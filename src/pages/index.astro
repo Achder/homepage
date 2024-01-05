@@ -9,7 +9,7 @@ import Wroomer from "../components/Wroomer.astro"
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta charset="utf-8">
 		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woffs" crossorigin=""/>
-		<link rel="preload" href="/fonts/RethinkSans-SemiBold.woff2" as="font" type="font/woffs" crossorigin=""/>
+		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woffs" crossorigin=""/>
 	</head>
 
 	<body>
@@ -34,7 +34,6 @@ import Wroomer from "../components/Wroomer.astro"
 			<h1>
 				<p>Hi, I'm</p>
 				<Wroomer title="Thomas Meerpohl" class="wroomer"/>
-				<Wroomer title="Thomas Meerpohl" class="wroomer ttt"/>
 			</h1>
 			<img id="profile" src="/me.jpg">
 			<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" />
@@ -61,7 +60,6 @@ import Wroomer from "../components/Wroomer.astro"
 		font-style: normal;
 		font-weight: 400;
 		src: url("/fonts/RethinkSans-Regular.woff2") format("woff2");
-		font-display: swap;
 	}
 
 	@font-face {
@@ -69,7 +67,6 @@ import Wroomer from "../components/Wroomer.astro"
 		font-style: normal;
 		font-weight: 800;
 		src: url("/fonts/RethinkSans-ExtraBold.woff2") format("woff2");
-		font-display: swap;
 	}
 
 	*, *::after, *::before {
