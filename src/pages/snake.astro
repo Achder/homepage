@@ -1,0 +1,290 @@
+---
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+	</head>
+	<body>
+		<canvas>
+		</canvas>
+	</body>
+</html>
+
+<style>
+
+	* {
+		box-sizing: border-box;
+	}
+
+	body {
+		height: 100dvh;
+		margin: 0;
+		overflow: hidden;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr);
+		place-items: center;
+		padding: 4rem;
+	}
+
+	canvas {
+		box-sizing: border-box;
+		padding: 2px;
+		outline: 5px solid black;
+		outline-offset: -1px;
+		width: 100%;
+		height: 100%;
+	}
+</style>
+
+<script>
+
+	type Direction = {
+		x: number
+		y: number
+	}
+
+	let snake: Snake
+	
+	const segmentSize = 20
+	const segmentBorder = 2
+
+	function getInnerSize(element: HTMLElement | null) {
+		if(!element) {
+			return null
+		}
+		
+		const computed = getComputedStyle(element)
+		return {
+			width: element.clientWidth - parseFloat(computed.paddingLeft) - parseFloat(computed.paddingRight),
+			height: element.clientHeight - parseFloat(computed.paddingTop) - parseFloat(computed.paddingBottom)
+		}
+	}
+
+	const body = document.querySelector("body")
+	const bodySize = getInnerSize(body)
+
+	const field = {
+		width: Math.floor((bodySize?.width ?? 0) / segmentSize),
+		height: Math.floor((bodySize?.height ?? 0) / segmentSize),
+	}
+
+	let nextDir: Direction = {
+		x: 0,
+		y: -1
+	}
+
+	let lastTime = 0
+	let counter = 0
+	let maxCount = 50
+
+	class Segment {
+		next: Segment | null = null
+		prev: Segment | null = null
+		x: number
+		y: number
+
+		constructor(x: number, y: number) {
+			this.x = x
+			this.y = y
+		}
+
+		getNext(dir: Direction) {
+			let nextX = this.x + dir.x
+			if(nextX < 0) {
+				nextX = field.width - 1
+			} else if(nextX >= field.width) {
+				nextX = 0
+			}
+
+			let nextY = this.y + dir.y
+			if(nextY < 0) {
+				nextY = field.height - 1
+			} else if(nextY >= field.height) {
+				nextY = 0
+			}
+
+			console.log(nextX, nextY)
+			return new Segment(nextX, nextY)
+		}
+	}
+
+	class Snake {
+		first: Segment | null
+		last: Segment | null
+
+		constructor(x: number, y: number) {
+			this.first = new Segment(x, y)
+			this.last = this.first
+		}
+
+		extend(dir: Direction) {
+			if(!this.first) {
+				return
+			}
+
+			const segment = this.first.getNext(dir)
+			segment.next = this.first
+			this.first.prev = segment
+			this.first = segment
+		}
+
+		removeLast() {
+			if(!this.last) {
+				return
+			}
+
+			this.last = this.last.prev
+
+			if(!this.last) {
+				return 
+			}
+
+			this.last.next = null
+		}
+
+		step(dir: Direction) {
+			this.extend(dir)
+			this.removeLast()
+		}
+
+		hit(test: Segment | null) {
+			if(!test) {
+				return false
+			}
+
+			let segment = this.first
+			while(segment) {
+				if(test.x === segment.x && test.y === segment.y) {
+					return true
+				}
+				segment = segment.next
+			}
+			return false
+		}
+	}
+
+	window.addEventListener("keydown", (event) => {
+		let proposal
+		switch(event.key) {
+			case "ArrowRight":
+				proposal = {
+					x: -nextDir.y,
+					y: nextDir.x,
+				}
+				break
+			case "ArrowLeft":
+				proposal = {
+					x: nextDir.y,
+					y: -nextDir.x,
+				}
+				break
+			default: 
+				proposal = null
+		}
+
+		if(!proposal) {
+			return
+		}
+
+		const extended = snake.first?.getNext(proposal) ?? null
+		if(!snake.hit(extended)) {
+			nextDir = proposal
+			draw()
+		}
+	})
+
+	function init() {
+
+		const canvas = document.querySelector("canvas")
+		if(!canvas) {
+			return
+		}
+
+		canvas.width = field.width * segmentSize
+		canvas.height = field.height * segmentSize
+
+		snake = new Snake(Math.ceil(field.width / 2), field.height - 4)
+		snake.extend(nextDir)
+		snake.extend(nextDir)
+		snake.extend(nextDir)
+	}
+	
+	function stepper() {
+		let step = false
+		const curTime = Date.now()
+		if(lastTime) {
+			counter += curTime - lastTime
+			if(counter > maxCount) {
+				step = true
+				counter %= maxCount
+			}
+		}
+		lastTime = curTime		
+		return step
+	}
+
+	function update() {
+		snake.step(nextDir)
+	}
+
+	function draw() {
+		const canvas = document.querySelector("canvas")
+		const ctx = canvas?.getContext("2d")
+		if(!ctx) {
+			return
+		}
+
+		ctx.clearRect(0, 0, canvas?.width ?? 0, canvas?.height ?? 0)
+
+		// draw grid
+		ctx.beginPath()
+		ctx.strokeStyle = "rgba(0, 0, 0, 0.1)"
+		ctx.lineWidth = 2
+		for(let x = 1; x < field.width; x++) {
+			ctx.moveTo(x * segmentSize, 0)
+			ctx.lineTo(x * segmentSize, field.height * segmentSize)
+		}
+		for(let y = 1; y < field.height; y++) {
+			ctx.moveTo(0, y * segmentSize)
+			ctx.lineTo(field.width * segmentSize, y * segmentSize)
+		}
+		ctx.stroke()
+		ctx.closePath()
+
+		// draw snake
+		let segment = snake.first
+		while(segment) {
+			ctx.fillStyle = "rgb(0, 0, 0)"
+			ctx.fillRect(segment.x * segmentSize, segment.y * segmentSize, segmentSize, segmentSize)
+			ctx.strokeStyle = "white"
+			ctx.lineWidth = segmentBorder
+			ctx.strokeRect(segment.x * segmentSize, segment.y * segmentSize, segmentSize, segmentSize)
+			segment = segment.next
+		}
+
+		// draw direction
+		const target = snake.first?.getNext(nextDir)
+		if(!target) {
+			return
+		}
+
+		ctx.fillStyle = "rgba(0, 0, 0, 0.1)"
+		ctx.fillRect(target.x * segmentSize, target.y * segmentSize, segmentSize, segmentSize)
+		ctx.strokeStyle = "white"
+		ctx.lineWidth = segmentBorder
+		ctx.strokeRect(target.x * segmentSize, target.y * segmentSize, segmentSize, segmentSize)
+	}
+
+	function loop() {
+		if(stepper()) {
+			update()
+			draw()
+		}
+		requestAnimationFrame(loop)
+	}
+
+	init()
+	loop()
+</script>
