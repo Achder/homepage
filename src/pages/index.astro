@@ -8,8 +8,8 @@ import Wroomer from "../components/Wroomer.astro"
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta charset="utf-8">
-		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woffs" crossorigin=""/>
-		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woffs" crossorigin=""/>
+		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""/>
+		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin=""/>
 	</head>
 
 	<body>
@@ -76,6 +76,7 @@ import Wroomer from "../components/Wroomer.astro"
 	:root {
 		--dark: #2c2c2c;
 		--light: white;
+		--pink: #d900ff;
 
 		--duration: 2000ms;
 		--ease-out-back: cubic-bezier(0.175, 0.885, 0.320, 1);
@@ -143,16 +144,22 @@ import Wroomer from "../components/Wroomer.astro"
 	}
 
 	a:hover {
-		color: deeppink;
+		color: var(--pink);
 	}
 
 	main {
 		grid-area: main;
-		padding: calc(1rem + 5cqi) 0;
+		padding: calc(1rem + 7cqi) 0;
 		display: grid;
 		gap: calc(1rem + 1cqi);
 		align-content: start;
 		justify-items: start;
+	}
+
+	@container(width < 650px) {
+		main {
+			padding: calc(1rem + 5cqi) 0;
+		}
 	}
 
 	footer {
@@ -196,7 +203,7 @@ import Wroomer from "../components/Wroomer.astro"
 	h1 p {
 		font-size: 2rem;
 		width: 100%;
-		margin: 1rem 0;
+		margin-bottom: 1rem;
 	}
 
 	.wroomer {

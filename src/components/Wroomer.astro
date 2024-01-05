@@ -29,6 +29,16 @@ const { title, class: className, ...rest } = Astro.props
   spans.forEach((span, idx) => {
     span.style.setProperty("--delay-idx", `${idx}`)
   })
+
+  spans[spans.length - 1].addEventListener("animationend", () => {
+      setTimeout(() => {
+        for(const span of spans) {
+          span.classList.remove("riser")
+          void span.offsetWidth
+          span.classList.add("riser")
+        }
+      }, 10000 + (Math.random() * 10000))
+    })
 </script>
 
 <style>
@@ -42,7 +52,7 @@ const { title, class: className, ...rest } = Astro.props
 		animation-duration: var(--duration);
 		animation-iteration-count: 1;
 		animation-timing-function: var(--ease-out-back);
-		animation-delay: calc(0s + var(--delay-idx, 0) * var(--delay));
+		animation-delay: calc(3s + var(--delay-idx, 0) * var(--delay));
 		
 		transform: scale(var(--final-scale)) translateY(calc(-1 * var(--final-offset)));
 		text-shadow: var(--final-shadow);
@@ -53,7 +63,7 @@ const { title, class: className, ...rest } = Astro.props
 		30% {
 			transform: scale(var(--max-scale)) translateY(calc(-1 * var(--max-offset)));
 			text-shadow: var(--max-shadow);
-			color: deeppink;
+			color: var(--pink);
 		}
 	}
 </style>
