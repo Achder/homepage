@@ -1,6 +1,9 @@
 ---
 import LinkButton from "../components/LinkButton.astro"
 import Wroomer from "../components/Wroomer.astro"
+import Github from "../components/icons/Github.astro"
+import LinkedIn from "../components/icons/LinkedIn.astro"
+import Threads from "../components/icons/Threads.astro"
 ---
 
 <!doctype html>
@@ -19,14 +22,14 @@ import Wroomer from "../components/Wroomer.astro"
 		</nav>
 
 		<nav class="social-nav">
-			<a href="/index">
-				<img src="/linkedin.svg"/>
+			<a href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/">
+				<LinkedIn />
 			</a>
-			<a href="/snake">
-				<img src="/threads.svg"/>
+			<a href="https://www.threads.net/@serranoschinken">
+				<Threads />
 			</a>
-			<a href="/snake">
-				<img src="/github.svg"/>
+			<a href="https://github.com/Achder">
+				<Github />
 			</a>
 		</nav>
 
@@ -49,7 +52,7 @@ import Wroomer from "../components/Wroomer.astro"
 
 		<footer>
 			ⓒ Thomas Meerpohl 2023
-			<a href="#">Impressum</a>
+			<a href="#">Imprint</a>
 		</footer>
 	</body>
 </html>
@@ -140,7 +143,7 @@ import Wroomer from "../components/Wroomer.astro"
 		color: var(--dark);
 		display: flex;
 		align-items: center;
-		transition: all 100ms ease-in-out;
+		transition: all 100ms ease-out;
 	}
 
 	a:hover {
