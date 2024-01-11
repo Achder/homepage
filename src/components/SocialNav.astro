@@ -1,0 +1,32 @@
+---
+
+import Github from "../components/icons/Github.astro"
+import LinkedIn from "../components/icons/LinkedIn.astro"
+import Threads from "../components/icons/Threads.astro"
+
+type Props = {
+  class?: string
+}
+
+const { class: className, ...rest } = Astro.props
+---
+
+<nav class="social-nav">
+  <a href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/">
+    <LinkedIn />
+  </a>
+  <a href="https://www.threads.net/@serranoschinken">
+    <Threads />
+  </a>
+  <a href="https://github.com/Achder">
+    <Github />
+  </a>
+</nav>
+
+<style>
+	.social-nav {
+		display: flex;
+		justify-content: end;
+		gap: 2rem;
+	}
+</style>

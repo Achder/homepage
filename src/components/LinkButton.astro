@@ -15,12 +15,13 @@ const { label, href } = Astro.props
 		font-weight: 800;
 		transition: all 100ms ease-in-out;
     letter-spacing: 1px;
+		border-radius: var(--border-radius);
 	}
-
+	
 	a:hover {
 		color: var(--light);
 		background-color: var(--pink);
-		box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 	}
 	
 	@container(max-width: 500px) {

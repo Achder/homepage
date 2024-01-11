@@ -1,188 +1,35 @@
 ---
+import { Image } from 'astro:assets'
+import Me from '../images/me.jpg'
+import PageLayout from "../layouts/PageLayout.astro"
 import LinkButton from "../components/LinkButton.astro"
 import Wroomer from "../components/Wroomer.astro"
-import Github from "../components/icons/Github.astro"
-import LinkedIn from "../components/icons/LinkedIn.astro"
-import Threads from "../components/icons/Threads.astro"
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta charset="utf-8">
-		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""/>
-		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin=""/>
-	</head>
-
-	<body>
-		<nav class="page-nav">
-			<a href="/index">Home</a>
-			<a href="/snake">Play Snake</a>
-		</nav>
-
-		<nav class="social-nav">
-			<a href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/">
-				<LinkedIn />
-			</a>
-			<a href="https://www.threads.net/@serranoschinken">
-				<Threads />
-			</a>
-			<a href="https://github.com/Achder">
-				<Github />
-			</a>
-		</nav>
-
-		<main>
-			<h1>
-				<p>Hi, I'm</p>
-				<Wroomer title="Thomas Meerpohl" class="wroomer"/>
-			</h1>
-			<img id="profile" src="/me.jpg">
-			<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" />
-			<div class="info">
-				<p>
-					I'm a freelance app developer by heart.
-				</p>
-				<p>
-					I do web apps, cross platform mobile apps and everything between and beyond.
-				</p>
-			</div>
-		</main>
-
-		<footer>
-			ⓒ Thomas Meerpohl 2023
-			<a href="#">Imprint</a>
-		</footer>
-	</body>
-</html>
-
-<style is:global>
-	@font-face {
-		font-family: "Rethink Sans";
-		font-style: normal;
-		font-weight: 400;
-		src: url("/fonts/RethinkSans-Regular.woff2") format("woff2");
-	}
-
-	@font-face {
-		font-family: "Rethink Sans";
-		font-style: normal;
-		font-weight: 800;
-		src: url("/fonts/RethinkSans-ExtraBold.woff2") format("woff2");
-	}
-
-	*, *::after, *::before {
-		box-sizing: border-box;
-	}
-
-	:root {
-		--dark: #2c2c2c;
-		--light: white;
-		--pink: #d900ff;
-
-		--duration: 2000ms;
-		--ease-out-back: cubic-bezier(0.175, 0.885, 0.320, 1);
-		--delay: calc(var(--duration) / 20);
-
-		--max-offset: 0.5rem;
-		--max-shadow-blur: 10px;
-		--max-scale: 1.1;
-		--final-offset: 0.5rem;
-		--final-shadow-blur: 6px;
-		--final-scale: 1;
-		--shadow-color: rgba(0, 0, 0, 0.1);
-		--max-shadow: 0px calc(var(--max-offset) + 0.5rem) var(--max-shadow-blur) var(--shadow-color);
-		--final-shadow: 0px calc(var(--final-offset)) var(--final-shadow-blur) var(--shadow-color);
-	}
-</style>
+<PageLayout>
+	<h1>
+		<p>Hi, I'm</p>
+		<Wroomer title="Thomas Meerpohl" class="wroomer"/>
+	</h1>
+	<Image id="profile" src={Me} width="736" height="368" alt="An image of me, Thomas Meerpohl"/>
+	<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" />
+	<div class="info">
+		<p>
+			I'm a freelance app developer by heart.
+		</p>
+		<p>
+			I do web apps, cross platform mobile apps and everything between and beyond.
+		</p>
+	</div>
+</PageLayout>
 
 <style>
-	html, 
-	body {
-		margin: 0;
-		padding: 0;
-		font-family: 'Rethink Sans', 'Trebuchet MS', sans-serif;
-		font-weight: 400;
-	}
-
-	body {
-		min-height: 100dvh;
-		max-width: 768px;
-		margin-inline: auto;
-		padding: 1rem;
-
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: auto 1fr auto;
-		grid-template-areas: 
-			'page-nav social-nav'
-			'main main'
-			'footer footer';
-		align-content: start;
-
-		container-name: body;
-		container-type: inline-size;
-	}
-
-	.page-nav {
-		grid-area: page-nav;
-		display: flex;
-		justify-content: start;
-		gap: 1rem;
-	}
-
-	.social-nav {
-		grid-area: social-nav;
-		display: flex;
-		justify-content: end;
-		gap: 2rem;
-	}
-
-	a {
-		color: var(--dark);
-		display: flex;
-		align-items: center;
-		transition: all 100ms ease-out;
-	}
-
-	a:hover {
-		color: var(--pink);
-	}
-
-	main {
-		grid-area: main;
-		padding: calc(1rem + 7cqi) 0;
-		display: grid;
-		gap: calc(1rem + 1cqi);
-		align-content: start;
-		justify-items: start;
-	}
-
-	@container(width < 650px) {
-		main {
-			padding: calc(1rem + 5cqi) 0;
-		}
-	}
-
-	footer {
-		grid-area: footer;
-		justify-self: end;
-		display: flex;
-		gap: 1rem;
-	}
-	
-	@container(max-width: 500px) {
-		footer {
-			justify-self: center;
-		}
-	}
-
 	#profile {
 		width: 100%;
 		aspect-ratio: 2 / 1;
 		object-fit: cover;
 		border: 2px solid var(--dark);
+		border-radius: var(--border-radius);
 	}
 
 	.info {
@@ -199,14 +46,14 @@ import Threads from "../components/icons/Threads.astro"
 		color: var(--dark);
 		font-weight: 800;
 		margin: 0;
-		line-height: 1.2;
+		line-height: 1;
 		text-wrap: balance;
 	}
 
 	h1 p {
 		font-size: 2rem;
 		width: 100%;
-		margin-bottom: 1rem;
+		line-height: 2;
 	}
 
 	.wroomer {
@@ -229,7 +76,3 @@ import Threads from "../components/icons/Threads.astro"
 		}
 	}
 </style>
-
-<script>
-
-</script>

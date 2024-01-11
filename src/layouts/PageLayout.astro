@@ -1,0 +1,134 @@
+---
+import PageNav from "../components/PageNav.astro"
+import SocialNav from "../components/SocialNav.astro"
+import { ViewTransitions } from 'astro:transitions';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta charset="utf-8">
+		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""/>
+		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin=""/>
+	</head>
+
+	<body>
+
+		<PageNav class="page-nav" />
+		<SocialNav class="social-nav" />
+
+		<main>
+			<slot/>
+		</main>
+
+		<footer>
+			ⓒ Thomas Meerpohl 2023
+			<a href="#">Imprint</a>
+		</footer>
+	</body>
+</html>
+
+<style is:global>
+	@font-face {
+		font-family: "Rethink Sans";
+		font-style: normal;
+		font-weight: 400;
+		src: url("/fonts/RethinkSans-Regular.woff2") format("woff2");
+	}
+
+	@font-face {
+		font-family: "Rethink Sans";
+		font-style: normal;
+		font-weight: 800;
+		src: url("/fonts/RethinkSans-ExtraBold.woff2") format("woff2");
+	}
+
+	*, *::after, *::before {
+		box-sizing: border-box;
+	}
+
+	:root {
+		--dark: #2c2c2c;
+		--light: white;
+		--pink: #d900ff;
+		--shadow-color: rgba(0, 0, 0, 0.1);
+		--border-radius: 0px;
+	}
+
+	a {
+		color: var(--dark);
+		display: flex;
+		align-items: center;
+		transition: all 100ms ease-out;
+	}
+
+	a:hover {
+		color: var(--pink);
+	}
+</style>
+
+<style>
+	html, 
+	body {
+		margin: 0;
+		padding: 0;
+		font-family: 'Rethink Sans', 'Trebuchet MS', sans-serif;
+		font-weight: 400;
+	}
+
+	body {
+		min-height: 100dvh;
+		max-width: 768px;
+		margin-inline: auto;
+		padding: 1rem;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: auto 1fr auto;
+		grid-template-areas: 
+			'page-nav social-nav'
+			'main main'
+			'footer footer';
+		align-content: start;
+
+		container-name: body;
+		container-type: inline-size;
+	}
+
+  .page-nav {
+		grid-area: page-nav;
+  }
+
+	.social-nav {
+		grid-area: social-nav;
+	}
+
+	main {
+		grid-area: main;
+		padding: calc(1rem + 7cqi) 0;
+		display: grid;
+		gap: calc(1rem + 1cqi);
+		align-content: start;
+		justify-items: start;
+	}
+
+	@container(width < 650px) {
+		main {
+			padding: calc(1rem + 5cqi) 0;
+		}
+	}
+
+	footer {
+		grid-area: footer;
+		justify-self: end;
+		display: flex;
+		gap: 1rem;
+	}
+	
+	@container(max-width: 500px) {
+		footer {
+			justify-self: center;
+		}
+	}
+</style>

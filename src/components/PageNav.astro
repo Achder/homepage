@@ -1,0 +1,20 @@
+---
+type Props = {
+  class?: string
+}
+
+const { class: className, ...rest } = Astro.props
+---
+
+<nav class:list={["page-nav", className]}>
+  <a href="/">Home</a>
+  <a href="/snake">Play Snake</a>
+</nav>
+
+<style>
+  .page-nav {
+    display: flex;
+    justify-content: start;
+    gap: 1rem;
+  }
+</style>
