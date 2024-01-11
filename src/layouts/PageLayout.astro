@@ -1,12 +1,13 @@
 ---
 import PageNav from "../components/PageNav.astro"
 import SocialNav from "../components/SocialNav.astro"
-import { ViewTransitions } from 'astro:transitions';
+import { ViewTransitions } from 'astro:transitions'
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
+    <title>Homepage Thomas Meerpohl</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta charset="utf-8">
 		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""/>
@@ -35,6 +36,7 @@ import { ViewTransitions } from 'astro:transitions';
 		font-style: normal;
 		font-weight: 400;
 		src: url("/fonts/RethinkSans-Regular.woff2") format("woff2");
+    font-display: swap;
 	}
 
 	@font-face {
@@ -42,6 +44,7 @@ import { ViewTransitions } from 'astro:transitions';
 		font-style: normal;
 		font-weight: 800;
 		src: url("/fonts/RethinkSans-ExtraBold.woff2") format("woff2");
+    font-display: swap;
 	}
 
 	*, *::after, *::before {
