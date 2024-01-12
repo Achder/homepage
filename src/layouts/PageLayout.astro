@@ -100,9 +100,9 @@ import { ViewTransitions } from 'astro:transitions'
 		container-type: inline-size;
 	}
 
-  .page-nav {
-		grid-area: page-nav;
-  }
+	.page-nav {
+			grid-area: page-nav;
+	}
 
 	.social-nav {
 		grid-area: social-nav;
@@ -110,17 +110,11 @@ import { ViewTransitions } from 'astro:transitions'
 
 	main {
 		grid-area: main;
-		padding: calc(1rem + 7cqi) 0;
+		padding: calc(1rem + 4cqi) 0;
 		display: grid;
 		gap: calc(1rem + 1cqi);
 		align-content: start;
 		justify-items: start;
-	}
-
-	@container(width < 650px) {
-		main {
-			padding: calc(1rem + 5cqi) 0;
-		}
 	}
 
 	footer {
