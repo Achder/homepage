@@ -11,7 +11,7 @@ type Props = {
 const { class: className, ...rest } = Astro.props
 ---
 
-<nav class="social-nav">
+<nav class:list={["social-nav", className]} {...rest}>
   <a href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/" aria-label="LinkedIn">
     <LinkedIn />
   </a>
@@ -28,5 +28,7 @@ const { class: className, ...rest } = Astro.props
 		display: flex;
 		justify-content: end;
 		gap: 2rem;
+    padding: 1rem 0;
+    background-color: var(--light);
 	}
 </style>

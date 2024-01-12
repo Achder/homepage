@@ -85,7 +85,7 @@ import { ViewTransitions } from 'astro:transitions'
 		min-height: 100dvh;
 		max-width: 768px;
 		margin-inline: auto;
-		padding: 1rem;
+		padding: 0 1rem;
 
 		display: grid;
 		grid-template-columns: 1fr 1fr;
@@ -101,11 +101,15 @@ import { ViewTransitions } from 'astro:transitions'
 	}
 
 	.page-nav {
-			grid-area: page-nav;
+		grid-area: page-nav;
+		position: sticky;
+		top: 0;
 	}
 
 	.social-nav {
 		grid-area: social-nav;
+		position: sticky;
+		top: 0;
 	}
 
 	main {
@@ -122,6 +126,7 @@ import { ViewTransitions } from 'astro:transitions'
 		justify-self: end;
 		display: flex;
 		gap: 1rem;
+		padding: 1rem 0;
 	}
 	
 	@container(max-width: 500px) {
