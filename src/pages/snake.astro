@@ -39,15 +39,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 	}
 	
 	let game: Game
-	document.addEventListener('astro:page-load', event => {
-		// @ts-ignore
-		console.log(event, event.target?.URL.toString())
-
-		// @ts-ignore
-		if(!event.target?.URL.toString().includes("snake") && game) {
-			game.destructor()
-			return
-		}
+	document.addEventListener('DOMContentLoaded', event => {
 
 		const canvas = document.querySelector("canvas")
 		const container = canvas?.parentElement ?? null
