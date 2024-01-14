@@ -7,8 +7,8 @@ const { class: className, ...rest } = Astro.props
 ---
 
 <nav class:list={["page-nav", className]} {...rest}>
-  <a href="/" data-astro-prefetch>Home</a>
-  <a href="/snake" data-astro-prefetch>Play Snake</a>
+  <a href="/" data-astro-prefetch="viewport">Home</a>
+  <a href="/snake" data-astro-prefetch="viewport">Play Snake</a>
 </nav>
 
 <style>
