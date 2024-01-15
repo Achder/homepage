@@ -3,8 +3,11 @@ import PageLayout from "../layouts/PageLayout.astro"
 ---
 
 <PageLayout>
-	<canvas>
-	</canvas>
+	<h1>Ssssnake</h1>
+	<div class="container">
+		<canvas>
+		</canvas>
+	</div>
 </PageLayout>
 
 <style>
@@ -12,43 +15,33 @@ import PageLayout from "../layouts/PageLayout.astro"
 		box-sizing: border-box;
 	}
 
+	.container {
+		justify-self: stretch;
+		display: grid;
+		justify-items: center;
+		aspect-ratio: 1 / 1;
+	}
 	canvas {
 		box-sizing: border-box;
-		padding: 2px;
-		outline: 2px solid black;
+		outline: 4px solid var(--dark);
 		outline-offset: -1px;
-		width: 100%;
+		height: 80%;
 		aspect-ratio: 1 / 1;
 	}
 </style>
 
 <script>
-
 	import { Game } from '../snake/game'
-
-	function getInnerSize(element: HTMLElement | null) {
-		if(!element) {
-			return null
-		}
-		
-		const computed = getComputedStyle(element)
-		return {
-			width: element.clientWidth - parseFloat(computed.paddingLeft) - parseFloat(computed.paddingRight),
-			height: element.clientHeight - parseFloat(computed.paddingTop) - parseFloat(computed.paddingBottom)
-		}
-	}
 	
 	let game: Game
-	document.addEventListener('DOMContentLoaded', event => {
+	document.addEventListener('DOMContentLoaded', () => {
 
 		const canvas = document.querySelector("canvas")
-		const container = canvas?.parentElement ?? null
-		const size = getInnerSize(container)
-		const segmentSize = 20
 		const field = {
-			width: Math.floor((size?.width ?? 0) / segmentSize),
-			height: Math.floor((size?.height ?? 0) / segmentSize),
+			width: 50,
+			height: 50,
 		}
+		const segmentSize = (canvas?.clientWidth ?? 0) / field.width
 
 		if(canvas) {
 			canvas.width = field.width * segmentSize

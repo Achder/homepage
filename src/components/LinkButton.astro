@@ -1,12 +1,22 @@
 ---
 
-const { label, href } = Astro.props
+type Props = {
+	label: string
+	href: string
+  	class?: string
+}
+
+const { label, href, class: className, ...rest } = Astro.props
 
 ---
 
+<a href={href} class:list={[className]} {...rest}>
+	{label}
+</a>
+
 <style>
 	a {
-    display: inline-block;
+    	display: inline-block;
 		background-color: var(--dark);
 		padding: 1.4rem 4rem;
 		color: var(--light);
@@ -14,7 +24,7 @@ const { label, href } = Astro.props
 		font-size: 1.5rem;
 		font-weight: 800;
 		transition: all 100ms ease-in-out;
-    letter-spacing: 1px;
+    	letter-spacing: 1px;
 		border-radius: var(--border-radius);
 	}
 	
@@ -27,11 +37,7 @@ const { label, href } = Astro.props
 	@container(max-width: 500px) {
 		a {
 			width: 100%;
-      text-align: center;
+      		text-align: center;
 		}
 	}
 </style>
-
-<a href={href}>
-  {label}
-</a>

@@ -1,0 +1,36 @@
+---
+import Me from '../images/me.jpg'
+import PageLayout from "../layouts/PageLayout.astro"
+import LinkButton from "../components/LinkButton.astro"
+import Wroomer from "../components/Wroomer.astro"
+---
+
+<PageLayout>
+	<h1>Imprint</h1>
+    <div class="address">
+        <p><strong>Thomas Meerpohl</strong></p>
+        <p>Nieritz Straße 7</p>
+        <p>01097 Dresden</p>
+    </div>
+    <div class="contact">
+        <p>Mail: <a href="mailto:thomas.meerpohl@gmail.com">thomas.meerpohl@gmail.com</a></p>
+        <p>Phone: <a href="tel:+4915771983864">+49 1577 1983864</a></p>   
+    </div>
+</PageLayout>
+
+<style>
+    p {
+        margin: 0;
+        padding: 0;
+    }
+
+    .address, .contact {
+        display: grid;
+        gap: 0.3rem;
+        margin-top: 0.5rem;
+    }
+
+    strong {
+        font-size: 1.5rem;
+    }
+</style>

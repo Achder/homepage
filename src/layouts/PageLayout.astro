@@ -24,7 +24,7 @@ import SocialNav from "../components/SocialNav.astro"
 
 		<footer>
 			ⓒ Thomas Meerpohl 2023
-			<a href="#">Imprint</a>
+			<a href="/imprint">Imprint</a>
 		</footer>
 	</body>
 </html>
@@ -58,13 +58,20 @@ import SocialNav from "../components/SocialNav.astro"
 
 	a {
 		color: var(--dark);
-		display: flex;
-		align-items: center;
 		transition: all 100ms ease-out;
 	}
 
 	a:hover {
 		color: var(--pink);
+	}
+
+	h1 {
+		font-size: calc(1rem + 8cqi);
+		color: var(--dark);
+		font-weight: 800;
+		margin: 0;
+		line-height: 1;
+		text-wrap: balance;
 	}
 </style>
 
@@ -75,6 +82,11 @@ import SocialNav from "../components/SocialNav.astro"
 		padding: 0;
 		font-family: 'Rethink Sans', 'Trebuchet MS', sans-serif;
 		font-weight: 400;
+		background-color: var(--light);
+	}
+
+	html {
+		scrollbar-gutter: stable;
 	}
 
 	body {
@@ -106,7 +118,7 @@ import SocialNav from "../components/SocialNav.astro"
 
 	main {
 		grid-area: main;
-		padding: calc(1rem + 4cqi) 0;
+		padding: calc(1rem + 1cqi) 0;
 		display: grid;
 		gap: calc(1rem + 1cqi);
 		align-content: start;

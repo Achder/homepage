@@ -1,5 +1,4 @@
 ---
-import { Image } from 'astro:assets'
 import Me from '../images/me.jpg'
 import PageLayout from "../layouts/PageLayout.astro"
 import LinkButton from "../components/LinkButton.astro"
@@ -12,7 +11,7 @@ import Wroomer from "../components/Wroomer.astro"
 		<Wroomer title="Thomas Meerpohl" class="wroomer"/>
 	</h1>
 	<img id="profile" src={Me.src} loading="eager" alt="An image of me, Thomas Meerpohl"/>
-	<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" />
+	<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" class="link"/>
 	<div class="info">
 		<p>
 			I'm a freelance app developer by heart.
@@ -24,6 +23,10 @@ import Wroomer from "../components/Wroomer.astro"
 </PageLayout>
 
 <style>
+	.link {
+		margin-top: 0.5rem;
+	}
+
 	#profile {
 		width: 100%;
 		aspect-ratio: 2 / 1;
@@ -41,14 +44,6 @@ import Wroomer from "../components/Wroomer.astro"
 		font-size: 1.5rem;
 	}
 
-	h1 {
-		color: var(--dark);
-		font-weight: 800;
-		margin: 0;
-		line-height: 1;
-		text-wrap: balance;
-	}
-
 	h1 p {
 		font-size: 2rem;
 		width: 100%;
@@ -56,7 +51,6 @@ import Wroomer from "../components/Wroomer.astro"
 	}
 
 	.wroomer {
-		font-size: calc(1rem + 8cqi);
 		line-height: 0.9;
 		display: flex;
 		flex-wrap: wrap;
