@@ -3,10 +3,31 @@ import PageLayout from "../layouts/PageLayout.astro"
 ---
 
 <PageLayout>
-	<h1>Ssssnake</h1>
-	<div class="container">
+	<h1 class="snap">Ssssnake</h1>
+
+	<div class="inputs snap">
+		<label>
+			Speed
+			<input type="range" id="speed" min="0" max="500" value="200"/>
+		</label>
+		<div class="button-group">
+			<span>Players</span>
+			<button type="button" id="1-player">1 Player</button>
+			<button type="button" id="2-player">2 Player</button>
+		</div>
+	</div>
+
+	<div class="container snap">
+		<div class="player-controls player-2 hidden" style="transform: rotate(180deg)">
+			<button type="button" id="player-2-left">L</button>
+			<button type="button" id="player-2-right">R</button>
+		</div>
 		<canvas>
 		</canvas>
+		<div class="player-controls player-1 hidden">
+			<button type="button" id="player-1-left">L</button>
+			<button type="button" id="player-1-right">R</button>
+		</div>
 	</div>
 </PageLayout>
 
@@ -15,31 +36,147 @@ import PageLayout from "../layouts/PageLayout.astro"
 		box-sizing: border-box;
 	}
 
+	html {
+		scroll-snap-type: y mandatory;
+	}
+
 	.container {
 		justify-self: stretch;
 		display: grid;
 		justify-items: center;
-		aspect-ratio: 1 / 1;
+		align-items: center;
+		gap: 1rem;
 	}
+
+	@container(width < 650px) {
+		.container {
+			height: 100dvh;
+		}
+	}
+
 	canvas {
 		box-sizing: border-box;
 		outline: 4px solid var(--dark);
 		outline-offset: -1px;
-		height: 80%;
+		width: 100%;
 		aspect-ratio: 1 / 1;
+	}
+
+	.inputs {
+		justify-self: stretch;
+		display: grid;
+		gap: 1rem;
+	}
+
+	.button-group {
+		display: grid;
+		grid-template-columns: auto auto;
+		justify-content: start;
+		column-gap: 1rem;
+		row-gap: 0.5rem;
+	}
+
+	.button-group > span {
+		grid-column: 1 / -1;
+		font-size: 1.5rem;
+	}
+
+	.button-group > button {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		padding: 1rem 2rem;
+		background: var(--light);
+		color: var(--dark);
+		font-weight: 800;
+		font-size: 1rem;
+		border: 4px solid var(--dark);
+	}
+
+	.button-group > button:active {
+		background: var(--dark);
+		color: var(--light);
+	}
+
+	label {
+		display: grid;
+		gap: 0.5rem;
+		font-size: 1.5rem;
+	}
+
+	input[type="range"] {
+		-webkit-appearance: none;
+		appearance: none;
+		margin: 0;
+	}
+
+	input[type="range"]::-webkit-slider-runnable-track {
+		-webkit-appearance: none; /* Override default look */
+		background-color: var(--dark);
+		border-radius: 100vmax;
+		height: 1.5rem;
+	}
+
+	input[type="range"]::-webkit-slider-thumb {
+		-webkit-appearance: none; /* Override default look */
+		appearance: none;
+		background-color: var(--light);
+		height: 1.5rem;
+		width: 1.5rem;
+		border-radius: 100vmax;
+		border: 4px solid var(--dark);
+	}
+
+	.player-controls {
+		justify-self: stretch;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		justify-items: center;
+		align-items: center;
+		touch-action: manipulation;
+		user-select: none;
+	}
+
+	.player-controls button {
+		font-size: 2rem;
+		font-weight: 800;
+		background-color: var(--dark);
+		color: var(--light);
+		border: 0;
+		padding: 0;
+		margin: 0;
+		width: 5rem;
+		aspect-ratio: 1 / 1;
+		border-radius: 100vmax;
+		border: 4px solid var(--dark);
+	}
+
+	.player-controls button:active {
+		background-color: var(--light);
+		color: var(--dark);
+	}
+
+	.hidden {
+		display: none;
 	}
 </style>
 
 <script>
 	import { Game } from '../snake/game'
-	
+	import mobile from 'is-mobile'
+
+	const isMobile = mobile({
+		tablet: true,
+		featureDetect: true,
+	})
+
 	let game: Game
 	document.addEventListener('DOMContentLoaded', () => {
 
 		const canvas = document.querySelector("canvas")
 		const field = {
-			width: 50,
-			height: 50,
+			width: isMobile ? 20 : 30,
+			height: isMobile ? 20 : 30,
 		}
 		const segmentSize = (canvas?.clientWidth ?? 0) / field.width
 
@@ -48,7 +185,57 @@ import PageLayout from "../layouts/PageLayout.astro"
 			canvas.height = field.height * segmentSize
 		}
 
-		game = new Game(field, segmentSize)
-		game.loop()
+		// init speed
+		const speed = document.getElementById("speed") as HTMLInputElement
+		speed?.addEventListener('input', () => game?.setSpeed(600 - speed.valueAsNumber))
+
+		// init player selection
+		const player1 = document.getElementById("1-player")
+		const player2 = document.getElementById("2-player")
+
+		player1?.addEventListener("click", () => {
+			game?.destructor()
+			game = new Game(field, segmentSize, 1)
+			speed?.dispatchEvent(new Event('input'))
+			game.loop()
+		})
+
+		player2?.addEventListener("click", () => {
+			game.destructor()
+			game = new Game(field, segmentSize, 2)
+			speed?.dispatchEvent(new Event('input'))
+			game.loop()
+		})
+
+		// init player controls
+		if(isMobile) {
+			const player1Controls = document.querySelector(".player-controls.player-1")
+			const player2Controls = document.querySelector(".player-controls.player-2")
+
+			player1Controls?.classList.toggle("hidden", false)
+			player2Controls?.classList.toggle("hidden", false)
+			
+			const player1Left = document.getElementById("player-1-left")
+			const player1Right = document.getElementById("player-1-right")
+			const player2Left = document.getElementById("player-2-left")
+			const player2Right = document.getElementById("player-2-right")
+	
+			player1Left?.addEventListener("click", () => {
+				window.dispatchEvent(new KeyboardEvent("keydown", {key: 'ArrowLeft'}))
+			})
+			player1Right?.addEventListener("click", () => {
+				window.dispatchEvent(new KeyboardEvent("keydown", {key: 'ArrowRight'}))
+			})
+			player2Left?.addEventListener("click", () => {
+				window.dispatchEvent(new KeyboardEvent("keydown", {key: 'a'}))
+			})
+			player2Right?.addEventListener("click", () => {
+				window.dispatchEvent(new KeyboardEvent("keydown", {key: 'd'}))
+			})
+		}
+
+		// start inital game
+		player1?.dispatchEvent(new Event("click"))
   })
+
 </script>

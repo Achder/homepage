@@ -73,6 +73,10 @@ import SocialNav from "../components/SocialNav.astro"
 		line-height: 1;
 		text-wrap: balance;
 	}
+
+	.snap {
+		scroll-snap-align: start;
+	} 
 </style>
 
 <style>
@@ -87,6 +91,7 @@ import SocialNav from "../components/SocialNav.astro"
 
 	html {
 		scrollbar-gutter: stable;
+		scroll-snap-type: y mandatory;
 	}
 
 	body {

@@ -1,64 +1,73 @@
-import type { Field, Direction } from './types'
+import type { Field, Direction, Position } from './types'
 import { Segment } from './segment'
 
 export class Snake {
+    first: Segment | null
+    last: Segment | null
+    field: Field
+    nextDir: Direction
 
-  first: Segment | null
-  last: Segment | null
-  field: Field
+    constructor(x: number, y: number, field: Field, startDir: Direction) {
+        this.first = new Segment(x, y, {
+            maxWidth: field.width,
+            maxHeight: field.height,
+        })
 
-  constructor(x: number, y: number, field: Field) {
-    this.first = new Segment(x, y, {
-      maxWidth: field.width,
-      maxHeight: field.height
-    })
-
-    this.last = this.first
-    this.field = field
-  }
-
-  extend(dir: Direction) {
-    if(!this.first) {
-      return
+        this.last = this.first
+        this.field = field
+        this.nextDir = startDir
     }
 
-    const segment = this.first.getNext(dir)
-    segment.next = this.first
-    this.first.prev = segment
-    this.first = segment
-  }
+    collidesWith(position: Position, startOffset: number = 0) {
+        let segment = this.first
+        let offsetCount = 0
+        while (segment) {
+            if (offsetCount < startOffset) {
+                offsetCount++
+                segment = segment.next
+                continue
+            }
 
-  removeLast() {
-    if(!this.last) {
-      return
+            if (
+                segment.position.x === position.x &&
+                segment.position.y === position.y
+            ) {
+                return true
+            }
+
+            segment = segment.next
+        }
+
+        return false
     }
 
-    this.last = this.last.prev
+    extend(dir: Direction) {
+        if (!this.first) {
+            return
+        }
 
-    if(!this.last) {
-      return 
+        const segment = this.first.getNext(dir)
+        segment.next = this.first
+        this.first.prev = segment
+        this.first = segment
     }
 
-    this.last.next = null
-  }
+    removeLast() {
+        if (!this.last) {
+            return
+        }
 
-  step(dir: Direction) {
-    this.extend(dir)
-    this.removeLast()
-  }
+        this.last = this.last.prev
 
-  hit(test: Segment | null) {
-    if(!test) {
-      return false
+        if (!this.last) {
+            return
+        }
+
+        this.last.next = null
     }
 
-    let segment = this.first
-    while(segment) {
-      if(test.x === segment.x && test.y === segment.y) {
-        return true
-      }
-      segment = segment.next
+    step(dir: Direction) {
+        this.extend(dir)
+        this.removeLast()
     }
-    return false
-  }
 }
