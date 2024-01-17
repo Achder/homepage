@@ -8,7 +8,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 	<div class="inputs snap">
 		<label>
 			Speed
-			<input type="range" id="speed" min="0" max="500" value="200"/>
+			<input type="range" id="speed" min="0" max="500" value="400"/>
 		</label>
 		<div class="button-group">
 			<span>Players</span>
@@ -17,7 +17,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 		</div>
 	</div>
 
-	<div class="container snap">
+	<div class="container snap hidden">
 		<div class="player-controls player-2 hidden" style="transform: rotate(180deg)">
 			<button type="button" id="player-2-left">L</button>
 			<button type="button" id="player-2-right">R</button>
@@ -34,10 +34,6 @@ import PageLayout from "../layouts/PageLayout.astro"
 <style>
 	* {
 		box-sizing: border-box;
-	}
-
-	html {
-		scroll-snap-type: y mandatory;
 	}
 
 	.container {
@@ -145,7 +141,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 		border: 0;
 		padding: 0;
 		margin: 0;
-		width: 5rem;
+		width: 7rem;
 		aspect-ratio: 1 / 1;
 		border-radius: 100vmax;
 		border: 4px solid var(--dark);
@@ -171,40 +167,54 @@ import PageLayout from "../layouts/PageLayout.astro"
 	})
 
 	let game: Game
-	document.addEventListener('DOMContentLoaded', () => {
 
+	const field = {
+		width: isMobile ? 20 : 30,
+		height: isMobile ? 20 : 30,
+	}
+
+	// init speed
+	const speed = document.getElementById("speed") as HTMLInputElement
+	speed?.addEventListener('input', () => game?.setSpeed(600 - speed.valueAsNumber))
+
+	// start new game
+	const startGame = (numPlayers: 1 | 2) => {
 		const canvas = document.querySelector("canvas")
-		const field = {
-			width: isMobile ? 20 : 30,
-			height: isMobile ? 20 : 30,
-		}
-		const segmentSize = (canvas?.clientWidth ?? 0) / field.width
+		const container = document.querySelector(".container")
 
-		if(canvas) {
-			canvas.width = field.width * segmentSize
-			canvas.height = field.height * segmentSize
-		}
+		container?.classList.remove("hidden")
+		container?.scrollIntoView({
+			block: "start", 
+			inline: "nearest",
+			behavior: "smooth"
+		})
+		
+		game?.destructor()
 
-		// init speed
-		const speed = document.getElementById("speed") as HTMLInputElement
-		speed?.addEventListener('input', () => game?.setSpeed(600 - speed.valueAsNumber))
+		requestAnimationFrame(() => {
+			const segmentSize = (canvas?.clientWidth ?? 0) / field.width
+			if(canvas) {
+				canvas.width = field.width * segmentSize
+				canvas.height = field.height * segmentSize
+			}
+			game = new Game(field, segmentSize, numPlayers)
+			speed?.dispatchEvent(new Event('input'))
+			game.loop()
+		})
+	}
+
+	document.addEventListener('DOMContentLoaded', () => {
 
 		// init player selection
 		const player1 = document.getElementById("1-player")
 		const player2 = document.getElementById("2-player")
 
 		player1?.addEventListener("click", () => {
-			game?.destructor()
-			game = new Game(field, segmentSize, 1)
-			speed?.dispatchEvent(new Event('input'))
-			game.loop()
+			startGame(1)
 		})
 
 		player2?.addEventListener("click", () => {
-			game.destructor()
-			game = new Game(field, segmentSize, 2)
-			speed?.dispatchEvent(new Event('input'))
-			game.loop()
+			startGame(2)
 		})
 
 		// init player controls
@@ -214,7 +224,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 
 			player1Controls?.classList.toggle("hidden", false)
 			player2Controls?.classList.toggle("hidden", false)
-			
+
 			const player1Left = document.getElementById("player-1-left")
 			const player1Right = document.getElementById("player-1-right")
 			const player2Left = document.getElementById("player-2-left")
@@ -232,10 +242,9 @@ import PageLayout from "../layouts/PageLayout.astro"
 			player2Right?.addEventListener("click", () => {
 				window.dispatchEvent(new KeyboardEvent("keydown", {key: 'd'}))
 			})
+		} else {
+			startGame(1)
 		}
-
-		// start inital game
-		player1?.dispatchEvent(new Event("click"))
   })
 
 </script>
