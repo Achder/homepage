@@ -5,7 +5,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 <PageLayout>
 	<h1 class="snap">Ssssnake</h1>
 
-	<div class="inputs snap">
+	<div class="inputs">
 		<label>
 			Speed
 			<input type="range" id="speed" min="0" max="500" value="400"/>
@@ -31,6 +31,12 @@ import PageLayout from "../layouts/PageLayout.astro"
 	</div>
 </PageLayout>
 
+<style is:global>
+	nav, footer {
+		scroll-snap-align: start;
+	}
+</style>
+
 <style>
 	* {
 		box-sizing: border-box;
@@ -41,7 +47,7 @@ import PageLayout from "../layouts/PageLayout.astro"
 		display: grid;
 		justify-items: center;
 		align-items: center;
-		gap: 1rem;
+		scroll-margin: 1rem;
 	}
 
 	@container(width < 650px) {
@@ -183,9 +189,11 @@ import PageLayout from "../layouts/PageLayout.astro"
 		const container = document.querySelector(".container")
 
 		container?.classList.remove("hidden")
-		container?.scrollIntoView({
-			behavior: "smooth"
-		})
+		if(isMobile) {
+			container?.scrollIntoView({
+				behavior: "smooth"
+			})
+		}
 		
 		game?.destructor()
 

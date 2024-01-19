@@ -9,14 +9,15 @@ import SocialNav from "../components/SocialNav.astro"
     <title>Homepage Thomas Meerpohl</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta charset="utf-8">
+		<link rel="icon" href="/favicon.ico" sizes="any" />
 		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""/>
 		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin=""/>
 	</head>
 
 	<body>
 
-		<PageNav class="page-nav snap" />
-		<SocialNav class="social-nav snap" />
+		<PageNav class="page-nav" />
+		<SocialNav class="social-nav" />
 
 		<main>
 			<slot/>
@@ -92,6 +93,7 @@ import SocialNav from "../components/SocialNav.astro"
 	html {
 		scrollbar-gutter: stable;
 		scroll-snap-type: y mandatory;
+		overflow-x: clip;
 	}
 
 	body {
@@ -123,7 +125,7 @@ import SocialNav from "../components/SocialNav.astro"
 
 	main {
 		grid-area: main;
-		padding: calc(1rem + 1cqi) 0;
+		padding: 1rem 0;
 		display: grid;
 		gap: calc(1rem + 1cqi);
 		align-content: start;
@@ -144,3 +146,9 @@ import SocialNav from "../components/SocialNav.astro"
 		}
 	}
 </style>
+
+<script>
+	import { polyfill } from "seamless-scroll-polyfill"
+
+	polyfill()
+</script>
