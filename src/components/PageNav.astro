@@ -8,6 +8,7 @@ const { class: className, ...rest } = Astro.props
 
 <nav class:list={["page-nav", className]} {...rest}>
   <a href="/">Home</a>
+  <a href="/what">What I do</a>
   <a href="/snake">Play Snake</a>
 </nav>
 
@@ -15,7 +16,7 @@ const { class: className, ...rest } = Astro.props
   .page-nav {
     display: flex;
     justify-content: start;
-    gap: 1rem;
+    gap: 1.5rem;
     padding: 1rem 0;
     background-color: var(--light);
   }

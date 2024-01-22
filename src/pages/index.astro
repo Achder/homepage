@@ -3,48 +3,49 @@ import Me from '../images/me.webp'
 import PageLayout from "../layouts/PageLayout.astro"
 import LinkButton from "../components/LinkButton.astro"
 import Wroomer from "../components/Wroomer.astro"
+import Envelope from "../components/icons/Envelope.astro"
 ---
 
 <PageLayout>
-	<h1>
-		<p>Hi, I'm</p>
-		<Wroomer title="Thomas Meerpohl" class="wroomer"/>
-	</h1>
-	<img id="profile" src={Me.src} loading="eager" alt="An image of me, Thomas Meerpohl"/>
-	<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" class="link"/>
-	<div class="info">
-		<p>
-			I'm a freelance app developer by heart.
-		</p>
-		<p>
-			I do web apps, cross platform mobile apps and everything between and beyond.
-		</p>
-	</div>
+	<section>
+		<h1>
+			<p>Hi, I'm</p>
+			<Wroomer title="Thomas Meerpohl" class="wroomer"/>
+		</h1>
+		<img id="profile" src={Me.src} loading="eager" alt="An image of me, Thomas Meerpohl"/>
+		<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" class="link"/>
+	</section>
 </PageLayout>
 
 <style>
+	hr {
+		border: 0;
+		height: 1px;
+		background-color: var(--dark);
+		width: 50ch;
+	}
+
 	#profile {
 		width: 100%;
 		aspect-ratio: 2 / 1;
 		object-fit: cover;
 	}
 
-	.info {
+	section {
 		font-size: 1.5rem;
 		text-wrap: pretty;
-	}
-
-	p {
-		margin: 0;
-		font-size: 1.5rem;
+		display: grid;
+		gap: 1rem;
+		justify-items: start;
 	}
 
 	h1 p {
 		font-size: 2rem;
 		width: 100%;
 		line-height: 1.8;
+		color: var(--dark);
 	}
-
+	
 	.wroomer {
 		line-height: 0.9;
 		display: flex;

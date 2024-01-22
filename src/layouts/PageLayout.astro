@@ -66,7 +66,7 @@ import SocialNav from "../components/SocialNav.astro"
 		color: var(--pink);
 	}
 
-	h1 {
+	h1, h2 {
 		font-size: calc(1rem + 8cqi);
 		color: var(--dark);
 		font-weight: 800;
@@ -75,9 +75,30 @@ import SocialNav from "../components/SocialNav.astro"
 		text-wrap: balance;
 	}
 
+	p {
+		margin: 0;
+		font-size: 1.3rem;
+		color: #6d6d6d;
+	}
+
+	p > strong {
+		color: var(--dark);
+	}
+
+	h3 {
+		margin: 0;
+		font-size: 1.5rem;
+		color: var(--dark);
+	}
+
 	.snap {
 		scroll-snap-align: start;
 	} 
+
+    strong {
+        font-size: 1.5rem;
+		font-weight: 800;
+    }
 </style>
 
 <style>
@@ -115,6 +136,7 @@ import SocialNav from "../components/SocialNav.astro"
 		container-type: inline-size;
 	}
 
+
 	.page-nav {
 		grid-area: page-nav;
 	}
@@ -127,7 +149,7 @@ import SocialNav from "../components/SocialNav.astro"
 		grid-area: main;
 		padding: 1rem 0;
 		display: grid;
-		gap: calc(1rem + 1cqi);
+		gap: 3rem;
 		align-content: start;
 		justify-items: start;
 	}
@@ -140,7 +162,22 @@ import SocialNav from "../components/SocialNav.astro"
 		padding: 1rem 0;
 	}
 	
-	@container(max-width: 500px) {
+	@media (width <= 500px) {
+
+        body {
+			grid-template-columns: 1fr;
+			grid-template-rows: auto 1fr auto auto;
+			grid-template-areas: 
+				'page-nav'
+				'main'
+				'social-nav'
+				'footer';
+		}
+
+		.social-nav {
+			justify-self: center;
+		}
+
 		footer {
 			justify-self: center;
 		}

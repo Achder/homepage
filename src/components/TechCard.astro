@@ -1,0 +1,72 @@
+---
+
+type Props = {
+    title: string
+    text: string
+}
+
+const {title, text} = Astro.props
+---
+
+<div class="card">
+    <slot />
+    <h3>{title}</h3>
+    <p>{text}</p>
+</div>
+
+<style is:global>
+    .card > :where(img, svg) {
+        grid-area: img;
+        width: 4rem;
+        height: 4rem;
+        align-self: center;
+		transition: all 100ms ease-out;
+    }
+	
+	@container(width < 500px) {
+        .card > :where(img, svg) {
+            width: 5rem;
+            height: 5rem;
+        }
+	}
+
+    .card > :where(img, svg):hover {
+        color: var(--pink);
+    }
+</style>
+<style>
+    .card {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto 1fr;
+        grid-template-areas: 
+            'img title'
+            'img text'
+        ;
+        align-content: start;
+        align-items: start;
+        column-gap: 2rem;
+    }
+	
+	@container(width < 500px) {
+        .card {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto 1fr;
+            grid-template-areas: 
+                'img'
+                'title'
+                'text'
+            ;
+            justify-items: center;
+            gap: 1rem;
+        }
+	}
+
+    h3 {
+        grid-area: title;
+    }
+
+    p {
+        grid-area: text;
+    }
+</style>
