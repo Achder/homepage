@@ -15,16 +15,34 @@ import Envelope from "../components/icons/Envelope.astro"
 		<img id="profile" src={Me.src} loading="eager" alt="An image of me, Thomas Meerpohl"/>
 		<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" class="link"/>
 	</section>
+
+	<section class="about">
+		<h2>About me</h2>
+
+		<article>
+			<p>
+				I'm a fullstack developer from Dresden, Germany.
+			</p>
+			<p>
+				My focus is on building applications <a href="/what">using webtechologies</a>.
+			</p>
+			<p>
+				In my 8 years professional carreer I have worked in large international SCRUM teams as well as small and highly dynamic startup.
+			</p>
+			<p>
+				The products I helped develop are being used by thousands of users around the world.
+			</p>
+			<p>
+				If you need assistance with your next project feel free to <a href="mailto:thomas.meerpohl@gmail.com">contact me</a> and I will provide you with a detailed CV.
+			</p>
+		</article>
+	</section>
 </PageLayout>
 
-<style>
-	hr {
-		border: 0;
-		height: 1px;
-		background-color: var(--dark);
-		width: 50ch;
-	}
+<style is:global>
+</style>
 
+<style>
 	#profile {
 		width: 100%;
 		aspect-ratio: 2 / 1;
@@ -35,7 +53,7 @@ import Envelope from "../components/icons/Envelope.astro"
 		font-size: 1.5rem;
 		text-wrap: pretty;
 		display: grid;
-		gap: 1rem;
+		gap: 1.5rem;
 		justify-items: start;
 	}
 
@@ -62,6 +80,16 @@ import Envelope from "../components/icons/Envelope.astro"
 	@container(width < 500px) {
 		.wroomer {
 			font-size: calc(1rem + 15cqi);
+		}
+	}
+
+	.about p {
+		color: var(--dark);
+	}
+
+	@container(width >= 650px) {
+		.about {
+			margin-top: 3rem;
 		}
 	}
 </style>
