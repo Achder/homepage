@@ -1,0 +1,59 @@
+---
+type Props = {
+    id: string
+    name: string
+    min: number
+    max: number
+    value: number
+    step?: number
+}
+
+const { id, name, min, max, value, step = 1, ...rest } = Astro.props
+---
+
+<label class="text-lg grid gap-2" {...rest}>
+    {name}
+    <input
+        id={id}
+        class="h-4"
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        step={step}
+    />
+</label>
+
+<style>
+    input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+        background-color: transparent;
+    }
+
+    input[type='range']::-webkit-slider-runnable-track {
+        -webkit-appearance: none; /* Override default look */
+        background-color: black;
+        border-radius: 100vmax;
+        height: 1.5rem;
+    }
+
+    input[type='range']:hover::-webkit-slider-runnable-track {
+        background-color: #c026d3;
+    }
+
+    input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none; /* Override default look */
+        appearance: none;
+        background-color: white;
+        height: 1.5rem;
+        width: 1.5rem;
+        border-radius: 100vmax;
+        border: 4px solid black;
+    }
+
+    input[type='range']:hover::-webkit-slider-thumb {
+        border-color: #c026d3;
+    }
+</style>

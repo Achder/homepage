@@ -1,5 +1,6 @@
 import { Snake } from './snake'
 import type { Field, Direction, Position, Item } from './types'
+import colors from 'tailwindcss/colors'
 
 export class Game {
     numPlayers: number
@@ -194,9 +195,9 @@ export class Game {
         ctx.clearRect(0, 0, canvas?.width ?? 0, canvas?.height ?? 0)
 
         const docStyle = getComputedStyle(document.documentElement)
-        const dark = docStyle.getPropertyValue('--dark')
-        const light = docStyle.getPropertyValue('--light')
-        const pink = docStyle.getPropertyValue('--pink')
+        const dark = colors.black
+        const light = colors.white
+        const pink = colors.fuchsia[600]
 
         // draw grid
         ctx.beginPath()

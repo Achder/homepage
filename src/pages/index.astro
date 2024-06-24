@@ -1,95 +1,60 @@
 ---
 import Me from '../images/me.webp'
-import PageLayout from "../layouts/PageLayout.astro"
-import LinkButton from "../components/LinkButton.astro"
-import Wroomer from "../components/Wroomer.astro"
-import Envelope from "../components/icons/Envelope.astro"
+import MePig from '../images/pig.jpg'
+import PageLayout from '../layouts/PageLayout.astro'
+import LinkButton from '../components/LinkButton.astro'
+import Heading from '../components/Heading.astro'
 ---
 
 <PageLayout>
-	<section>
-		<h1>
-			<p>Hi, I'm</p>
-			<Wroomer title="Thomas Meerpohl" class="wroomer"/>
-		</h1>
-		<img id="profile" src={Me.src} loading="eager" alt="An image of me, Thomas Meerpohl"/>
-		<LinkButton href="mailto:thomas.meerpohl@gmail.com" label="Contact me" class="link"/>
-	</section>
+    <Heading type="h1">
+        <p class="text-4xl">Hi, I'm</p>
+        <p class="leading-none">Thomas Meerpohl</p>
+    </Heading>
 
-	<section class="about">
-		<h2>About me</h2>
+    <section class="w-full text-2xl text-pretty grid gap-4 justify-items-start">
+        <img
+            id="profile"
+            class="w-full aspect-square sm:aspect-[2/1] object-cover border-8 border-black shadow-2xl rounded-sm"
+            src={Me.src}
+            loading="eager"
+            alt="An image of me, Thomas Meerpohl"
+        />
 
-		<article>
-			<p>
-				I'm a fullstack developer from Dresden, Germany.
-			</p>
-			<p>
-				My focus is on building applications <a href="/what">using webtechologies</a>.
-			</p>
-			<p>
-				In my 8 years professional carreer I have worked in large international SCRUM teams as well as small and highly dynamic startup.
-			</p>
-			<p>
-				The products I helped develop are being used by thousands of users around the world.
-			</p>
-			<p>
-				If you need assistance with your next project feel free to <a href="mailto:thomas.meerpohl@gmail.com">contact me</a> and I will provide you with a detailed CV.
-			</p>
-		</article>
-	</section>
+        <LinkButton
+            href="mailto:thomas.meerpohl@gmail.com"
+            class="w-full sm:w-auto"
+        >
+            > Contact me
+        </LinkButton>
+    </section>
+
+    <section
+        class="w-full text-xl text-pretty grid gap-5 justify-items-start about px-8 py-12 bg-black rounded-sm text-white shadow-2xl"
+    >
+        <Heading type="h2">About me</Heading>
+
+        <article>
+            <p>I'm a fullstack developer from Dresden, Germany.</p>
+            <p>
+                My focus is on building applications <a href="/what"
+                    >using webtechologies</a
+                >.
+            </p>
+            <p>
+                In my 8 years professional carreer I have worked in large
+                international SCRUM teams as well as small and highly dynamic
+                startup.
+            </p>
+            <p>
+                The products I helped develop are being used by thousands of
+                users around the world.
+            </p>
+            <p>
+                If you need assistance with your next project feel free to <a
+                    href="mailto:thomas.meerpohl@gmail.com">contact me</a
+                > and I will provide you with a detailed CV.
+            </p>
+        </article>
+    </section>
 </PageLayout>
-
-<style is:global>
-</style>
-
-<style>
-	#profile {
-		width: 100%;
-		aspect-ratio: 2 / 1;
-		object-fit: cover;
-	}
-
-	section {
-		font-size: 1.5rem;
-		text-wrap: pretty;
-		display: grid;
-		gap: 1.5rem;
-		justify-items: start;
-	}
-
-	h1 p {
-		font-size: 2rem;
-		width: 100%;
-		line-height: 1.8;
-		color: var(--dark);
-	}
-	
-	.wroomer {
-		line-height: 0.9;
-		display: flex;
-		flex-wrap: wrap;
-		column-gap: 0.5ch;
-	}
-
-	@container(500px <= width < 650px) {
-		.wroomer {
-			font-size: calc(1rem + 13cqi);
-		}
-	}
-	
-	@container(width < 500px) {
-		.wroomer {
-			font-size: calc(1rem + 15cqi);
-		}
-	}
-
-	.about p {
-		color: var(--dark);
-	}
-
-	@container(width >= 650px) {
-		.about {
-			margin-top: 3rem;
-		}
-	}
-</style>

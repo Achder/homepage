@@ -1,43 +1,28 @@
 ---
-
 type Props = {
-	label: string
-	href: string
-  	class?: string
+    href: string
+    class?: string
 }
 
-const { label, href, class: className, ...rest } = Astro.props
-
+const { href, class: className, ...rest } = Astro.props
 ---
 
-<a href={href} class:list={[className]} {...rest}>
-	{label}
+<a
+    href={href}
+    class:list={[
+        className,
+        'bg-black rounded-sm text-white hover:bg-fuchsia-500 hover:text-white shadow-xl transition-all px-8 py-6 font-extrabold tracking-wider flex gap-4 whitespace-nowrap',
+    ]}
+    {...rest}
+>
+    <slot />
 </a>
 
 <style>
-	a {
-    	display: inline-block;
-		background-color: var(--dark);
-		padding: 1.4rem 4rem;
-		color: var(--light);
-		text-decoration: none;
-		font-size: 1.5rem;
-		font-weight: 800;
-		transition: all 100ms ease-in-out;
-    	letter-spacing: 1px;
-		border-radius: var(--border-radius);
-	}
-	
-	a:hover {
-		color: var(--light);
-		background-color: var(--pink);
-		box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-	}
-	
-	@container(max-width: 500px) {
-		a {
-			width: 100%;
-      		text-align: center;
-		}
-	}
+    @container (max-width: 500px) {
+        a {
+            width: 100%;
+            text-align: center;
+        }
+    }
 </style>

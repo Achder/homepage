@@ -1,34 +1,24 @@
 ---
-
-import Github from "../components/icons/Github.astro"
-import LinkedIn from "../components/icons/LinkedIn.astro"
-import Threads from "../components/icons/Threads.astro"
+import StyledLink from './StyledLink.astro'
+import Github from './icons/Github.astro'
+import LinkedIn from './icons/LinkedIn.astro'
+import Threads from './icons/Threads.astro'
 
 type Props = {
-  class?: string
+    class?: string
 }
 
 const { class: className, ...rest } = Astro.props
 ---
 
-<nav class:list={["social-nav", className]} {...rest}>
-  <a href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/" aria-label="LinkedIn">
-    <LinkedIn />
-  </a>
-  <a href="https://www.threads.net/@serranoschinken" aria-label="LinkedIn">
-    <Threads />
-  </a>
-  <a href="https://github.com/Achder" aria-label="LinkedIn">
-    <Github />
-  </a>
+<nav class:list={[className]} {...rest}>
+    <StyledLink href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/">
+        <LinkedIn />
+    </StyledLink>
+    <StyledLink href="https://www.threads.net/@serranoschinken">
+        <Threads />
+    </StyledLink>
+    <StyledLink href="https://github.com/Achder">
+        <Github />
+    </StyledLink>
 </nav>
-
-<style>
-	.social-nav {
-		display: flex;
-		justify-content: end;
-		gap: 2rem;
-    padding: 1rem 0;
-    background-color: var(--light);
-	}
-</style>

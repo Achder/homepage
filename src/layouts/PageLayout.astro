@@ -1,196 +1,72 @@
 ---
-import PageNav from "../components/PageNav.astro"
-import SocialNav from "../components/SocialNav.astro"
+import StyledLink from '../components/StyledLink.astro'
+import SocialNav from '../components/SocialNav.astro'
+import PageNav from '../components/PageNav.astro'
 ---
 
 <!doctype html>
-<html lang="en">
-	<head>
-    <title>Homepage Thomas Meerpohl</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta charset="utf-8">
-		<link rel="icon" href="/favicon.ico" sizes="any" />
-		<link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin=""/>
-		<link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin=""/>
-	</head>
+<html lang="en" class="snap-y snap-mandatory overflow-x-clip">
+    <head>
+        <title>Homepage Thomas Meerpohl</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charset="utf-8" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link
+            rel="preload"
+            href="/fonts/RethinkSans-Regular.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin=""
+        />
+        <link
+            rel="preload"
+            href="/fonts/RethinkSans-ExtraBold.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin=""
+        />
+    </head>
 
-	<body>
+    <body class="font-rethink font-normal bg-white text-black">
+        <div class="body-wrapper min-h-dvh max-w-4xl mx-auto px-4 py-1">
+            <div class="flex justify-between gap-4">
+                <PageNav class="flex justify-start gap-6 py-4" />
+                <SocialNav class="justify-end gap-8 py-4 hidden sm:flex" />
+            </div>
 
-		<PageNav class="page-nav" />
-		<SocialNav class="social-nav" />
+            <main class="py-4 grid content-start justify-items-start gap-12">
+                <slot />
+            </main>
 
-		<main>
-			<slot/>
-		</main>
+            <SocialNav class="flex justify-center gap-8 py-4 sm:hidden" />
 
-		<footer>
-			ⓒ Thomas Meerpohl 2023
-			<a href="/imprint">Imprint</a>
-		</footer>
-	</body>
+            <footer
+                class="flex gap-4 py-4 justify-center justify-self-end sm:justify-end"
+            >
+                ⓒ Thomas Meerpohl 2023
+                <StyledLink href="/imprint">Imprint</StyledLink>
+            </footer>
+        </div>
+    </body>
 </html>
 
 <style is:global>
-	@font-face {
-		font-family: "Rethink Sans";
-		font-style: normal;
-		font-weight: 400;
-		src: url("/fonts/RethinkSans-Regular.woff2") format("woff2");
-	}
-
-	@font-face {
-		font-family: "Rethink Sans";
-		font-style: normal;
-		font-weight: 800;
-		src: url("/fonts/RethinkSans-ExtraBold.woff2") format("woff2");
-	}
-
-	*, *::after, *::before {
-		box-sizing: border-box;
-	}
-
-	:root {
-		--dark: #2c2c2c;
-		--light: white;
-		--pink: #d900ff;
-		--shadow-color: rgba(0, 0, 0, 0.1);
-		--border-radius: 0px;
-	}
-
-	a {
-		color: var(--dark);
-		transition: all 100ms ease-out;
-	}
-
-	a:hover {
-		color: var(--pink);
-	}
-
-	h1, h2 {
-		font-size: calc(1rem + 8cqi);
-		color: var(--dark);
-		font-weight: 800;
-		margin: 0;
-		line-height: 1;
-		text-wrap: balance;
-	}
-
-	p {
-		margin: 0;
-		font-size: 1.3rem;
-		color: #6d6d6d;
-	}
-
-	p > strong {
-		color: var(--dark);
-	}
-
-	h3 {
-		margin: 0;
-		font-size: 1.5rem;
-		color: var(--dark);
-	}
-
-	.snap {
-		scroll-snap-align: start;
-	} 
-
-    strong {
-        font-size: 1.5rem;
-		font-weight: 800;
+    @font-face {
+        font-family: 'Rethink Sans';
+        font-style: normal;
+        font-weight: 400;
+        src: url('/fonts/RethinkSans-Regular.woff2') format('woff2');
     }
 
-	article {
-		display: grid;
-		gap: 1rem;
-	}
-</style>
-
-<style>
-	html, 
-	body {
-		margin: 0;
-		padding: 0;
-		font-family: 'Rethink Sans', 'Trebuchet MS', sans-serif;
-		font-weight: 400;
-		background-color: var(--light);
-	}
-
-	html {
-		scrollbar-gutter: stable;
-		scroll-snap-type: y mandatory;
-		overflow-x: clip;
-	}
-
-	body {
-		min-height: 100dvh;
-		max-width: 768px;
-		margin-inline: auto;
-		padding: 0 1rem;
-
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: auto 1fr auto;
-		grid-template-areas: 
-			'page-nav social-nav'
-			'main main'
-			'footer footer';
-		align-content: start;
-
-		container-name: body;
-		container-type: inline-size;
-	}
-
-
-	.page-nav {
-		grid-area: page-nav;
-	}
-
-	.social-nav {
-		grid-area: social-nav;
-	}
-
-	main {
-		grid-area: main;
-		padding: 1rem 0;
-		display: grid;
-		gap: 3rem;
-		align-content: start;
-		justify-items: start;
-	}
-
-	footer {
-		grid-area: footer;
-		justify-self: end;
-		display: flex;
-		gap: 1rem;
-		padding: 1rem 0;
-	}
-	
-	@media (width <= 500px) {
-
-        body {
-			grid-template-columns: 1fr;
-			grid-template-rows: auto 1fr auto auto;
-			grid-template-areas: 
-				'page-nav'
-				'main'
-				'social-nav'
-				'footer';
-		}
-
-		.social-nav {
-			justify-self: center;
-		}
-
-		footer {
-			justify-self: center;
-		}
-	}
+    @font-face {
+        font-family: 'Rethink Sans';
+        font-style: normal;
+        font-weight: 800;
+        src: url('/fonts/RethinkSans-ExtraBold.woff2') format('woff2');
+    }
 </style>
 
 <script>
-	import { polyfill } from "seamless-scroll-polyfill"
-
-	polyfill()
+    import { polyfill } from 'seamless-scroll-polyfill'
+    polyfill()
 </script>

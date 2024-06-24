@@ -1,0 +1,185 @@
+---
+import Slider from '../components/Slider.astro'
+import Button from '../components/Button.astro'
+import PageLayout from '../layouts/PageLayout.astro'
+import Heading from '../components/Heading.astro'
+---
+
+<PageLayout>
+    <Heading type="h1">Squaddle</Heading>
+
+    <div
+        class="grid justify-self-stretch gap-4 sm:grid-cols-2 sticky top-0 bg-white/85 z-10"
+    >
+        <Slider
+            id="stride"
+            min={0.1}
+            max={3}
+            value={2}
+            name="Stride"
+            step={0.01}
+        />
+        <Slider
+            id="amplitude"
+            min={-500}
+            max={500}
+            value={100}
+            name="Amplitude"
+        />
+        <Slider
+            id="amplitude-freq"
+            min={1}
+            max={10}
+            value={1}
+            step={0.1}
+            name="Amplitude Frequency"
+        />
+        <Slider
+            id="radius-base"
+            min={5}
+            max={300}
+            value={100}
+            name="Base Radius"
+        />
+        <Slider
+            id="radius-wobble"
+            min={-100}
+            max={100}
+            value={0}
+            name="Radius Wobble"
+        />
+        <Slider
+            id="radius-freq"
+            min={1}
+            max={10}
+            value={1}
+            step={0.1}
+            name="Radius Frequency"
+        />
+        <Button
+            id="save"
+            class="mt-4 sm:justify-self-end sm:col-start-2 sm:col-end-3"
+            >Save svg</Button
+        >
+    </div>
+    <div class="h-dvh justify-self-stretch relative py-4 box-border">
+        <section
+            id="container"
+            class="h-full w-full border-8 border-black shadow-2xl"
+        >
+            <svg id="svg" class="w-full" xmlns="http://www.w3.org/2000/svg"
+            ></svg>
+        </section>
+    </div>
+</PageLayout>
+
+<script>
+    import { clear } from '../svg/svg'
+    import { drawCircle } from '../svg/circle'
+
+    const saveBtn = document.getElementById('save')!
+    saveBtn.addEventListener('click', save)
+
+    const container = document.getElementById('container')!
+    const svg = document.getElementById('svg')!
+    const strideSlider = document.getElementById('stride')! as HTMLInputElement
+    const amplitudeSlider = document.getElementById(
+        'amplitude'
+    )! as HTMLInputElement
+    const amplitudeFreqSlider = document.getElementById(
+        'amplitude-freq'
+    )! as HTMLInputElement
+    const baseRadiusSlider = document.getElementById(
+        'radius-base'
+    )! as HTMLInputElement
+    const radiusWobbleSlider = document.getElementById(
+        'radius-wobble'
+    )! as HTMLInputElement
+    const radiusFreqSlider = document.getElementById(
+        'radius-freq'
+    )! as HTMLInputElement
+
+    strideSlider.addEventListener('input', render)
+    amplitudeSlider.addEventListener('input', render)
+    amplitudeFreqSlider.addEventListener('input', render)
+    baseRadiusSlider.addEventListener('input', render)
+    radiusWobbleSlider.addEventListener('input', render)
+    radiusFreqSlider.addEventListener('input', render)
+
+    let size = {
+        w: container.clientWidth,
+        h: container.clientHeight,
+    }
+
+    function render() {
+        clear(svg)
+
+        const baseRadius = baseRadiusSlider.valueAsNumber
+        const radiusWobble = radiusWobbleSlider.valueAsNumber
+        const radiusFreq = radiusFreqSlider.valueAsNumber
+        const stride = strideSlider.valueAsNumber
+        const amplitude = amplitudeSlider.valueAsNumber
+        const amplitudeFreq = amplitudeFreqSlider.valueAsNumber
+        const steps = (size.h + 2 * baseRadius) / stride
+
+        const center = { x: size.w / 2, y: -baseRadius }
+
+        for (let i = 0; i < steps; i++) {
+            const t = i / steps
+            const pi_t = t * Math.PI * 2
+
+            drawCircle(svg, {
+                x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,
+                y: center.y,
+                radius: baseRadius + Math.sin(pi_t * radiusFreq) * radiusWobble,
+            })
+
+            center.y += stride
+        }
+    }
+
+    function restart() {
+        size = {
+            w: container.clientWidth,
+            h: container.clientHeight,
+        }
+
+        svg.setAttribute('width', size.w.toString())
+        svg.setAttribute('height', size.h.toString())
+        svg.setAttribute(
+            'viewbox',
+            `0 0 ${size.h.toString()} ${size.h.toString()}`
+        )
+
+        render()
+    }
+
+    function save() {
+        const svgElement = document.getElementById('svg')!
+
+        // 1. Get SVG Content
+        const svgString = new XMLSerializer().serializeToString(svgElement)
+
+        // 2. Prepare Data
+        const svgData =
+            `<?xml version="1.0" standalone="no"?>\r\n` +
+            `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ` +
+            `"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\r\n` +
+            svgString
+
+        const blob = new Blob([svgData], { type: 'image/svg+xml' })
+        const url = URL.createObjectURL(blob)
+
+        // 3. Trigger Download
+        const downloadLink = document.createElement('a')
+        downloadLink.href = url
+        downloadLink.download = 'squaddle'
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        document.body.removeChild(downloadLink)
+    }
+
+    restart()
+
+    window.addEventListener('resize', restart)
+</script>

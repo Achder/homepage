@@ -1,0 +1,23 @@
+---
+type Props = {
+    id: string
+    rounded?: boolean
+    class?: string
+}
+
+const { id, rounded, class: className } = Astro.props
+---
+
+<button
+    id={id}
+    class:list={[
+        'px-8 py-3 font-bold text-md tracking-widest bg-black hover:bg-fuchsia-500 text-white transition-colors',
+        className,
+        {
+            'rounded-sm': !rounded,
+            'rounded-full': rounded,
+        },
+    ]}
+>
+    <slot />
+</button>

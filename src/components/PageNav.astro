@@ -1,23 +1,19 @@
 ---
+import StyledLink from './StyledLink.astro'
+import Github from './icons/Github.astro'
+import LinkedIn from './icons/LinkedIn.astro'
+import Threads from './icons/Threads.astro'
+
 type Props = {
-  class?: string
+    class?: string
 }
 
 const { class: className, ...rest } = Astro.props
 ---
 
-<nav class:list={["page-nav", className]} {...rest}>
-  <a href="/">Home</a>
-  <a href="/what">What I do</a>
-  <a href="/snake">Play Snake</a>
+<nav class:list={[className]}>
+    <StyledLink href="/">Home</StyledLink>
+    <StyledLink href="/what"> What I do</StyledLink>
+    <StyledLink href="/snake">Ssssnake</StyledLink>
+    <StyledLink href="/squaddle">Squaddle</StyledLink>
 </nav>
-
-<style>
-  .page-nav {
-    display: flex;
-    justify-content: start;
-    gap: 1.5rem;
-    padding: 1rem 0;
-    background-color: var(--light);
-  }
-</style>

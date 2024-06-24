@@ -1,72 +1,16 @@
 ---
-
 type Props = {
     title: string
     text: string
 }
 
-const {title, text} = Astro.props
+const { title, text } = Astro.props
 ---
 
-<div class="card">
+<div
+    class="grid grid-cols-[auto_1fr] grid-row-[auto_1fr] items-start content-start gap-x-8 [&>svg]:w-16 [&>svg]:h-16 [&>svg]:row-span-2 [&>svg]:self-center hover:text-fuchsia-500"
+>
     <slot />
-    <h3>{title}</h3>
-    <p>{text}</p>
+    <h3 class="text-2xl font-bold">{title}</h3>
+    <p class="text-xl">{text}</p>
 </div>
-
-<style is:global>
-    .card > :where(img, svg) {
-        grid-area: img;
-        width: 4rem;
-        height: 4rem;
-        align-self: center;
-		transition: all 100ms ease-out;
-    }
-	
-	@container(width < 500px) {
-        .card > :where(img, svg) {
-            width: 5rem;
-            height: 5rem;
-        }
-	}
-
-    .card > :where(img, svg):hover {
-        color: var(--pink);
-    }
-</style>
-<style>
-    .card {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        grid-template-rows: auto 1fr;
-        grid-template-areas: 
-            'img title'
-            'img text'
-        ;
-        align-content: start;
-        align-items: start;
-        column-gap: 2rem;
-    }
-	
-	@container(width < 500px) {
-        .card {
-            grid-template-columns: 1fr;
-            grid-template-rows: auto auto 1fr;
-            grid-template-areas: 
-                'img'
-                'title'
-                'text'
-            ;
-            justify-items: center;
-            gap: 1rem;
-        }
-	}
-
-    h3 {
-        grid-area: title;
-    }
-
-    p {
-        grid-area: text;
-    }
-</style>
