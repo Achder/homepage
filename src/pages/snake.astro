@@ -12,8 +12,8 @@ import Button from '../components/Button.astro'
         <Slider name="Speed" id="speed" min={0} max={500} value={400} />
 
         <div class="grid content-start gap-2">
-            <span class="col-span-2 text-lg">Players</span>
-            <div class="flex gap-4">
+            <span class="text-lg">Players</span>
+            <div class="grid gap-4 grid-cols-2 sm:flex">
                 <Button id="1-player">1 Player</Button>
                 <Button id="2-player">2 Player</Button>
             </div>
