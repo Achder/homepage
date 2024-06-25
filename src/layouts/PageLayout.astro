@@ -2,6 +2,12 @@
 import StyledLink from '../components/StyledLink.astro'
 import SocialNav from '../components/SocialNav.astro'
 import PageNav from '../components/PageNav.astro'
+
+type Props = {
+    description: string
+}
+
+const { description } = Astro.props
 ---
 
 <!doctype html>
@@ -12,12 +18,16 @@ import PageNav from '../components/PageNav.astro'
 >
     <head>
         <title>Homepage Thomas Meerpohl</title>
+
+        <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charset="utf-8" />
+
         <script
             defer
             src="https://analytics.meerpohl.dev/script.js"
             data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"></script>
+
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link
             rel="preload"

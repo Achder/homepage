@@ -4,17 +4,19 @@ import Heading from '../components/Heading.astro'
 import StyledLink from '../components/StyledLink.astro'
 ---
 
-<PageLayout>
+<PageLayout
+    description="thomas meerpohls imprint including address and contact info as well as links to social media and job platforms"
+>
     <Heading type="h1">Imprint</Heading>
 
-    <div class="grid gap-1 text-xl">
+    <div class="grid text-xl">
         <p class="text-2xl font-bold">Thomas Meerpohl</p>
         <p>Nieritz Straße 7</p>
         <p>01097 Dresden</p>
         <p>Germany</p>
     </div>
 
-    <div class="grid gap-1 text-xl">
+    <div class="grid text-xl">
         <StyledLink href="mailto:thomas.meerpohl@gmail.com">
             thomas.meerpohl@gmail.com
         </StyledLink>
