@@ -40,7 +40,7 @@ import Button from '../components/Button.astro'
         </div>
 
         <canvas
-            class="border-8 border-black w-full sm:h-[calc(100%-32px)] sm:w-auto mx-auto aspect-square shadow-2xl"
+            class="border-8 border-black w-[calc(min(100%,100dvh-64px))] mx-auto aspect-square shadow-2xl"
         ></canvas>
 
         <div
@@ -92,18 +92,12 @@ import Button from '../components/Button.astro'
 
 <script>
     import { Game } from '../snake/game'
-    import mobile from 'is-mobile'
-
-    const isMobile = mobile({
-        tablet: true,
-        featureDetect: true,
-    })
 
     let game: Game
 
     const field = {
-        width: isMobile ? 20 : 30,
-        height: isMobile ? 20 : 30,
+        width: 30,
+        height: 30,
     }
 
     // init speed
