@@ -12,24 +12,15 @@ const { class: className, ...rest } = Astro.props
 ---
 
 <nav class:list={[className]} {...rest}>
-    <StyledLink
-        href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/"
-        label="Thomas Meerpohls LinkedIn Account"
-    >
+    <StyledLink href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/">
         <span class="sr-only">LinkedIn</span>
         <LinkedIn />
     </StyledLink>
-    <StyledLink
-        href="https://www.threads.net/@serranoschinken"
-        label="Thomas Meerpohls Threads Account"
-    >
+    <StyledLink href="https://www.threads.net/@serranoschinken">
         <span class="sr-only">Threads</span>
         <Threads />
     </StyledLink>
-    <StyledLink
-        href="https://github.com/Achder"
-        label="Thomas Meerpohls Github Account"
-    >
+    <StyledLink href="https://github.com/Achder">
         <span class="sr-only">Github</span>
         <Github />
     </StyledLink>
