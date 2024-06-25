@@ -1,14 +1,16 @@
 ---
 type Props = {
     href: string
+    label: string
     class?: string
 }
 
-const { href, class: className, ...rest } = Astro.props
+const { href, label, class: className, ...rest } = Astro.props
 ---
 
 <a
     href={href}
+    aria-label={label}
     class:list={[
         className,
         'transition-all hover:text-fuchsia-500 underline underline-offset-2 whitespace-nowrap',
