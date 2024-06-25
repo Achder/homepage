@@ -28,7 +28,6 @@ const { description } = Astro.props
             src="https://analytics.meerpohl.dev/script.js"
             data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"></script>
 
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link
             rel="preload"
             href="/fonts/RethinkSans-Regular.woff2"
@@ -46,6 +45,7 @@ const { description } = Astro.props
     </head>
 
     <body class="font-rethink font-normal bg-white text-black">
+        <div class="bg-black"></div>
         <div class="body-wrapper min-h-dvh max-w-4xl mx-auto px-4 py-1">
             <div class="flex justify-between gap-4">
                 <PageNav class="flex justify-start gap-6 py-4" />
