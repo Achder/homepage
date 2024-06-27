@@ -8,7 +8,7 @@ const { title, text } = Astro.props
 ---
 
 <div
-    class="grid grid-cols-[auto_1fr] grid-row-[auto_1fr] items-start content-start gap-x-8 [&>svg]:w-16 [&>svg]:h-16 [&>svg]:row-span-2 [&>svg]:self-center hover:text-fuchsia-500"
+    class="grid sm:grid-cols-[auto_1fr] sm:grid-row-[auto_1fr] items-start justify-items-center sm:justify-items-start gap-x-8 gap-y-2 [&>svg]:w-16 [&>svg]:h-16 sm:[&>svg]:row-span-2 [&>svg]:self-center hover:text-fuchsia-500"
 >
     <slot />
     <h3 class="text-2xl font-bold">{title}</h3>

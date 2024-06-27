@@ -1,0 +1,12 @@
+---
+type Props = {
+    class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+<section class:list={['relative px-6 sm:pl-12', className]}>
+    <div class="bg-black w-6 rounded-full absolute top-0 bottom-0"></div>
+    <slot />
+</section>
