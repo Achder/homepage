@@ -4,6 +4,7 @@ import MePig from '../images/pig.jpg'
 import PageLayout from '../layouts/PageLayout.astro'
 import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
+import StyledLink from '../components/StyledLink.astro'
 ---
 
 <PageLayout
@@ -39,9 +40,9 @@ import Heading from '../components/Heading.astro'
         <article>
             <p>I'm a full-stack developer from Dresden, Germany.</p>
             <p>
-                My focus is on building applications <a href="/what"
-                    >using web technologies</a
-                >.
+                My focus is on building applications <StyledLink href="/what"
+                    >using web technologies</StyledLink
+                >
             </p>
             <p>
                 In my 8 years professional career, I have worked in large
@@ -53,9 +54,10 @@ import Heading from '../components/Heading.astro'
                 users around the world.
             </p>
             <p>
-                If you need assistance with your next project, feel free to <a
-                    href="mailto:thomas.meerpohl@gmail.com">contact me</a
-                > and I will provide you with a detailed CV.
+                If you need assistance with your next project, feel free to <StyledLink
+                    href="mailto:thomas.meerpohl@gmail.com"
+                    >contact me</StyledLink
+                >and I will provide you with a detailed CV.
             </p>
         </article>
     </section>
