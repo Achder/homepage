@@ -1,6 +1,7 @@
 ---
 import Slider from '../components/Slider.astro'
 import Button from '../components/Button.astro'
+import Input from '../components/Input.astro'
 import PageLayout from '../layouts/PageLayout.astro'
 import Heading from '../components/Heading.astro'
 ---
@@ -17,7 +18,7 @@ import Heading from '../components/Heading.astro'
             id="stride"
             min={0.1}
             max={3}
-            value={2}
+            value={3}
             name="Stride"
             step={0.01}
         />
@@ -25,14 +26,14 @@ import Heading from '../components/Heading.astro'
             id="amplitude"
             min={-500}
             max={500}
-            value={100}
+            value={250}
             name="Amplitude"
         />
         <Slider
             id="amplitude-freq"
             min={1}
             max={10}
-            value={1}
+            value={2}
             step={0.1}
             name="Amplitude Frequency"
         />
@@ -40,7 +41,7 @@ import Heading from '../components/Heading.astro'
             id="radius-base"
             min={5}
             max={300}
-            value={100}
+            value={220}
             name="Base Radius"
         />
         <Slider
@@ -58,9 +59,45 @@ import Heading from '../components/Heading.astro'
             step={0.1}
             name="Radius Frequency"
         />
+
+        <Slider
+            id="stroke-width"
+            min={0}
+            max={10}
+            step={0.1}
+            value={1}
+            name="Stroke width"
+        />
+        <div class="grid grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3">
+            <Input
+                type="color"
+                id="fill-start"
+                label="Fill start"
+                value="#6366f1"
+            />
+            <Input
+                type="color"
+                id="fill-end"
+                label="Fill end"
+                value="#ef4444"
+            />
+            <Input
+                type="color"
+                id="stroke-start"
+                label="Stroke start"
+                value="#000000"
+            />
+            <Input
+                type="color"
+                id="stroke-end"
+                label="Stroke end"
+                value="#ffffff"
+            />
+        </div>
+
         <Button
             id="save"
-            class="mt-4 sm:justify-self-end sm:col-start-2 sm:col-end-3"
+            class="mt-4 sm:justify-self-end sm:col-start-1 sm:col-end-3"
             >Save svg</Button
         >
     </div>
@@ -79,6 +116,7 @@ import Heading from '../components/Heading.astro'
 <script>
     import { clear } from '../svg/svg'
     import { drawCircle } from '../svg/circle'
+    import lerp from '@sunify/lerp-color'
 
     const saveBtn = document.getElementById('save')!
     saveBtn.addEventListener('click', save)
@@ -101,6 +139,21 @@ import Heading from '../components/Heading.astro'
     const radiusFreqSlider = document.getElementById(
         'radius-freq'
     )! as HTMLInputElement
+    const fillStartInput = document.getElementById(
+        'fill-start'
+    )! as HTMLInputElement
+    const fillEndInput = document.getElementById(
+        'fill-end'
+    )! as HTMLInputElement
+    const strokeWidthInput = document.getElementById(
+        'stroke-width'
+    )! as HTMLInputElement
+    const strokeStartInput = document.getElementById(
+        'stroke-start'
+    )! as HTMLInputElement
+    const strokeEndInput = document.getElementById(
+        'stroke-end'
+    )! as HTMLInputElement
 
     strideSlider.addEventListener('input', render)
     amplitudeSlider.addEventListener('input', render)
@@ -108,6 +161,11 @@ import Heading from '../components/Heading.astro'
     baseRadiusSlider.addEventListener('input', render)
     radiusWobbleSlider.addEventListener('input', render)
     radiusFreqSlider.addEventListener('input', render)
+    fillStartInput.addEventListener('input', render)
+    fillEndInput.addEventListener('input', render)
+    strokeWidthInput.addEventListener('input', render)
+    strokeStartInput.addEventListener('input', render)
+    strokeEndInput.addEventListener('input', render)
 
     let size = {
         w: container.clientWidth,
@@ -123,6 +181,11 @@ import Heading from '../components/Heading.astro'
         const stride = strideSlider.valueAsNumber
         const amplitude = amplitudeSlider.valueAsNumber
         const amplitudeFreq = amplitudeFreqSlider.valueAsNumber
+        const fillStart = fillStartInput.value
+        const fillEnd = fillEndInput.value
+        const strokeWidth = strokeWidthInput.valueAsNumber
+        const strokeStart = strokeStartInput.value
+        const strokeEnd = strokeEndInput.value
         const steps = (size.h + 2 * baseRadius) / stride
 
         const center = { x: size.w / 2, y: -baseRadius }
@@ -130,11 +193,16 @@ import Heading from '../components/Heading.astro'
         for (let i = 0; i < steps; i++) {
             const t = i / steps
             const pi_t = t * Math.PI * 2
+            const fill = lerp(fillStart, fillEnd, t)
+            const stroke = lerp(strokeStart, strokeEnd, t)
 
             drawCircle(svg, {
                 x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,
                 y: center.y,
                 radius: baseRadius + Math.sin(pi_t * radiusFreq) * radiusWobble,
+                fill: fill ?? '',
+                stroke: stroke ?? '',
+                strokeWidth: strokeWidth,
             })
 
             center.y += stride

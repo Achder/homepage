@@ -1,0 +1,15 @@
+---
+type Props = {
+    label: string
+} & astroHTML.JSX.InputHTMLAttributes
+
+const { class: className, label, ...rest } = Astro.props
+---
+
+<label class:list={['text-lg grid gap-1', className]}>
+    {label}
+    <input
+        {...rest}
+        class="font-bold text-md border-black text-white transition-colors w-full h-10 border-4 rounded-sm appearance-none"
+    />
+</label>

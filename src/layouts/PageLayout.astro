@@ -94,6 +94,24 @@ const { description } = Astro.props
         font-weight: 800;
         src: url('/fonts/RethinkSans-ExtraBold.woff2') format('woff2');
     }
+
+    ::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+
+    ::-webkit-color-swatch {
+        border: 0;
+        border-radius: 0;
+    }
+
+    ::-moz-color-swatch,
+    ::-moz-focus-inner {
+        border: 0;
+    }
+
+    ::-moz-focus-inner {
+        padding: 0;
+    }
 </style>
 
 <script>

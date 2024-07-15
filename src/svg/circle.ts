@@ -4,10 +4,13 @@ type CircleParams = {
     x: number
     y: number
     radius: number
+    fill: string
+    stroke: string
+    strokeWidth: number
 }
 
 export function drawCircle(svg: HTMLElement, params: CircleParams) {
-    const { x, y, radius } = params
+    const { x, y, radius, fill, stroke, strokeWidth } = params
 
     const circle = document.createElementNS(ns, 'circle')
 
@@ -15,9 +18,9 @@ export function drawCircle(svg: HTMLElement, params: CircleParams) {
     circle.setAttribute('cy', y.toString())
     circle.setAttribute('r', radius.toString())
 
-    circle.setAttribute('fill', 'none')
-    circle.setAttribute('stroke', '#00000055')
-    circle.setAttribute('stroke-width', '1')
+    circle.setAttribute('fill', fill)
+    circle.setAttribute('stroke', stroke)
+    circle.setAttribute('stroke-width', `${strokeWidth}`)
 
     svg.append(circle)
 }
