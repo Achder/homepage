@@ -11,9 +11,7 @@ import Heading from '../components/Heading.astro'
 >
     <Heading type="h1">Squaddle</Heading>
 
-    <div
-        class="grid justify-self-stretch content-start gap-4 sm:grid-cols-2 lg:grid-cols-4"
-    >
+    <div class="grid justify-self-stretch content-start gap-4 sm:grid-cols-2">
         <Slider
             id="stride"
             min={0.1}
@@ -67,7 +65,7 @@ import Heading from '../components/Heading.astro'
             name="Stroke Width"
         />
         <div
-            class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 lg:col-end-5"
+            class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3"
         >
             <Input
                 type="color"
@@ -97,7 +95,7 @@ import Heading from '../components/Heading.astro'
 
         <Button
             id="save"
-            class="mt-4 sm:justify-self-end sm:col-start-1 sm:col-end-3 lg:col-end-5"
+            class="mt-4 sm:justify-self-end sm:col-start-1 sm:col-end-3"
             >Save svg</Button
         >
     </div>
