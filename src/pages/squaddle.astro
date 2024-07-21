@@ -1,17 +1,14 @@
 ---
 import Slider from '../components/Slider.astro'
-import Button from '../components/Button.astro'
 import Input from '../components/Input.astro'
-import PageLayout from '../layouts/PageLayout.astro'
-import Heading from '../components/Heading.astro'
+import SvgPlayground from '../layouts/SvgPlayground.astro'
 ---
 
-<PageLayout
-    description="SVG sketching tool for generating downloadable abstract SVG forms"
+<SvgPlayground
+    pageDescription="SVG sketching tool for generating downloadable abstract SVG forms"
+    heading="Squaddle"
 >
-    <Heading type="h1">Squaddle</Heading>
-
-    <div class="grid justify-self-stretch content-start gap-4 sm:grid-cols-2">
+    <Fragment slot="controls">
         <Slider
             id="stride"
             min={0.1}
@@ -64,8 +61,9 @@ import Heading from '../components/Heading.astro'
             value={1}
             name="Stroke Width"
         />
+
         <div
-            class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3"
+            class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1"
         >
             <Input
                 type="color"
@@ -92,151 +90,81 @@ import Heading from '../components/Heading.astro'
                 value="#ffffff"
             />
         </div>
-
-        <Button
-            id="save"
-            class="mt-4 sm:justify-self-end sm:col-start-1 sm:col-end-3"
-            >Save svg</Button
-        >
-    </div>
-
-    <div class="h-dvh justify-self-stretch relative py-4 box-border">
-        <section
-            id="container"
-            class="h-full w-full border-8 border-black shadow-2xl"
-        >
-            <svg id="svg" class="w-full" xmlns="http://www.w3.org/2000/svg"
-            ></svg>
-        </section>
-    </div>
-</PageLayout>
+    </Fragment>
+</SvgPlayground>
 
 <script>
-    import { clear } from '../svg/svg'
+    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
     import lerp from '@sunify/lerp-color'
     import { drawEllipse } from '../svg/ellipse'
+    import { connect as connectControl, get } from '../utils/controls'
 
-    const saveBtn = document.getElementById('save')!
-    saveBtn.addEventListener('click', save)
-
-    const get = <T,>(id: string) => {
-        const element = document.getElementById(id)! as HTMLInputElement
-        if (!isNaN(element.valueAsNumber)) {
-            return element.valueAsNumber as T
-        }
-        return element.value as T
-    }
-
-    const connect = (id: string) => {
-        const element = document.getElementById(id)! as HTMLInputElement
-        element.addEventListener('input', render)
-    }
-
-    const container = document.getElementById('container')!
-    const svg = document.getElementById('svg')!
-
-    connect('stride')
-    connect('amplitude')
-    connect('amplitude-freq')
-    connect('radius-x')
-    connect('radius-y')
-    connect('radius-wobble')
-    connect('radius-freq')
-    connect('fill-start')
-    connect('fill-end')
-    connect('stroke-start')
-    connect('stroke-end')
-    connect('stroke-width')
-    connect('rotation')
-
-    let size = {
-        w: container.clientWidth,
-        h: container.clientHeight,
-    }
-
-    function render() {
-        clear(svg)
-
-        const radiusX = get<number>('radius-x')
-        const radiusY = get<number>('radius-y')
-        const rotation = get<number>('rotation')
-        const radiusWobble = get<number>('radius-wobble')
-        const radiusFreq = get<number>('radius-freq')
-        const stride = get<number>('stride')
-        const amplitude = get<number>('amplitude')
-        const amplitudeFreq = get<number>('amplitude-freq')
-        const fillStart = get<string>('fill-start')
-        const fillEnd = get<string>('fill-end')
-        const strokeWidth = get<number>('stroke-width')
-        const strokeStart = get<string>('stroke-start')
-        const strokeEnd = get<string>('stroke-end')
-
-        const steps = (size.h + 2 * radiusY) / stride
-        const center = { x: size.w / 2, y: -radiusY }
-
-        for (let i = 0; i < steps; i++) {
-            const t = i / steps
-            const pi_t = t * Math.PI * 2
-            const fill = lerp(fillStart, fillEnd, t)
-            const stroke = lerp(strokeStart, strokeEnd, t)
-
-            drawEllipse(svg, {
-                x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,
-                y: center.y,
-                radiusX: radiusX + Math.sin(pi_t * radiusFreq) * radiusWobble,
-                radiusY: radiusY + Math.sin(pi_t * radiusFreq) * radiusWobble,
-                fill: fill ?? '',
-                stroke: stroke ?? '',
-                strokeWidth: strokeWidth,
-                rotation: (t - 0.5) * rotation,
-            })
-
-            center.y += stride
-        }
-    }
-
-    function restart() {
-        size = {
-            w: container.clientWidth,
-            h: container.clientHeight,
+    const init = (svg: HTMLElement, size: Size) => {
+        const connect = (id: string) => {
+            connectControl(id, () => render())
         }
 
-        svg.setAttribute('width', size.w.toString())
-        svg.setAttribute('height', size.h.toString())
-        svg.setAttribute(
-            'viewbox',
-            `0 0 ${size.h.toString()} ${size.h.toString()}`
-        )
+        connect('stride')
+        connect('amplitude')
+        connect('amplitude-freq')
+        connect('radius-x')
+        connect('radius-y')
+        connect('radius-wobble')
+        connect('radius-freq')
+        connect('fill-start')
+        connect('fill-end')
+        connect('stroke-start')
+        connect('stroke-end')
+        connect('stroke-width')
+        connect('rotation')
+
+        const render = () => {
+            clear(svg)
+
+            const radiusX = get<number>('radius-x')
+            const radiusY = get<number>('radius-y')
+            const rotation = get<number>('rotation')
+            const radiusWobble = get<number>('radius-wobble')
+            const radiusFreq = get<number>('radius-freq')
+            const stride = get<number>('stride')
+            const amplitude = get<number>('amplitude')
+            const amplitudeFreq = get<number>('amplitude-freq')
+            const fillStart = get<string>('fill-start')
+            const fillEnd = get<string>('fill-end')
+            const strokeWidth = get<number>('stroke-width')
+            const strokeStart = get<string>('stroke-start')
+            const strokeEnd = get<string>('stroke-end')
+
+            const steps = (size.h + 2 * radiusY) / stride
+            const center = { x: size.w / 2, y: -radiusY }
+
+            for (let i = 0; i < steps; i++) {
+                const t = i / steps
+                const pi_t = t * Math.PI * 2
+                const fill = lerp(fillStart, fillEnd, t)
+                const stroke = lerp(strokeStart, strokeEnd, t)
+
+                drawEllipse(svg, {
+                    x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,
+                    y: center.y,
+                    radiusX:
+                        radiusX + Math.sin(pi_t * radiusFreq) * radiusWobble,
+                    radiusY:
+                        radiusY + Math.sin(pi_t * radiusFreq) * radiusWobble,
+                    fill: fill ?? '',
+                    stroke: stroke ?? '',
+                    strokeWidth: strokeWidth,
+                    rotation: (t - 0.5) * rotation,
+                })
+
+                center.y += stride
+            }
+        }
 
         render()
     }
 
-    function save() {
-        const svgElement = document.getElementById('svg')!
-
-        // 1. Get SVG Content
-        const svgString = new XMLSerializer().serializeToString(svgElement)
-
-        // 2. Prepare Data
-        const svgData =
-            `<?xml version="1.0" standalone="no"?>\r\n` +
-            `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ` +
-            `"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\r\n` +
-            svgString
-
-        const blob = new Blob([svgData], { type: 'image/svg+xml' })
-        const url = URL.createObjectURL(blob)
-
-        // 3. Trigger Download
-        const downloadLink = document.createElement('a')
-        downloadLink.href = url
-        downloadLink.download = 'squaddle'
-        document.body.appendChild(downloadLink)
-        downloadLink.click()
-        document.body.removeChild(downloadLink)
-    }
-
-    restart()
-
-    window.addEventListener('resize', restart)
+    initInteractiveSvg({
+        init,
+    })
 </script>
