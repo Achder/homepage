@@ -13,7 +13,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             id="stride"
             min={0.1}
             max={6}
-            value={6}
+            value={3.75}
             name="Stride"
             step={0.01}
         />
@@ -69,26 +69,39 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
                 type="color"
                 id="fill-start"
                 label="Fill Start"
-                value="#6366f1"
+                value="#2bff00"
             />
             <Input
                 type="color"
                 id="fill-end"
                 label="Fill end"
-                value="#ef4444"
+                value="#ff0000"
             />
             <Input
                 type="color"
                 id="stroke-start"
                 label="Stroke Start"
-                value="#000000"
+                value="#00ff91"
             />
             <Input
                 type="color"
                 id="stroke-end"
                 label="Stroke End"
-                value="#ffffff"
+                value="#ffae00"
             />
+        </div>
+
+        <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
+        <div
+            class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1"
+        >
+            <Input
+                type="color"
+                id="bg-start"
+                label="Bg Start"
+                value="#00ff40"
+            />
+            <Input type="color" id="bg-end" label="Bg End" value="#00ffbf" />
         </div>
     </Fragment>
 </SvgPlayground>
@@ -98,6 +111,8 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
     import lerp from '@sunify/lerp-color'
     import { drawEllipse } from '../svg/ellipse'
     import { connect as connectControl, get } from '../utils/controls'
+    import { drawRect } from '../svg/rect'
+    import { createGradient } from '../svg/gradient'
 
     const init = (svg: HTMLElement, size: Size) => {
         const connect = (id: string) => {
@@ -116,6 +131,9 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
         connect('stroke-start')
         connect('stroke-end')
         connect('stroke-width')
+        connect('bg-angle')
+        connect('bg-start')
+        connect('bg-end')
         connect('rotation')
 
         const render = () => {
@@ -134,9 +152,27 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             const strokeWidth = get<number>('stroke-width')
             const strokeStart = get<string>('stroke-start')
             const strokeEnd = get<string>('stroke-end')
+            const bgAngle = get<number>('bg-angle')
+            const bgStart = get<string>('bg-start')
+            const bgEnd = get<string>('bg-end')
 
             const steps = (size.h + 2 * radiusY) / stride
             const center = { x: size.w / 2, y: -radiusY }
+
+            createGradient(svg, {
+                id: 'bg-gradient',
+                start: bgStart,
+                end: bgEnd,
+                angle: bgAngle,
+            })
+
+            drawRect(svg, {
+                x: 0,
+                y: 0,
+                width: size.w,
+                height: size.h,
+                fill: 'url(#bg-gradient)',
+            })
 
             for (let i = 0; i < steps; i++) {
                 const t = i / steps
