@@ -21,20 +21,14 @@ const { pageDescription, heading } = Astro.props
             class="grid content-start gap-4 origin-top-left rounded-sm sm:grid-cols-2 md:grid-cols-1 md:absolute md:top-2 md:left-2 md:scale-[0.6] z-10 md:w-[35ch] md:p-4 md:bg-white/50 transition-all"
         >
             <slot name="controls" />
-            <Button
-                id="save"
-                class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
+            <Button id="save" class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
                 >Save svg</Button
             >
         </div>
 
         <div class="h-dvh relative box-border">
-            <section
-                id="container"
-                class="h-full w-full border-8 border-black shadow-2xl"
-            >
-                <svg id="svg" class="w-full" xmlns="http://www.w3.org/2000/svg"
-                ></svg>
+            <section id="container" class="h-full w-full border-8 border-black shadow-2xl relative overflow-clip">
+                <svg id="svg" class="w-full" xmlns="http://www.w3.org/2000/svg"></svg>
             </section>
         </div>
     </div>

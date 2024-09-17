@@ -11,11 +11,7 @@ const { description } = Astro.props
 ---
 
 <!doctype html>
-<html
-    lang="en"
-    class="snap-y snap-mandatory overflow-x-clip"
-    style={{ scrollbarGutter: 'stable' }}
->
+<html lang="en" class="snap-y snap-mandatory overflow-x-clip" style={{ scrollbarGutter: 'stable' }}>
     <head>
         <title>Homepage Thomas Meerpohl</title>
 
@@ -26,10 +22,7 @@ const { description } = Astro.props
         <meta property="og:title" content="Freelancer Thomas Meerpohl" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://meerpohl.dev" />
-        <meta
-            property="og:image"
-            content="https://meerpohl.dev/opengraph.png"
-        />
+        <meta property="og:image" content="https://meerpohl.dev/opengraph.png" />
         <meta
             property="og:description"
             content="I'm a Dresden based JS fullstack freelancer. I built cross-platform apps, web services and desktop applications."
@@ -40,20 +33,8 @@ const { description } = Astro.props
             src="https://analytics.meerpohl.dev/script.js"
             data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"></script>
 
-        <link
-            rel="preload"
-            href="/fonts/RethinkSans-Regular.woff2"
-            as="font"
-            type="font/woff2"
-            crossorigin=""
-        />
-        <link
-            rel="preload"
-            href="/fonts/RethinkSans-ExtraBold.woff2"
-            as="font"
-            type="font/woff2"
-            crossorigin=""
-        />
+        <link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin="" />
+        <link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="" />
     </head>
 
     <body class="font-rethink font-normal bg-white text-black">
@@ -70,9 +51,7 @@ const { description } = Astro.props
 
             <SocialNav class="flex justify-center gap-8 py-4 sm:hidden" />
 
-            <footer
-                class="flex gap-4 py-4 justify-center justify-self-end sm:justify-end"
-            >
+            <footer class="flex gap-4 py-4 justify-center justify-self-end sm:justify-end">
                 ⓒ Thomas Meerpohl 2023
                 <StyledLink href="/imprint">Imprint</StyledLink>
             </footer>
@@ -113,8 +92,3 @@ const { description } = Astro.props
         padding: 0;
     }
 </style>
-
-<script>
-    import { polyfill } from 'seamless-scroll-polyfill'
-    polyfill()
-</script>

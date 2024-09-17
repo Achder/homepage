@@ -1,10 +1,231 @@
 ---
 import SvgPlayground from '../layouts/SvgPlayground.astro'
+import Button from '../components/Button.astro'
 ---
 
-<SvgPlayground
-    pageDescription="SVG sketching tool for generating downloadable abstract SVG forms"
-    heading="Squaddle"
->
-    <Fragment slot="controls"> </Fragment>
+<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Squaddle">
+    <Fragment slot="controls">
+        <div class="grid grid-cols-2 gap-2">
+            <Button id="zoom-out">Zoom Out</Button>
+            <Button id="zoom-in">Zoom In</Button>
+        </div>
+    </Fragment>
 </SvgPlayground>
+
+<script>
+    import { drawCircle } from '../svg/circle'
+    import { drawPath, type Point } from '../svg/path'
+    import { clear, initInteractiveSvg, type Size } from '../svg/svg'
+    import { connectClick, shiftLeft } from '../utils/controls'
+
+    function add(a: Point, b: Point): Point {
+        return {
+            x: a.x + b.x,
+            y: a.y + b.y,
+        }
+    }
+
+    function resize(p: Point, length: number): Point {
+        return {
+            x: p.x * length,
+            y: p.y * length,
+        }
+    }
+
+    function generatePoints(radius: number, numPoints: number, offset: Point) {
+        const points: Point[] = []
+        const angleStep = (Math.PI * 2) / numPoints
+        const arcLength = angleStep * radius
+
+        for (let idx = 0; idx < numPoints; idx++) {
+            const angle = angleStep * idx
+
+            const point: Point = {
+                x: radius * Math.cos(angle) + offset.x,
+                y: radius * Math.sin(angle) + offset.y,
+            }
+
+            const tangent: Point = {
+                x: -Math.sin(angle),
+                y: Math.cos(angle),
+            }
+
+            const tangentBack = resize(tangent, -arcLength / 3)
+            const tangentFront = resize(tangent, arcLength / 3)
+            const cpBack = add(point, tangentBack)
+            const cpFront = add(point, tangentFront)
+
+            points.push(cpBack)
+            points.push(point)
+            points.push(cpFront)
+        }
+
+        return shiftLeft(points)
+    }
+
+    function pathLerp(pointsA: Point[], pointsB: Point[], t: number) {
+        if (pointsA.length !== pointsB.length) {
+            throw new Error("Path sizes don't match. Can't lerp.")
+        }
+
+        return pointsA.map((a, idx) => {
+            const b = pointsB[idx]
+            return {
+                x: a.x + (b.x - a.x) * t,
+                y: a.y + (b.y - a.y) * t,
+            }
+        })
+    }
+
+    function addControlPoints(points: Point[], classId: string) {
+        for (const point of points) {
+            const cp = document.createElement('div')
+            cp.classList.add(
+                classId,
+                'rounded-full',
+                'bg-black',
+                'h-4',
+                'w-4',
+                'absolute',
+                'translate-x-[-50%]',
+                'translate-y-[-50%]'
+            )
+            cp.style.left = `${point.x}px`
+            cp.style.top = `${point.y}px`
+
+            cp.addEventListener('mousedown', (e) => {
+                let offsetX = e.clientX - cp.offsetLeft
+                let offsetY = e.clientY - cp.offsetTop
+
+                function handleMouseMove(e: MouseEvent) {
+                    let newLeft = e.clientX - offsetX
+                    let newTop = e.clientY - offsetY
+
+                    cp.style.left = newLeft + 'px'
+                    cp.style.top = newTop + 'px'
+                }
+
+                function handleMouseUp() {
+                    document.removeEventListener('mousemove', handleMouseMove)
+                    document.removeEventListener('mouseup', handleMouseUp)
+                }
+
+                document.addEventListener('mousemove', handleMouseMove)
+                document.addEventListener('mouseup', handleMouseUp)
+            })
+
+            container?.append(cp)
+        }
+    }
+
+    function getPoints(classId: string): Point[] {
+        const controlPoints = [...document.querySelectorAll<HTMLElement>(`.${classId}`)]
+        return controlPoints.map((cp) => {
+            return {
+                x: cp.offsetLeft,
+                y: cp.offsetTop,
+            }
+        })
+    }
+
+    function scale(parentSize: Size, factor: number) {
+        const center: Point = {
+            x: parentSize.w / 2,
+            y: parentSize.h / 2,
+        }
+
+        const controlPoints = [...document.querySelectorAll<HTMLElement>(`.pointA, .pointB`)]
+        for (const point of controlPoints) {
+            point.style.left = `${center.x + (point.offsetLeft - center.x) * factor}px`
+            point.style.top = `${center.y + (point.offsetTop - center.y) * factor}px`
+        }
+    }
+
+    function onMove(callback: () => void) {
+        const observer = new MutationObserver(() => {
+            callback()
+        })
+
+        const cpA = document.querySelectorAll<HTMLElement>('.pointA')
+        const cpB = document.querySelectorAll<HTMLElement>('.pointB')
+        for (const cp of [...cpA, ...cpB]) {
+            observer.observe(cp, {
+                attributes: true,
+                attributeFilter: ['style'],
+            })
+        }
+    }
+
+    const container = document.getElementById('container')!
+
+    const init = (svg: HTMLElement, size: Size) => {
+        const drawPoints = false
+        const lerps = 100
+
+        addControlPoints(
+            generatePoints(100, 8, {
+                x: size.w / 2,
+                y: size.h * 0.25,
+            }),
+            'pointA'
+        )
+
+        addControlPoints(
+            generatePoints(200, 8, {
+                x: size.w / 2,
+                y: size.h * 0.75,
+            }),
+            'pointB'
+        )
+
+        connectClick('zoom-in', () => scale(size, 1.1))
+        connectClick('zoom-out', () => scale(size, 0.9))
+
+        const render = () => {
+            clear(svg)
+
+            const cpA = getPoints('pointA')
+            const cpB = getPoints('pointB')
+
+            for (let idx = 0; idx < lerps; idx++) {
+                drawPath(svg, {
+                    points: pathLerp(cpA, cpB, idx / lerps),
+                    closed: true,
+                    interpolation: 'bezier',
+                    stroke: '#555',
+                })
+            }
+
+            drawPath(svg, {
+                points: cpA,
+                closed: true,
+                interpolation: 'bezier',
+                strokeWidth: 4,
+            })
+
+            drawPath(svg, {
+                points: cpB,
+                closed: true,
+                interpolation: 'bezier',
+                strokeWidth: 4,
+            })
+
+            if (drawPoints) {
+                for (const { x, y } of [...cpA, ...cpB]) {
+                    drawCircle(svg, {
+                        x,
+                        y,
+                        radius: 4,
+                    })
+                }
+            }
+        }
+
+        onMove(render)
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>
