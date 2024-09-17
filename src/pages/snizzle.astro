@@ -3,7 +3,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 import Button from '../components/Button.astro'
 ---
 
-<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Squaddle">
+<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Snizzle">
     <Fragment slot="controls">
         <div class="grid grid-cols-2 gap-2">
             <Button id="zoom-out">Zoom Out</Button>
@@ -32,8 +32,14 @@ import Button from '../components/Button.astro'
         }
     }
 
+    type PointGroup = {
+        cpBack: Point
+        point: Point
+        cpFront: Point
+    }
+
     function generatePoints(radius: number, numPoints: number, offset: Point) {
-        const points: Point[] = []
+        const pointGroups: PointGroup[] = []
         const angleStep = (Math.PI * 2) / numPoints
         const arcLength = angleStep * radius
 
@@ -55,12 +61,10 @@ import Button from '../components/Button.astro'
             const cpBack = add(point, tangentBack)
             const cpFront = add(point, tangentFront)
 
-            points.push(cpBack)
-            points.push(point)
-            points.push(cpFront)
+            pointGroups.push({ cpBack, point, cpFront })
         }
 
-        return shiftLeft(points)
+        return pointGroups
     }
 
     function pathLerp(pointsA: Point[], pointsB: Point[], t: number) {
@@ -77,55 +81,152 @@ import Button from '../components/Button.astro'
         })
     }
 
-    function addControlPoints(points: Point[], classId: string) {
-        for (const point of points) {
-            const cp = document.createElement('div')
-            cp.classList.add(
-                classId,
-                'rounded-full',
-                'bg-black',
-                'h-4',
-                'w-4',
-                'absolute',
-                'translate-x-[-50%]',
-                'translate-y-[-50%]'
-            )
-            cp.style.left = `${point.x}px`
-            cp.style.top = `${point.y}px`
+    function addHandleToDom(container: HTMLElement, classId: string, point: Point) {
+        const handle = document.createElement('div')
+        handle.classList.add(
+            classId,
+            'rounded-full',
+            'bg-black',
+            'h-4',
+            'w-4',
+            'absolute',
+            'translate-x-[-50%]',
+            'translate-y-[-50%]'
+        )
+        handle.style.left = `${point.x}px`
+        handle.style.top = `${point.y}px`
 
-            cp.addEventListener('mousedown', (e) => {
-                let offsetX = e.clientX - cp.offsetLeft
-                let offsetY = e.clientY - cp.offsetTop
+        handle.addEventListener('mousedown', (e) => {
+            let offsetX = e.clientX - handle.offsetLeft
+            let offsetY = e.clientY - handle.offsetTop
 
-                function handleMouseMove(e: MouseEvent) {
-                    let newLeft = e.clientX - offsetX
-                    let newTop = e.clientY - offsetY
+            function handleMouseMove(e: MouseEvent) {
+                let newLeft = e.clientX - offsetX
+                let newTop = e.clientY - offsetY
 
-                    cp.style.left = newLeft + 'px'
-                    cp.style.top = newTop + 'px'
-                }
+                handle.style.left = newLeft + 'px'
+                handle.style.top = newTop + 'px'
+            }
 
-                function handleMouseUp() {
-                    document.removeEventListener('mousemove', handleMouseMove)
-                    document.removeEventListener('mouseup', handleMouseUp)
-                }
+            function handleMouseUp() {
+                document.removeEventListener('mousemove', handleMouseMove)
+                document.removeEventListener('mouseup', handleMouseUp)
+            }
 
-                document.addEventListener('mousemove', handleMouseMove)
-                document.addEventListener('mouseup', handleMouseUp)
-            })
+            document.addEventListener('mousemove', handleMouseMove)
+            document.addEventListener('mouseup', handleMouseUp)
+        })
 
-            container?.append(cp)
+        container?.append(handle)
+
+        return handle
+    }
+
+    function getPosition(element: HTMLDivElement): Point {
+        return {
+            x: element.offsetLeft,
+            y: element.offsetTop,
+        }
+    }
+
+    function handleCpControl(cp: HTMLDivElement, center: HTMLDivElement, counterCp: HTMLDivElement) {
+        let mouseDownOnCp = false
+        cp.addEventListener('mousedown', () => {
+            mouseDownOnCp = true
+        })
+
+        cp.addEventListener('mouseup', () => {
+            mouseDownOnCp = false
+        })
+
+        const observer = new MutationObserver(() => {
+            if (!mouseDownOnCp) {
+                return
+            }
+
+            const cpPos = getPosition(cp)
+            const centerPos = getPosition(center)
+
+            const reflectedX = -1 * (cpPos.x - centerPos.x)
+            const reflectedY = -1 * (cpPos.y - centerPos.y)
+
+            counterCp.style.left = `${centerPos.x + reflectedX}px`
+            counterCp.style.top = `${centerPos.y + reflectedY}px`
+        })
+
+        observer.observe(cp, {
+            attributes: true,
+            attributeFilter: ['style'],
+        })
+    }
+
+    function handleCenterControl(cpBack: HTMLDivElement, point: HTMLDivElement, cpFront: HTMLDivElement) {
+        let cpBackOffset: Point | null = null
+        let cpFrontOffset: Point | null = null
+
+        point.addEventListener('mousedown', () => {
+            const cpBackPos = getPosition(cpBack)
+            const pointPos = getPosition(point)
+            const cpFrontPos = getPosition(cpFront)
+
+            cpBackOffset = {
+                x: cpBackPos.x - pointPos.x,
+                y: cpBackPos.y - pointPos.y,
+            }
+
+            cpFrontOffset = {
+                x: cpFrontPos.x - pointPos.x,
+                y: cpFrontPos.y - pointPos.y,
+            }
+        })
+
+        point.addEventListener('mouseup', () => {
+            cpBackOffset = null
+            cpFrontOffset = null
+        })
+
+        const observer = new MutationObserver(() => {
+            const pointPos = getPosition(point)
+
+            if (cpBackOffset) {
+                cpBack.style.left = `${pointPos.x + cpBackOffset.x}px`
+                cpBack.style.top = `${pointPos.y + cpBackOffset.y}px`
+            }
+
+            if (cpFrontOffset) {
+                cpFront.style.left = `${pointPos.x + cpFrontOffset.x}px`
+                cpFront.style.top = `${pointPos.y + cpFrontOffset.y}px`
+            }
+        })
+
+        observer.observe(point, {
+            attributes: true,
+            attributeFilter: ['style'],
+        })
+    }
+
+    function addControlPoints(pointGroups: PointGroup[], classId: string) {
+        for (const { cpBack, point, cpFront } of pointGroups) {
+            const cpBackHandle = addHandleToDom(container, classId, cpBack)
+            const pointHandle = addHandleToDom(container, classId, point)
+            const cpFrontHandle = addHandleToDom(container, classId, cpFront)
+
+            handleCpControl(cpBackHandle, pointHandle, cpFrontHandle)
+            handleCpControl(cpFrontHandle, pointHandle, cpBackHandle)
+            handleCenterControl(cpBackHandle, pointHandle, cpFrontHandle)
         }
     }
 
     function getPoints(classId: string): Point[] {
         const controlPoints = [...document.querySelectorAll<HTMLElement>(`.${classId}`)]
-        return controlPoints.map((cp) => {
-            return {
-                x: cp.offsetLeft,
-                y: cp.offsetTop,
-            }
-        })
+        return shiftLeft(
+            controlPoints.map((cp) => {
+                return {
+                    x: cp.offsetLeft,
+                    y: cp.offsetTop,
+                }
+            })
+        )
     }
 
     function scale(parentSize: Size, factor: number) {
@@ -160,20 +261,20 @@ import Button from '../components/Button.astro'
 
     const init = (svg: HTMLElement, size: Size) => {
         const drawPoints = false
-        const lerps = 100
+        const lerps = 50
 
         addControlPoints(
-            generatePoints(100, 8, {
+            generatePoints(100, 4, {
                 x: size.w / 2,
-                y: size.h * 0.25,
+                y: size.h * 0.5,
             }),
             'pointA'
         )
 
         addControlPoints(
-            generatePoints(200, 8, {
+            generatePoints(300, 4, {
                 x: size.w / 2,
-                y: size.h * 0.75,
+                y: size.h * 0.5,
             }),
             'pointB'
         )
@@ -196,19 +297,19 @@ import Button from '../components/Button.astro'
                 })
             }
 
-            drawPath(svg, {
-                points: cpA,
-                closed: true,
-                interpolation: 'bezier',
-                strokeWidth: 4,
-            })
+            // drawPath(svg, {
+            //     points: cpA,
+            //     closed: true,
+            //     interpolation: 'bezier',
+            //     strokeWidth: 4,
+            // })
 
-            drawPath(svg, {
-                points: cpB,
-                closed: true,
-                interpolation: 'bezier',
-                strokeWidth: 4,
-            })
+            // drawPath(svg, {
+            //     points: cpB,
+            //     closed: true,
+            //     interpolation: 'bezier',
+            //     strokeWidth: 4,
+            // })
 
             if (drawPoints) {
                 for (const { x, y } of [...cpA, ...cpB]) {
