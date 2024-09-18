@@ -1,14 +1,18 @@
 ---
 import SvgPlayground from '../layouts/SvgPlayground.astro'
 import Button from '../components/Button.astro'
+import Input from '../components/Input.astro'
+import Slider from '../components/Slider.astro'
 ---
 
 <SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Snizzle">
     <Fragment slot="controls">
+        <Slider id="lerps" min={2} max={100} value={50} name="Lerps" />
         <div class="grid grid-cols-2 gap-2">
             <Button id="zoom-out">Zoom Out</Button>
             <Button id="zoom-in">Zoom In</Button>
         </div>
+        <Input type="checkbox" id="show-handles" label="Show handles" checked="yes" />
     </Fragment>
 </SvgPlayground>
 
@@ -16,7 +20,7 @@ import Button from '../components/Button.astro'
     import { drawCircle } from '../svg/circle'
     import { drawPath, type Point } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
-    import { connectClick, shiftLeft } from '../utils/controls'
+    import { connect, connectChange, connectClick, get, getChecked, shiftLeft } from '../utils/controls'
 
     function add(a: Point, b: Point): Point {
         return {
@@ -86,7 +90,6 @@ import Button from '../components/Button.astro'
         handle.classList.add(
             classId,
             'rounded-full',
-            'bg-black',
             'h-4',
             'w-4',
             'absolute',
@@ -217,16 +220,20 @@ import Button from '../components/Button.astro'
         }
     }
 
-    function getPoints(classId: string): Point[] {
+    function getPoints(classId: string, shift?: boolean): Point[] {
         const controlPoints = [...document.querySelectorAll<HTMLElement>(`.${classId}`)]
-        return shiftLeft(
-            controlPoints.map((cp) => {
-                return {
-                    x: cp.offsetLeft,
-                    y: cp.offsetTop,
-                }
-            })
-        )
+        const mapped = controlPoints.map((cp) => {
+            return {
+                x: cp.offsetLeft,
+                y: cp.offsetTop,
+            }
+        })
+
+        if (shift) {
+            return shiftLeft(mapped)
+        }
+
+        return mapped
     }
 
     function scale(parentSize: Size, factor: number) {
@@ -235,7 +242,7 @@ import Button from '../components/Button.astro'
             y: parentSize.h / 2,
         }
 
-        const controlPoints = [...document.querySelectorAll<HTMLElement>(`.pointA, .pointB`)]
+        const controlPoints = [...document.querySelectorAll<HTMLElement>(`.pointA, .pointB, .pointC`)]
         for (const point of controlPoints) {
             point.style.left = `${center.x + (point.offsetLeft - center.x) * factor}px`
             point.style.top = `${center.y + (point.offsetTop - center.y) * factor}px`
@@ -249,7 +256,8 @@ import Button from '../components/Button.astro'
 
         const cpA = document.querySelectorAll<HTMLElement>('.pointA')
         const cpB = document.querySelectorAll<HTMLElement>('.pointB')
-        for (const cp of [...cpA, ...cpB]) {
+        const cpC = document.querySelectorAll<HTMLElement>('.pointC')
+        for (const cp of [...cpA, ...cpB, ...cpC]) {
             observer.observe(cp, {
                 attributes: true,
                 attributeFilter: ['style'],
@@ -260,11 +268,8 @@ import Button from '../components/Button.astro'
     const container = document.getElementById('container')!
 
     const init = (svg: HTMLElement, size: Size) => {
-        const drawPoints = false
-        const lerps = 50
-
         addControlPoints(
-            generatePoints(100, 4, {
+            generatePoints(500, 4, {
                 x: size.w / 2,
                 y: size.h * 0.5,
             }),
@@ -279,14 +284,28 @@ import Button from '../components/Button.astro'
             'pointB'
         )
 
+        addControlPoints(
+            generatePoints(100, 4, {
+                x: size.w / 2,
+                y: size.h * 0.5,
+            }),
+            'pointC'
+        )
+
+        connect('lerps', () => render())
         connectClick('zoom-in', () => scale(size, 1.1))
         connectClick('zoom-out', () => scale(size, 0.9))
+        connectChange('show-handles', () => render())
 
         const render = () => {
             clear(svg)
 
-            const cpA = getPoints('pointA')
-            const cpB = getPoints('pointB')
+            const lerps = get<number>('lerps')
+            const showHandles = getChecked('show-handles')
+
+            const cpA = getPoints('pointA', true)
+            const cpB = getPoints('pointB', true)
+            const cpC = getPoints('pointC', true)
 
             for (let idx = 0; idx < lerps; idx++) {
                 drawPath(svg, {
@@ -297,26 +316,59 @@ import Button from '../components/Button.astro'
                 })
             }
 
-            // drawPath(svg, {
-            //     points: cpA,
-            //     closed: true,
-            //     interpolation: 'bezier',
-            //     strokeWidth: 4,
-            // })
+            for (let idx = 0; idx < lerps; idx++) {
+                drawPath(svg, {
+                    points: pathLerp(cpB, cpC, idx / lerps),
+                    closed: true,
+                    interpolation: 'bezier',
+                    stroke: '#555',
+                })
+            }
 
-            // drawPath(svg, {
-            //     points: cpB,
-            //     closed: true,
-            //     interpolation: 'bezier',
-            //     strokeWidth: 4,
-            // })
+            if (showHandles) {
+                drawPath(svg, {
+                    points: cpA,
+                    closed: true,
+                    interpolation: 'bezier',
+                    strokeWidth: 4,
+                })
 
-            if (drawPoints) {
-                for (const { x, y } of [...cpA, ...cpB]) {
+                drawPath(svg, {
+                    points: cpB,
+                    closed: true,
+                    interpolation: 'bezier',
+                    strokeWidth: 4,
+                })
+
+                drawPath(svg, {
+                    points: cpC,
+                    closed: true,
+                    interpolation: 'bezier',
+                    strokeWidth: 4,
+                })
+
+                const allPoints = [...getPoints('pointA'), ...getPoints('pointB'), ...getPoints('pointC')]
+                for (let idx = 0; idx < allPoints.length; idx += 3) {
+                    const cpBack = allPoints[idx]
+                    const cpFront = allPoints[idx + 2]
+                    drawPath(svg, {
+                        points: [cpBack, cpFront],
+                        stroke: '#00000033',
+                        strokeWidth: 8,
+                    })
+                }
+                for (const { x, y } of [...cpA, ...cpB, ...cpC]) {
                     drawCircle(svg, {
                         x,
                         y,
-                        radius: 4,
+                        radius: 8,
+                    })
+                }
+                for (const { x, y } of [...cpA, ...cpB, ...cpC]) {
+                    drawCircle(svg, {
+                        x,
+                        y,
+                        radius: 8,
                     })
                 }
             }
