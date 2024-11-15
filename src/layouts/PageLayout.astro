@@ -8,6 +8,7 @@ type Props = {
 }
 
 const { description } = Astro.props
+const isProduction = import.meta.env.MODE === 'production'
 ---
 
 <!doctype html>
@@ -28,10 +29,15 @@ const { description } = Astro.props
             content="I'm a Dresden based JS fullstack freelancer. I built cross-platform apps, web services and desktop applications."
         />
 
-        <script
-            defer
-            src="https://analytics.meerpohl.dev/script.js"
-            data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"></script>
+        {
+            isProduction && (
+                <script
+                    defer
+                    src="https://analytics.meerpohl.dev/script.js"
+                    data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"
+                />
+            )
+        }
 
         <link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="" />
@@ -39,7 +45,7 @@ const { description } = Astro.props
 
     <body class="font-rethink font-normal bg-white text-black">
         <div class="bg-black"></div>
-        <div class="body-wrapper min-h-dvh max-w-4xl mx-auto px-4 py-1">
+        <div class="body-wrapper min-h-dvh max-w-5xl mx-auto px-4 py-1">
             <div class="flex justify-between gap-4">
                 <PageNav class="flex justify-start gap-6 py-4" />
                 <SocialNav class="justify-end gap-8 py-4 hidden sm:flex" />

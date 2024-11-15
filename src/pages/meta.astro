@@ -1,0 +1,237 @@
+---
+import SvgPlayground from '../layouts/SvgPlayground.astro'
+import Button from '../components/Button.astro'
+import Input from '../components/Input.astro'
+import Slider from '../components/Slider.astro'
+---
+
+<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Snizzle">
+    <Fragment slot="controls">
+        <Slider id="min-threshold" min={0.001} max={0.5} value={0.001} step={0.001} name="Min Threshold" />
+        <Slider id="max-threshold" min={0.001} max={0.5} value={0.05} step={0.001} name="Max Threshold" />
+        <Slider id="resolution" min={4} max={20} value={6} name="Resolution" />
+        <Slider id="iso-levels" min={4} max={50} value={40} name="Iso Levels" />
+
+        <Input type="checkbox" id="show-handles" label="Show handles" checked="yes" />
+    </Fragment>
+</SvgPlayground>
+
+<script>
+    import { isoLines } from 'marching-squares'
+    import { drawPath } from '../svg/path'
+    import { clear, initInteractiveSvg, type Size } from '../svg/svg'
+    import { connect as connectControl, get } from '../utils/controls'
+
+    type Circle = {
+        x: number
+        y: number
+        radius: number
+    }
+
+    function metaball(x: number, y: number, ball: Circle) {
+        const dx = x - ball.x
+        const dy = y - ball.y
+        const distanceSquared = dx * dx + dy * dy
+        return ball.radius / distanceSquared
+    }
+
+    type FieldParams = {
+        size: Size
+        balls: Circle[]
+        gridSize: number
+    }
+
+    function generateField(params: FieldParams) {
+        const { size, balls, gridSize } = params
+
+        const field: number[][] = []
+        for (let y = 0; y <= size.h; y += gridSize) {
+            const line: number[] = []
+            for (let x = 0; x <= size.w; x += gridSize) {
+                let sum = 0
+                for (const ball of balls) {
+                    sum += metaball(x, y, ball)
+                }
+                line.push(sum)
+            }
+
+            field.push(line)
+        }
+
+        return field
+    }
+
+    function scaleRing(ring: number[][], scaleBy: number): number[][] {
+        return ring.map((point) => point.map((value) => value * scaleBy))
+    }
+
+    function smoothRing(ring: number[][]): number[][] {
+        const smoothRing: number[][] = []
+
+        const dx = (p1: number[], p2: number[]) => {
+            return p2[0] - p1[0]
+        }
+
+        const dy = (p1: number[], p2: number[]) => {
+            return p2[1] - p1[1]
+        }
+
+        const smoothPoint = (p1: number[], p2: number[]) => {
+            return [p1[0] + dx(p1, p2) / 2, p1[1] + dy(p1, p2) / 2]
+        }
+
+        for (let idx = -1; idx < ring.length; idx++) {
+            const prev = ring.at(idx - 1)
+            const p = ring.at(idx)
+            const next = ring.at(idx + 1)
+
+            if (!prev || !next || !p) {
+                continue
+            }
+
+            const d = smoothPoint(prev, next)
+            smoothRing.push(smoothPoint(p, d))
+        }
+
+        return smoothRing
+    }
+
+    function generatePath(ring: number[][]) {
+        let d = ''
+
+        for (let idx = 0; idx < ring.length; idx++) {
+            const point = ring[idx]
+
+            if (idx === 0) {
+                d += `M ${point[0]} ${point[1]} `
+            } else {
+                d += `L ${point[0]} ${point[1]} `
+            }
+        }
+
+        d += `Z`
+
+        return d
+    }
+
+    function generateThresholds(min: number, max: number, num: number) {
+        const result = []
+
+        for (let i = 0; i < num; i++) {
+            const x = i / (num - 1)
+            const y = Math.pow(x, 7)
+            const value = min + (max - min) * y
+            result.push(value)
+        }
+
+        return result
+    }
+
+    const init = (svg: HTMLElement, size: Size) => {
+        const connect = (id: string) => {
+            connectControl(id, () => render())
+        }
+
+        connect('min-threshold')
+        connect('max-threshold')
+        connect('resolution')
+        connect('iso-levels')
+
+        const balls: Circle[] = []
+
+        for (let idx = 0; idx < 6; idx++) {
+            balls.push({
+                x: Math.random() * size.w,
+                y: Math.random() * size.h,
+                radius: 100 + Math.random() * 800,
+            })
+        }
+
+        const container = document.getElementById('container') as HTMLElement
+        container.classList.add('bg-gradient-to-t', 'from-cyan-500', 'to-indigo-500')
+
+        for (const ball of balls) {
+            const ballElement = document.createElement('div')
+            ballElement.setAttribute('data-radius', ball.radius.toString())
+            ballElement.classList.add(
+                'ball',
+                'rounded-full',
+                'h-6',
+                'w-6',
+                'absolute',
+                'translate-x-[-50%]',
+                'translate-y-[-50%]',
+                'bg-fuchsia-600/30',
+                'hover:bg-fuchsia-600'
+            )
+            ballElement.style.left = `${ball.x}px`
+            ballElement.style.top = `${ball.y}px`
+
+            ballElement.addEventListener('pointerdown', (e) => {
+                let offsetX = e.clientX - ballElement.offsetLeft
+                let offsetY = e.clientY - ballElement.offsetTop
+
+                function handleMove(e: PointerEvent) {
+                    let newLeft = e.clientX - offsetX
+                    let newTop = e.clientY - offsetY
+
+                    ballElement.style.left = newLeft + 'px'
+                    ballElement.style.top = newTop + 'px'
+
+                    render()
+                }
+
+                function handleUp() {
+                    document.removeEventListener('pointermove', handleMove)
+                    document.removeEventListener('pointerup', handleUp)
+                }
+
+                document.addEventListener('pointermove', handleMove)
+                document.addEventListener('pointerup', handleUp)
+            })
+            container.appendChild(ballElement)
+        }
+
+        const getBalls = () => {
+            const ballElements = [...document.querySelectorAll('.ball')] as HTMLElement[]
+            return ballElements.map((el) => ({
+                x: el.offsetLeft,
+                y: el.offsetTop,
+                radius: Number(el.dataset.radius),
+            }))
+        }
+
+        const render = () => {
+            clear(svg)
+
+            const gridSize = get<number>('resolution')
+            const minThreshold = get<number>('min-threshold')
+            const maxThreshold = get<number>('max-threshold')
+            const isoLevels = get<number>('iso-levels')
+
+            const balls = getBalls()
+            const field = generateField({ size, balls, gridSize })
+
+            const layers = isoLines(field, generateThresholds(minThreshold, maxThreshold, isoLevels), { noFrame: true })
+
+            for (let idx = 0; idx < layers.length; idx++) {
+                const layer = layers[idx]
+                for (const ring of layer) {
+                    const scaled = scaleRing(ring, gridSize)
+                    const smooth = smoothRing(scaled)
+                    const d = generatePath(smooth)
+                    drawPath(svg, {
+                        d,
+                        strokeWidth: 4,
+                    })
+                }
+            }
+        }
+
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>
