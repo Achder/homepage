@@ -11,8 +11,6 @@ import Slider from '../components/Slider.astro'
         <Slider id="max-threshold" min={0.001} max={0.5} value={0.05} step={0.001} name="Max Threshold" />
         <Slider id="resolution" min={4} max={20} value={6} name="Resolution" />
         <Slider id="iso-levels" min={4} max={50} value={40} name="Iso Levels" />
-
-        <Input type="checkbox" id="show-handles" label="Show handles" checked="yes" />
     </Fragment>
 </SvgPlayground>
 
@@ -21,6 +19,7 @@ import Slider from '../components/Slider.astro'
     import { drawPath } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
     import { connect as connectControl, get } from '../utils/controls'
+    import isMobile from 'is-mobile'
 
     type Circle = {
         x: number
@@ -139,13 +138,19 @@ import Slider from '../components/Slider.astro'
 
         const balls: Circle[] = []
 
-        for (let idx = 0; idx < 6; idx++) {
+        const numBalls = isMobile() ? 3 : 6
+        for (let idx = 0; idx < numBalls; idx++) {
+            const radius = isMobile() ? 100 + Math.random() * 800 : 30 + Math.random() * 300
             balls.push({
                 x: Math.random() * size.w,
                 y: Math.random() * size.h,
-                radius: 100 + Math.random() * 800,
+                radius,
             })
         }
+
+        document.querySelectorAll('.ball').forEach((el) => {
+            el.remove()
+        })
 
         const container = document.getElementById('container') as HTMLElement
         container.classList.add('bg-gradient-to-t', 'from-cyan-500', 'to-indigo-500')
