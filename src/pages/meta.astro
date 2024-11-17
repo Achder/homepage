@@ -44,9 +44,9 @@ import Slider from '../components/Slider.astro'
         const { size, balls, gridSize } = params
 
         const field: number[][] = []
-        for (let y = 0; y <= size.h; y += gridSize) {
+        for (let y = 0; y <= size.h + gridSize; y += gridSize) {
             const line: number[] = []
-            for (let x = 0; x <= size.w; x += gridSize) {
+            for (let x = 0; x <= size.w + gridSize; x += gridSize) {
                 let sum = 0
                 for (const ball of balls) {
                     sum += metaball(x, y, ball)
@@ -140,7 +140,7 @@ import Slider from '../components/Slider.astro'
 
         const numBalls = isMobile() ? 3 : 6
         for (let idx = 0; idx < numBalls; idx++) {
-            const radius = isMobile() ? 100 + Math.random() * 800 : 30 + Math.random() * 300
+            const radius = !isMobile() ? 100 + Math.random() * 600 : 30 + Math.random() * 300
             balls.push({
                 x: Math.random() * size.w,
                 y: Math.random() * size.h,
