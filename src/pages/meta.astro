@@ -1,7 +1,5 @@
 ---
 import SvgPlayground from '../layouts/SvgPlayground.astro'
-import Button from '../components/Button.astro'
-import Input from '../components/Input.astro'
 import Slider from '../components/Slider.astro'
 ---
 
@@ -169,7 +167,13 @@ import Slider from '../components/Slider.astro'
                 'bg-fuchsia-600/30',
                 'hover:bg-fuchsia-600',
                 'touch-none',
-                'select-none'
+                'select-none',
+                'outline',
+                'outline-2',
+                'outline-transparent',
+                'active:outline-fuchsia-600',
+                'active:outline-offset-4',
+                'transition-[outline-offset]'
             )
             ballElement.style.left = `${ball.x}px`
             ballElement.style.top = `${ball.y}px`
