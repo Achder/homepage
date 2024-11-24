@@ -58,7 +58,7 @@ export function initInteractiveSvg(params: InteractiveSvgParams) {
 
         svg.setAttribute('width', size.w.toString())
         svg.setAttribute('height', size.h.toString())
-        svg.setAttribute('viewbox', `0 0 ${size.h.toString()} ${size.h.toString()}`)
+        svg.setAttribute('viewbox', `0 0 ${size.w.toString()} ${size.h.toString()}`)
 
         init(svg, size)
     }

@@ -12,8 +12,7 @@ type CircleParams = {
 }
 
 export function drawEllipse(svg: HTMLElement, params: CircleParams) {
-    const { x, y, radiusX, radiusY, fill, stroke, strokeWidth, rotation } =
-        params
+    const { x, y, radiusX, radiusY, fill, stroke, strokeWidth, rotation } = params
 
     const ellipse = document.createElementNS(ns, 'ellipse')
 
@@ -28,8 +27,8 @@ export function drawEllipse(svg: HTMLElement, params: CircleParams) {
     ellipse.style.fill = fill
     ellipse.style.stroke = stroke
     ellipse.style.strokeWidth = `${strokeWidth}`
-    ellipse.style.transform = `rotate(${rotation}deg)`
-    ellipse.style.transformOrigin = `${x}px ${y}px`
+
+    ellipse.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) translate(${-x}, ${-y})`)
 
     svg.append(ellipse)
 }
