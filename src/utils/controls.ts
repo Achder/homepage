@@ -11,19 +11,33 @@ export function getChecked(id: string) {
     return element.checked
 }
 
+function readFromUrl(id: string) {
+    const searchParams = new URLSearchParams(window.location.search)
+    return searchParams.get(id)
+}
+
+function writeToUrl(id: string, value: string) {
+    const searchParams = new URLSearchParams(window.location.search)
+    searchParams.set(id, value)
+    window.history.replaceState({}, '', `?${searchParams.toString()}`)
+}
+
 export function connect(id: string, callback: () => void) {
     const element = document.getElementById(id)! as HTMLInputElement
+
+    const urlValue = readFromUrl(id)
+    if (urlValue) {
+        element.value = urlValue
+    }
+
+    element.addEventListener('change', () => writeToUrl(id, element.value))
     element.addEventListener('input', callback)
+    element.dispatchEvent(new Event('change'))
 }
 
 export function connectClick(id: string, callback: () => void) {
     const element = document.getElementById(id)! as HTMLButtonElement
     element.addEventListener('click', callback)
-}
-
-export function connectChange(id: string, callback: () => void) {
-    const element = document.getElementById(id)! as HTMLElement
-    element.addEventListener('change', callback)
 }
 
 export function shiftLeft<T>(arr: T[]) {
