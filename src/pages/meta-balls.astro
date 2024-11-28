@@ -1,23 +1,40 @@
 ---
 import SvgPlayground from '../layouts/SvgPlayground.astro'
 import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Button from '../components/Button.astro'
 ---
 
 <SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Metaballs">
     <Fragment slot="controls">
-        <Slider id="min-threshold" min={0.001} max={0.5} value={0.001} step={0.001} name="Min Threshold" />
-        <Slider id="max-threshold" min={0.001} max={0.5} value={0.05} step={0.001} name="Max Threshold" />
-        <Slider id="resolution" min={4} max={20} value={6} name="Resolution" />
-        <Slider id="iso-levels" min={4} max={50} value={40} name="Iso Levels" />
+        <Slider id="min-threshold" min={-0.5} max={0.5} value={0.001} step={0.001} name="Min Threshold" />
+        <Slider id="max-threshold" min={-0.5} max={0.5} value={0.111} step={0.001} name="Max Threshold" />
+        <Slider id="resolution" min={4} max={20} value={16} name="Resolution" />
+        <Slider id="iso-levels" min={4} max={100} value={20} name="Iso Levels" />
+        <Slider id="stroke-width" min={0} max={10} step={0.1} value={1} name="Stroke Width" />
+
+        <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+            <Input type="color" id="fill-start" label="Fill Start" value="#00ccff" />
+            <Input type="color" id="fill-end" label="Fill end" value="#ff0000" />
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#00fffb" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#ff5900" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <Button id="remove">-</Button>
+            <Button id="add">+</Button>
+        </div>
     </Fragment>
 </SvgPlayground>
 
 <script>
-    import { isoLines } from 'marching-squares'
+    import { isoBands, isoLines, isoContours } from 'marching-squares'
     import { drawPath } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
-    import { connect as connectControl, get } from '../utils/controls'
+    import { connect as connectControl, get, writeToUrl, readFromUrl } from '../utils/controls'
     import isMobile from 'is-mobile'
+    import { drawCircle } from '../svg/circle'
+    import lerp from '@sunify/lerp-color'
 
     type Circle = {
         x: number
@@ -112,94 +129,178 @@ import Slider from '../components/Slider.astro'
     }
 
     function generateThresholds(min: number, max: number, num: number) {
-        const result = []
+        const bandwidth = (max - min) / num
 
-        for (let i = 0; i < num; i++) {
-            const x = i / (num - 1)
-            const y = Math.pow(x, 7)
-            const value = min + (max - min) * y
-            result.push(value)
+        // first and last bandwidth need to be big to catch outliers
+        const thresholds: number[] = [min - 10]
+        const bandwidths: number[] = [10]
+
+        for (let idx = 0; idx < num; idx++) {
+            thresholds.push(min + bandwidth * idx)
+            bandwidths.push(bandwidth)
         }
 
-        return result
+        thresholds.push(min + num * bandwidth)
+        bandwidths.push(10)
+
+        return { thresholds, bandwidths }
     }
 
-    function addBalls(container: HTMLElement, size: Size, onMoveCallback: () => void) {
-        const balls: Circle[] = []
-        const numBalls = isMobile() ? 4 : 6
-
-        for (let idx = 0; idx < numBalls; idx++) {
-            const radius = !isMobile() ? 100 + Math.random() * 600 : 30 + Math.random() * 300
-            balls.push({
-                x: Math.random() * size.w,
-                y: Math.random() * size.h,
-                radius,
-            })
+    function generateRandomBall(size: Size) {
+        const genRadius = (min: number, max: number) => {
+            const rr = (Math.random() - 0.2) * (1 / 0.8)
+            return Math.sign(rr) * min + rr * max
         }
 
+        return {
+            x: Math.random() * size.w,
+            y: Math.random() * size.h,
+            radius: isMobile() ? genRadius(200, 700) : genRadius(400, 2000),
+        }
+    }
+
+    function removeBall() {
+        const balls = getBallElements()
+        if (balls.length <= 1) {
+            return
+        }
+
+        const lastBall = balls.pop()
+        lastBall?.remove()
+        writeBallsToUrl()
+    }
+
+    function addBallResizeHandle(ballElement: HTMLElement, onUpdateCallback: () => void) {
+        const resizeHandle = document.createElement('div') as HTMLDivElement
+        resizeHandle.classList.add(
+            'bg-fuchsia-600/30',
+            'resize-handle',
+            'absolute',
+            'right-0',
+            'top-0',
+            'h-4',
+            'w-4',
+            'cursor-se-resize'
+        )
+        resizeHandle.style.transform = `translate(100%, -100%)`
+
+        ballElement.appendChild(resizeHandle)
+
+        resizeHandle.addEventListener('pointerdown', (e) => {
+            e.stopPropagation()
+            let initialX = e.clientX
+            const oldRadius = Number(ballElement.dataset.radius)
+
+            function handleMove(e: PointerEvent) {
+                const distX = e.clientX - initialX
+                ballElement.setAttribute('data-radius', (oldRadius + distX * 3).toString())
+                onUpdateCallback()
+            }
+
+            function handleUp(e: PointerEvent) {
+                document.removeEventListener('pointermove', handleMove)
+                document.removeEventListener('pointerup', handleUp)
+            }
+
+            document.addEventListener('pointermove', handleMove)
+            document.addEventListener('pointerup', handleUp)
+        })
+    }
+
+    function addBall(container: HTMLElement, ball: Circle, onUpdateCallback: () => void) {
+        const { x, y, radius } = ball
+
+        const ballElement = document.createElement('div')
+        ballElement.setAttribute('data-radius', radius.toString())
+        ballElement.classList.add(
+            'ball',
+            'rounded-full',
+            'h-12',
+            'w-12',
+            'absolute',
+            'translate-x-[-50%]',
+            'translate-y-[-50%]',
+            'bg-fuchsia-600/30',
+            'hover:bg-fuchsia-600',
+            'touch-none',
+            'select-none',
+            'outline',
+            'outline-2',
+            'outline-transparent',
+            'active:outline-fuchsia-600',
+            'active:outline-offset-4',
+            'transition-[outline-offset]'
+        )
+        ballElement.style.left = `${x}px`
+        ballElement.style.top = `${y}px`
+
+        ballElement.addEventListener('pointerdown', (e) => {
+            let offsetX = e.clientX - ballElement.offsetLeft
+            let offsetY = e.clientY - ballElement.offsetTop
+
+            function handleMove(e: PointerEvent) {
+                let newLeft = e.clientX - offsetX
+                let newTop = e.clientY - offsetY
+
+                ballElement.style.left = newLeft + 'px'
+                ballElement.style.top = newTop + 'px'
+
+                onUpdateCallback()
+            }
+
+            function handleUp() {
+                document.removeEventListener('pointermove', handleMove)
+                document.removeEventListener('pointerup', handleUp)
+                onUpdateCallback()
+            }
+
+            document.addEventListener('pointermove', handleMove)
+            document.addEventListener('pointerup', handleUp)
+        })
+
+        addBallResizeHandle(ballElement, onUpdateCallback)
+        container.appendChild(ballElement)
+    }
+
+    function addBalls(container: HTMLElement, size: Size, onUpdateCallback: () => void) {
         document.querySelectorAll('.ball').forEach((el) => {
             el.remove()
         })
 
-        for (const ball of balls) {
-            const ballElement = document.createElement('div')
-            ballElement.setAttribute('data-radius', ball.radius.toString())
-            ballElement.classList.add(
-                'ball',
-                'rounded-full',
-                'h-12',
-                'w-12',
-                'absolute',
-                'translate-x-[-50%]',
-                'translate-y-[-50%]',
-                'bg-fuchsia-600/30',
-                'hover:bg-fuchsia-600',
-                'touch-none',
-                'select-none',
-                'outline',
-                'outline-2',
-                'outline-transparent',
-                'active:outline-fuchsia-600',
-                'active:outline-offset-4',
-                'transition-[outline-offset]'
-            )
-            ballElement.style.left = `${ball.x}px`
-            ballElement.style.top = `${ball.y}px`
+        const ballsSearchParam = readFromUrl('balls')
+        const balls: Circle[] = ballsSearchParam ? (JSON.parse(ballsSearchParam) as Circle[]) : []
 
-            ballElement.addEventListener('pointerdown', (e) => {
-                let offsetX = e.clientX - ballElement.offsetLeft
-                let offsetY = e.clientY - ballElement.offsetTop
-
-                function handleMove(e: PointerEvent) {
-                    let newLeft = e.clientX - offsetX
-                    let newTop = e.clientY - offsetY
-
-                    ballElement.style.left = newLeft + 'px'
-                    ballElement.style.top = newTop + 'px'
-
-                    onMoveCallback()
-                }
-
-                function handleUp() {
-                    document.removeEventListener('pointermove', handleMove)
-                    document.removeEventListener('pointerup', handleUp)
-                }
-
-                document.addEventListener('pointermove', handleMove)
-                document.addEventListener('pointerup', handleUp)
-            })
-
-            container.appendChild(ballElement)
+        // init randomly if no balls are provided in the URL query string
+        if (!ballsSearchParam) {
+            const numBalls = isMobile() ? 10 : 15
+            for (let idx = 0; idx < numBalls; idx++) {
+                balls.push(generateRandomBall(size))
+            }
         }
+
+        for (const ball of balls) {
+            addBall(container, ball, onUpdateCallback)
+        }
+
+        writeBallsToUrl()
+    }
+
+    function getBallElements() {
+        return [...document.querySelectorAll('.ball')] as HTMLElement[]
     }
 
     function getBalls() {
-        const ballElements = [...document.querySelectorAll('.ball')] as HTMLElement[]
+        const ballElements = getBallElements()
         return ballElements.map((el) => ({
             x: el.offsetLeft,
             y: el.offsetTop,
             radius: Number(el.dataset.radius),
         }))
+    }
+
+    function writeBallsToUrl() {
+        const balls = getBalls()
+        writeToUrl('balls', JSON.stringify(balls))
     }
 
     const init = (svg: HTMLElement, size: Size) => {
@@ -211,6 +312,12 @@ import Slider from '../components/Slider.astro'
         connect('max-threshold')
         connect('resolution')
         connect('iso-levels')
+        connect('stroke-width')
+
+        connect('fill-start')
+        connect('fill-end')
+        connect('stroke-start')
+        connect('stroke-end')
 
         const render = () => {
             clear(svg)
@@ -219,30 +326,72 @@ import Slider from '../components/Slider.astro'
             const minThreshold = get<number>('min-threshold')
             const maxThreshold = get<number>('max-threshold')
             const isoLevels = get<number>('iso-levels')
+            const fillStart = get<string>('fill-start')
+            const fillEnd = get<string>('fill-end')
+            const strokeWidth = get<number>('stroke-width')
+            const strokeStart = get<string>('stroke-start')
+            const strokeEnd = get<string>('stroke-end')
 
             const balls = getBalls()
             const field = generateField({ size, balls, gridSize })
 
-            const layers = isoLines(field, generateThresholds(minThreshold, maxThreshold, isoLevels), { noFrame: true })
+            const { thresholds, bandwidths } = generateThresholds(minThreshold, maxThreshold, isoLevels)
+            const layers = isoBands(field, thresholds, bandwidths)
 
             for (let idx = 0; idx < layers.length; idx++) {
+                const t = idx / layers.length
                 const layer = layers[idx]
+                const fill = lerp([fillStart, fillEnd], t)
+                const stroke = lerp([strokeStart, strokeEnd], t)
+
                 for (const ring of layer) {
                     const scaled = scaleRing(ring, gridSize)
                     const smooth = smoothRing(scaled)
                     const d = generatePath(smooth)
                     drawPath(svg, {
                         d,
-                        strokeWidth: idx % 2 ? 4 : 1.5,
+                        strokeWidth,
+                        stroke: strokeWidth === 0 ? 'none' : stroke,
+                        fill,
                     })
                 }
+            }
+
+            for (const { x, y, radius } of balls) {
+                drawCircle(svg, {
+                    x,
+                    y,
+                    radius: Math.abs(radius / 16),
+                    fill: 'none',
+                    stroke: radius > 0 ? '#00000055' : '#ffffff55',
+                    strokeWidth: 1,
+                })
             }
         }
 
         const container = document.getElementById('container') as HTMLElement
         container.classList.add('bg-gradient-to-t', 'from-cyan-500', 'to-indigo-500')
 
-        addBalls(container, size, render)
+        const removeButton = document.getElementById('remove') as HTMLButtonElement
+        const addButton = document.getElementById('add') as HTMLButtonElement
+
+        removeButton.addEventListener('click', () => {
+            removeBall()
+            writeBallsToUrl()
+            render()
+        })
+
+        addButton.addEventListener('click', () => {
+            addBall(container, generateRandomBall(size), render)
+            writeBallsToUrl()
+            render()
+        })
+
+        addBalls(container, size, () => {
+            writeBallsToUrl()
+            render()
+        })
+
         getBalls()
         render()
     }

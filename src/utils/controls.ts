@@ -11,19 +11,22 @@ export function getChecked(id: string) {
     return element.checked
 }
 
-function readFromUrl(id: string) {
+export function readFromUrl(id: string) {
     const searchParams = new URLSearchParams(window.location.search)
     return searchParams.get(id)
 }
 
-function writeToUrl(id: string, value: string) {
+export function writeToUrl(id: string, value: string) {
     const searchParams = new URLSearchParams(window.location.search)
     searchParams.set(id, value)
     window.history.replaceState({}, '', `?${searchParams.toString()}`)
 }
 
 export function connect(id: string, callback: () => void) {
-    const element = document.getElementById(id)! as HTMLInputElement
+    const element = document.getElementById(id) as HTMLInputElement
+    if (!element) {
+        throw new Error(`Element with id ${id} not found`)
+    }
 
     const urlValue = readFromUrl(id)
     if (urlValue) {
