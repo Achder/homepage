@@ -17,6 +17,7 @@
     "@astrojs/tailwind": "^5.1.0",
     "@sunify/lerp-color": "^2.0.0",
     "astro": "^3.6.4",
+    "colorjs.io": "^0.5.2",
     "fft.js": "^4.0.4",
     "is-mobile": "^4.0.0",
     "marching-squares": "^1.0.0",

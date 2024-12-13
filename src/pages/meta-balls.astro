@@ -7,17 +7,19 @@ import Button from '../components/Button.astro'
 
 <SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Metaballs">
     <Fragment slot="controls">
-        <Slider id="min-threshold" min={-0.5} max={0.5} value={0.001} step={0.001} name="Min Threshold" />
-        <Slider id="max-threshold" min={-0.5} max={0.5} value={0.111} step={0.001} name="Max Threshold" />
-        <Slider id="resolution" min={4} max={20} value={16} name="Resolution" />
-        <Slider id="iso-levels" min={4} max={100} value={20} name="Iso Levels" />
-        <Slider id="stroke-width" min={0} max={10} step={0.1} value={0} name="Stroke Width" />
+        <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.076} step={0.001} name="Min Threshold" />
+        <Slider id="max-threshold" min={-0.5} max={0.5} value={0.06} step={0.001} name="Max Threshold" />
+        <Slider id="resolution" min={4} max={20} value={13} name="Resolution" />
+        <Slider id="iso-levels" min={4} max={100} value={52} name="Iso Levels" />
+        <Slider id="stroke-width" min={0} max={10} step={0.1} value={2.2} name="Stroke Width" />
 
-        <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
-            <Input type="color" id="fill-start" label="Fill Start" value="#00ccff" />
-            <Input type="color" id="fill-end" label="Fill end" value="#ff0000" />
-            <Input type="color" id="stroke-start" label="Stroke Start" value="#00fffb" />
-            <Input type="color" id="stroke-end" label="Stroke End" value="#ff5900" />
+        <div class="grid grid-cols-3 md:grid-cols-3 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+            <Input type="color" id="fill-start" label="Fill Start" value="#23ffea" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#23bb00" />
+            <Input type="color" id="fill-end" label="Fill End" value="#230000" />
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#23fff7" />
+            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#23b800" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#230000" />
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -35,6 +37,7 @@ import Button from '../components/Button.astro'
     import isMobile from 'is-mobile'
     import { drawCircle } from '../svg/circle'
     import lerp from '@sunify/lerp-color'
+    import Color from 'colorjs.io'
 
     type Circle = {
         x: number
@@ -303,6 +306,14 @@ import Button from '../components/Button.astro'
         writeToUrl('balls', JSON.stringify(balls))
     }
 
+    function mix(start: Color, mid: Color, end: Color, t: number, space: string) {
+        if (t < 0.5) {
+            return start.mix(mid, t * 2, { space, outputSpace: space })
+        } else {
+            return mid.mix(end, (t - 0.5) * 2, { space, outputSpace: space })
+        }
+    }
+
     const init = (svg: HTMLElement, size: Size) => {
         const connect = (id: string) => {
             connectControl(id, () => render())
@@ -315,8 +326,10 @@ import Button from '../components/Button.astro'
         connect('stroke-width')
 
         connect('fill-start')
+        connect('fill-mid')
         connect('fill-end')
         connect('stroke-start')
+        connect('stroke-mid')
         connect('stroke-end')
 
         const render = () => {
@@ -327,13 +340,22 @@ import Button from '../components/Button.astro'
             const maxThreshold = get<number>('max-threshold')
             const isoLevels = get<number>('iso-levels')
             const fillStart = get<string>('fill-start')
+            const fillMid = get<string>('fill-mid')
             const fillEnd = get<string>('fill-end')
             const strokeWidth = get<number>('stroke-width')
             const strokeStart = get<string>('stroke-start')
+            const strokeMid = get<string>('stroke-mid')
             const strokeEnd = get<string>('stroke-end')
 
             const balls = getBalls()
             const field = generateField({ size, balls, gridSize })
+
+            const fs = new Color(fillStart)
+            const fm = new Color(fillMid)
+            const fe = new Color(fillEnd)
+            const ss = new Color(strokeStart)
+            const sm = new Color(strokeMid)
+            const se = new Color(strokeEnd)
 
             const { thresholds, bandwidths } = generateThresholds(minThreshold, maxThreshold, isoLevels)
             const layers = isoBands(field, thresholds, bandwidths)
@@ -341,8 +363,9 @@ import Button from '../components/Button.astro'
             for (let idx = 0; idx < layers.length; idx++) {
                 const t = idx / layers.length
                 const layer = layers[idx]
-                const fill = lerp([fillStart, fillEnd], t)
-                const stroke = lerp([strokeStart, strokeEnd], t)
+
+                const fill = mix(fs, fm, fe, t, 'lch')
+                const stroke = mix(ss, sm, se, t, 'lch')
 
                 for (const ring of layer) {
                     const scaled = scaleRing(ring, gridSize)
@@ -351,8 +374,8 @@ import Button from '../components/Button.astro'
                     drawPath(svg, {
                         d,
                         strokeWidth,
-                        stroke: strokeWidth === 0 ? 'none' : stroke,
-                        fill,
+                        stroke: strokeWidth === 0 ? 'none' : stroke.to('srgb').toString({ format: 'hex' }),
+                        fill: fill.to('srgb').toString({ format: 'hex' }),
                     })
                 }
             }
