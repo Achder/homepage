@@ -16,10 +16,12 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
         <Slider id="radius-freq" min={1} max={10} value={1} step={0.1} name="Radius Frequency" />
         <Slider id="stroke-width" min={0} max={10} step={0.1} value={1} name="Stroke Width" />
 
-        <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+        <div class="grid grid-cols-3 gap-4">
             <Input type="color" id="fill-start" label="Fill Start" value="#2bff00" />
-            <Input type="color" id="fill-end" label="Fill end" value="#ff0000" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#2bff00" />
+            <Input type="color" id="fill-end" label="Fill End" value="#ff0000" />
             <Input type="color" id="stroke-start" label="Stroke Start" value="#00ff91" />
+            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#00ff91" />
             <Input type="color" id="stroke-end" label="Stroke End" value="#ffae00" />
         </div>
 
@@ -33,11 +35,12 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 
 <script>
     import { initInteractiveSvg, type Size, clear } from '../svg/svg'
-    import lerp from '@sunify/lerp-color'
     import { drawEllipse } from '../svg/ellipse'
     import { connect as connectControl, get } from '../utils/controls'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
+    import Color from 'colorjs.io'
+    import { mix } from '../utils/color'
 
     const init = (svg: HTMLElement, size: Size) => {
         const connect = (id: string) => {
@@ -52,8 +55,10 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
         connect('radius-wobble')
         connect('radius-freq')
         connect('fill-start')
+        connect('fill-mid')
         connect('fill-end')
         connect('stroke-start')
+        connect('stroke-mid')
         connect('stroke-end')
         connect('stroke-width')
         connect('bg-angle')
@@ -73,16 +78,25 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             const amplitude = get<number>('amplitude')
             const amplitudeFreq = get<number>('amplitude-freq')
             const fillStart = get<string>('fill-start')
+            const fillMid = get<string>('fill-mid')
             const fillEnd = get<string>('fill-end')
             const strokeWidth = get<number>('stroke-width')
             const strokeStart = get<string>('stroke-start')
+            const strokeMid = get<string>('stroke-mid')
             const strokeEnd = get<string>('stroke-end')
             const bgAngle = get<number>('bg-angle')
             const bgStart = get<string>('bg-start')
             const bgEnd = get<string>('bg-end')
 
-            const steps = (size.h + 2 * radiusY) / stride
-            const center = { x: size.w / 2, y: -radiusY }
+            const steps = (size.h + radiusY) / stride
+            const center = { x: size.w / 2, y: 0 }
+
+            const fs = new Color(fillStart)
+            const fm = new Color(fillMid)
+            const fe = new Color(fillEnd)
+            const ss = new Color(strokeStart)
+            const sm = new Color(strokeMid)
+            const se = new Color(strokeEnd)
 
             createGradient(svg, {
                 id: 'bg-gradient',
@@ -102,16 +116,16 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             for (let i = 0; i < steps; i++) {
                 const t = i / steps
                 const pi_t = t * Math.PI * 2
-                const fill = lerp(fillStart, fillEnd, t)
-                const stroke = lerp(strokeStart, strokeEnd, t)
+                const fill = mix(fs, fm, fe, t, 'lch')
+                const stroke = mix(ss, sm, se, t, 'lch')
 
                 drawEllipse(svg, {
                     x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,
                     y: center.y,
                     radiusX: radiusX + Math.sin(pi_t * radiusFreq) * radiusWobble,
                     radiusY: radiusY + Math.sin(pi_t * radiusFreq) * radiusWobble,
-                    fill: fill ?? '',
-                    stroke: stroke ?? '',
+                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
                     strokeWidth: strokeWidth,
                     rotation: (t - 0.5) * rotation,
                 })

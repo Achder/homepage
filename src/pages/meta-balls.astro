@@ -30,14 +30,14 @@ import Button from '../components/Button.astro'
 </SvgPlayground>
 
 <script>
-    import { isoBands, isoLines, isoContours } from 'marching-squares'
+    import { isoBands } from 'marching-squares'
     import { drawPath } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
     import { connect as connectControl, get, writeToUrl, readFromUrl } from '../utils/controls'
     import isMobile from 'is-mobile'
     import { drawCircle } from '../svg/circle'
-    import lerp from '@sunify/lerp-color'
     import Color from 'colorjs.io'
+    import { mix } from '../utils/color'
 
     type Circle = {
         x: number
@@ -304,14 +304,6 @@ import Button from '../components/Button.astro'
     function writeBallsToUrl() {
         const balls = getBalls()
         writeToUrl('balls', JSON.stringify(balls))
-    }
-
-    function mix(start: Color, mid: Color, end: Color, t: number, space: string) {
-        if (t < 0.5) {
-            return start.mix(mid, t * 2, { space, outputSpace: space })
-        } else {
-            return mid.mix(end, (t - 0.5) * 2, { space, outputSpace: space })
-        }
     }
 
     const init = (svg: HTMLElement, size: Size) => {
