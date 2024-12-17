@@ -1,0 +1,26 @@
+---
+type Props = {
+    id: string
+    label: string
+    rounded?: boolean
+    class?: string
+}
+
+const { id, label, rounded, class: className } = Astro.props
+---
+
+<label class:list={['text-lg grid gap-1', className]}>
+    {label}
+    <select
+        id={id}
+        class:list={[
+            'appearance-none px-4 py-3 font-bold text-md tracking-widest bg-black hover:bg-fuchsia-500 text-white transition-colors',
+            {
+                'rounded-sm': !rounded,
+                'rounded-full': rounded,
+            },
+        ]}
+    >
+        <slot />
+    </select>
+</label>

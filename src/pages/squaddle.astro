@@ -1,6 +1,7 @@
 ---
 import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
+import Select from '../components/Select.astro'
 import SvgPlayground from '../layouts/SvgPlayground.astro'
 ---
 
@@ -23,6 +24,24 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             <Input type="color" id="stroke-start" label="Stroke Start" value="#00ff91" />
             <Input type="color" id="stroke-mid" label="Stroke Mid" value="#00ff91" />
             <Input type="color" id="stroke-end" label="Stroke End" value="#ffae00" />
+            <Select id="color-space" label="Color Space" class="col-span-3">
+                <option value="lch" selected>LCH</option>
+                <option value="acescc">ACEScc</option>
+                <option value="a98rgb">Adobe 98 RGB</option>
+                <option value="hpluv">HPLuv</option>
+                <option value="hsl">HSL</option>
+                <option value="hsluv">HSLuv</option>
+                <option value="hwb">HWB</option>
+                <option value="ictcp">ICTCQ</option>
+                <option value="jzczhz">JzCzHz</option>
+                <option value="lab">LAB</option>
+                <option value="oklch">Oklch</option>
+                <option value="p3">P3</option>
+                <option value="prophoto">ProPhoto</option>
+                <option value="rec2020">REC.2020</option>
+                <option value="rec2100hlg">REC.2100-HLG</option>
+                <option value="rec2100pq">REC.2100-PQ</option>
+            </Select>
         </div>
 
         <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
@@ -61,6 +80,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
         connect('stroke-mid')
         connect('stroke-end')
         connect('stroke-width')
+        connect('color-space')
         connect('bg-angle')
         connect('bg-start')
         connect('bg-end')
@@ -84,6 +104,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             const strokeStart = get<string>('stroke-start')
             const strokeMid = get<string>('stroke-mid')
             const strokeEnd = get<string>('stroke-end')
+            const colorSpace = get<string>('color-space')
             const bgAngle = get<number>('bg-angle')
             const bgStart = get<string>('bg-start')
             const bgEnd = get<string>('bg-end')
@@ -116,8 +137,8 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             for (let i = 0; i < steps; i++) {
                 const t = i / steps
                 const pi_t = t * Math.PI * 2
-                const fill = mix(fs, fm, fe, t, 'lch')
-                const stroke = mix(ss, sm, se, t, 'lch')
+                const fill = mix(fs, fm, fe, t, colorSpace)
+                const stroke = mix(ss, sm, se, t, colorSpace)
 
                 drawEllipse(svg, {
                     x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,

@@ -23,7 +23,7 @@ export function writeToUrl(id: string, value: string) {
 }
 
 export function connect(id: string, callback: () => void) {
-    const element = document.getElementById(id) as HTMLInputElement
+    const element = document.getElementById(id) as HTMLInputElement | HTMLSelectElement
     if (!element) {
         throw new Error(`Element with id ${id} not found`)
     }
