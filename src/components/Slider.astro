@@ -6,22 +6,15 @@ type Props = {
     max: number
     value: number
     step?: number
+    class?: string
 }
 
-const { id, name, min, max, value, step = 1, ...rest } = Astro.props
+const { id, name, min, max, value, step = 1, class: className, ...rest } = Astro.props
 ---
 
-<label class="text-lg grid gap-2" {...rest}>
+<label class:list={['text-lg grid gap-2', className]} {...rest}>
     {name}
-    <input
-        id={id}
-        class="h-4"
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        step={step}
-    />
+    <input id={id} class="h-4" type="range" min={min} max={max} value={value} step={step} />
 </label>
 
 <style>
