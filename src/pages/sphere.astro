@@ -1,0 +1,184 @@
+---
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Select from '../components/Select.astro'
+import SvgPlayground from '../layouts/SvgPlayground.astro'
+---
+
+<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Squaddle">
+    <Fragment slot="controls">
+        <Slider id="stride" min={0.1} max={6} value={3.75} name="Stride" step={0.01} />
+        <Slider id="rotation" min={0} max={720} value={0} name="Rotation" />
+        <Slider id="amplitude" min={-500} max={500} value={250} name="Amplitude" />
+        <Slider id="amplitude-freq" min={1} max={10} value={2} step={0.1} name="Amplitude Frequency" />
+        <Slider id="radius-x" min={5} max={300} value={220} name="Radius X" />
+        <Slider id="radius-y" min={5} max={300} value={220} name="Radius Y" />
+        <Slider id="radius-wobble" min={-100} max={100} value={0} name="Radius Wobble" />
+        <Slider id="radius-freq" min={1} max={10} value={1} step={0.1} name="Radius Frequency" />
+        <Slider id="stroke-width" min={0} max={10} step={0.1} value={1} name="Stroke Width" />
+
+        <div class="grid grid-cols-3 gap-4">
+            <Input type="color" id="fill-start" label="Fill Start" value="#2bff00" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#2bff00" />
+            <Input type="color" id="fill-end" label="Fill End" value="#ff0000" />
+            <Slider class="col-span-3" id="fill-alpha" min={0} max={1} step={0.01} value={1} name="Fill Alpha" />
+
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#00ff91" />
+            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#00ff91" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#ffae00" />
+            <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={1} name="Stroke Alpha" />
+
+            <Select id="color-space" label="Color Space" class="col-span-3">
+                <option value="lch" selected>LCH</option>
+                <option value="acescc">ACEScc</option>
+                <option value="a98rgb">Adobe 98 RGB</option>
+                <option value="hpluv">HPLuv</option>
+                <option value="hsl">HSL</option>
+                <option value="hsluv">HSLuv</option>
+                <option value="hwb">HWB</option>
+                <option value="ictcp">ICTCQ</option>
+                <option value="jzczhz">JzCzHz</option>
+                <option value="lab">LAB</option>
+                <option value="oklch">Oklch</option>
+                <option value="p3">P3</option>
+                <option value="prophoto">ProPhoto</option>
+                <option value="rec2020">REC.2020</option>
+                <option value="rec2100hlg">REC.2100-HLG</option>
+                <option value="rec2100pq">REC.2100-PQ</option>
+            </Select>
+        </div>
+
+        <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
+        <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+            <Input type="color" id="bg-start" label="Bg Start" value="#00ff40" />
+            <Input type="color" id="bg-end" label="Bg End" value="#00ffbf" />
+        </div>
+    </Fragment>
+</SvgPlayground>
+
+<script>
+    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
+    import { drawEllipse } from '../svg/ellipse'
+    import { connect as connectControl, get } from '../utils/controls'
+    import { drawRect } from '../svg/rect'
+    import { createGradient } from '../svg/gradient'
+    import Color from 'colorjs.io'
+    import { mix } from '../utils/color'
+    import Zdog, { type EllipseOptions } from 'zdog'
+
+    const init = (svg: HTMLElement, size: Size) => {
+        const connect = (id: string) => {
+            connectControl(id, () => render())
+        }
+
+        connect('stride')
+        connect('amplitude')
+        connect('amplitude-freq')
+        connect('radius-x')
+        connect('radius-y')
+        connect('radius-wobble')
+        connect('radius-freq')
+        connect('fill-start')
+        connect('fill-mid')
+        connect('fill-end')
+        connect('fill-alpha')
+        connect('stroke-start')
+        connect('stroke-mid')
+        connect('stroke-end')
+        connect('stroke-width')
+        connect('stroke-alpha')
+        connect('color-space')
+        connect('bg-angle')
+        connect('bg-start')
+        connect('bg-end')
+        connect('rotation')
+
+        let illoRotation: Zdog.Vector | null = null
+        let illo: Zdog.Illustration | null = null
+
+        const render = () => {
+            illo = new Zdog.Illustration({
+                element: svg as HTMLOrSVGElement as SVGSVGElement,
+                rotate: illoRotation ?? { x: 0, y: 0, z: 0 },
+                dragRotate: true,
+                onDragEnd: () => {
+                    illoRotation = illo?.rotate ?? null
+                },
+            })
+
+            const radiusX = get<number>('radius-x')
+            const radiusY = get<number>('radius-y')
+            const rotation = get<number>('rotation')
+            const radiusWobble = get<number>('radius-wobble')
+            const radiusFreq = get<number>('radius-freq')
+            const stride = get<number>('stride')
+            const amplitude = get<number>('amplitude')
+            const amplitudeFreq = get<number>('amplitude-freq')
+            const fillStart = get<string>('fill-start')
+            const fillMid = get<string>('fill-mid')
+            const fillEnd = get<string>('fill-end')
+            const fillAlpha = get<number>('fill-alpha')
+            const strokeWidth = get<number>('stroke-width')
+            const strokeStart = get<string>('stroke-start')
+            const strokeMid = get<string>('stroke-mid')
+            const strokeEnd = get<string>('stroke-end')
+            const strokeAlpha = get<number>('stroke-alpha')
+            const colorSpace = get<string>('color-space')
+            const bgAngle = get<number>('bg-angle')
+            const bgStart = get<string>('bg-start')
+            const bgEnd = get<string>('bg-end')
+
+            const fs = new Color(fillStart)
+            const fm = new Color(fillMid)
+            const fe = new Color(fillEnd)
+            const ss = new Color(strokeStart)
+            const sm = new Color(strokeMid)
+            const se = new Color(strokeEnd)
+
+            const numCircles = 100
+            const maxRadius = size.w * 0.4
+
+            for (let i = 1; i < numCircles; i++) {
+                const t = i / numCircles
+                const tr = t * Math.PI
+                const radius = Math.sin(tr) * maxRadius
+                const zOffset = Math.cos(tr) * maxRadius
+
+                const fill = mix(fs, fm, fe, t, colorSpace)
+                const stroke = mix(ss, sm, se, t, colorSpace)
+
+                const options: EllipseOptions = {
+                    addTo: illo,
+                    diameter: radius * 2,
+                    translate: { z: zOffset },
+                    stroke: false,
+                    fill: false,
+                }
+
+                new Zdog.Ellipse({
+                    ...options,
+                    fill: true,
+                    color: fill.to('srgb').toString({ format: 'hsla' }),
+                })
+
+                new Zdog.Ellipse({
+                    ...options,
+                    stroke: 1,
+                    color: stroke.to('srgb').toString({ format: 'hsla' }),
+                })
+            }
+        }
+
+        function animate() {
+            illo?.updateRenderGraph()
+            requestAnimationFrame(animate)
+        }
+
+        animate()
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>
