@@ -1,0 +1,174 @@
+---
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Select from '../components/Select.astro'
+import SvgPlayground from '../layouts/SvgPlayground.astro'
+---
+
+<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Swirly">
+    <Fragment slot="controls">
+        <Slider id="stride" min={2} max={50} value={10} name="Stride" step={1} />
+        <Slider id="rotation" min={0} max={720} value={0} name="Rotation" />
+        <Slider id="radius-min" min={0} max={1000} value={5} name="Radius Min" />
+        <Slider id="radius-x" min={0} max={1} value={1} step={0.01} name="Radius X" />
+        <Slider id="radius-y" min={0} max={1} value={1} step={0.01} name="Radius Y" />
+        <Slider id="freq" min={-5} max={5} value={0} step={0.1} name="Frequency" />
+        <Slider id="offset-x" min={-500} max={500} value={0} name="Offset X" />
+        <Slider id="offset-y" min={-500} max={500} value={0} name="Offset Y" />
+        <Slider id="stroke-width" min={0} max={10} step={0.1} value={1} name="Stroke Width" />
+
+        <div class="grid grid-cols-3 gap-4">
+            <Input type="color" id="fill-start" label="Fill Start" value="#2bff00" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#2bff00" />
+            <Input type="color" id="fill-end" label="Fill End" value="#ff0000" />
+            <Slider class="col-span-3" id="fill-alpha" min={0} max={1} step={0.01} value={1} name="Fill Alpha" />
+
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#00ff91" />
+            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#00ff91" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#ffae00" />
+            <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={1} name="Stroke Alpha" />
+
+            <Select id="color-space" label="Color Space" class="col-span-3">
+                <option value="lch" selected>LCH</option>
+                <option value="acescc">ACEScc</option>
+                <option value="a98rgb">Adobe 98 RGB</option>
+                <option value="hpluv">HPLuv</option>
+                <option value="hsl">HSL</option>
+                <option value="hsluv">HSLuv</option>
+                <option value="hwb">HWB</option>
+                <option value="ictcp">ICTCQ</option>
+                <option value="jzczhz">JzCzHz</option>
+                <option value="lab">LAB</option>
+                <option value="oklch">Oklch</option>
+                <option value="p3">P3</option>
+                <option value="prophoto">ProPhoto</option>
+                <option value="rec2020">REC.2020</option>
+                <option value="rec2100hlg">REC.2100-HLG</option>
+                <option value="rec2100pq">REC.2100-PQ</option>
+            </Select>
+        </div>
+
+        <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
+        <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+            <Input type="color" id="bg-start" label="Bg Start" value="#00ff40" />
+            <Input type="color" id="bg-end" label="Bg End" value="#00ffbf" />
+        </div>
+    </Fragment>
+</SvgPlayground>
+
+<script>
+    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
+    import { drawEllipse } from '../svg/ellipse'
+    import { connect as connectControl, get } from '../utils/controls'
+    import { drawRect } from '../svg/rect'
+    import { createGradient } from '../svg/gradient'
+    import Color from 'colorjs.io'
+    import { mix } from '../utils/color'
+
+    const init = (svg: HTMLElement, size: Size) => {
+        const connect = (id: string) => {
+            connectControl(id, () => render())
+        }
+
+        connect('stride')
+        connect('radius-min')
+        connect('radius-x')
+        connect('radius-y')
+        connect('freq')
+        connect('offset-x')
+        connect('offset-y')
+        connect('fill-start')
+        connect('fill-mid')
+        connect('fill-end')
+        connect('fill-alpha')
+        connect('stroke-start')
+        connect('stroke-mid')
+        connect('stroke-end')
+        connect('stroke-width')
+        connect('stroke-alpha')
+        connect('color-space')
+        connect('bg-angle')
+        connect('bg-start')
+        connect('bg-end')
+        connect('rotation')
+
+        const render = () => {
+            clear(svg)
+
+            const radiusMin = get<number>('radius-min')
+            const radiusX = get<number>('radius-x')
+            const radiusY = get<number>('radius-y')
+            const freq = get<number>('freq')
+            const offsetX = get<number>('offset-x')
+            const offsetY = get<number>('offset-y')
+            const rotation = get<number>('rotation')
+            const stride = get<number>('stride')
+            const fillStart = get<string>('fill-start')
+            const fillMid = get<string>('fill-mid')
+            const fillEnd = get<string>('fill-end')
+            const fillAlpha = get<number>('fill-alpha')
+            const strokeWidth = get<number>('stroke-width')
+            const strokeStart = get<string>('stroke-start')
+            const strokeMid = get<string>('stroke-mid')
+            const strokeEnd = get<string>('stroke-end')
+            const strokeAlpha = get<number>('stroke-alpha')
+            const colorSpace = get<string>('color-space')
+            const bgAngle = get<number>('bg-angle')
+            const bgStart = get<string>('bg-start')
+            const bgEnd = get<string>('bg-end')
+
+            const steps = (size.h + radiusY) / stride
+            const center = { x: size.w / 2, y: size.h / 2 }
+
+            const fs = new Color(fillStart)
+            const fm = new Color(fillMid)
+            const fe = new Color(fillEnd)
+            const ss = new Color(strokeStart)
+            const sm = new Color(strokeMid)
+            const se = new Color(strokeEnd)
+
+            createGradient(svg, {
+                id: 'bg-gradient',
+                start: bgStart,
+                end: bgEnd,
+                angle: bgAngle,
+            })
+
+            drawRect(svg, {
+                x: 0,
+                y: 0,
+                width: size.w,
+                height: size.h,
+                fill: 'url(#bg-gradient)',
+            })
+
+            for (let i = 0; i < steps; i++) {
+                const t = i / steps
+                const pi_t = t * Math.PI * 2 * freq
+                const fill = mix(fs, fm, fe, t, colorSpace)
+                const stroke = mix(ss, sm, se, t, colorSpace)
+
+                const r = (1 - t) * size.h + 10
+
+                drawEllipse(svg, {
+                    x: center.x + Math.sin(pi_t) * offsetX,
+                    y: center.y + Math.cos(pi_t) * offsetY,
+                    radiusX: radiusMin + r * radiusX,
+                    radiusY: radiusMin + r * radiusY,
+                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    fillOpacity: fillAlpha,
+                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
+                    strokeOpacity: strokeAlpha,
+                    strokeWidth: strokeWidth,
+                    rotation: (t - 0.5) * rotation,
+                })
+            }
+        }
+
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>
