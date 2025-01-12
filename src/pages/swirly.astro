@@ -7,26 +7,26 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 
 <SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Swirly">
     <Fragment slot="controls">
-        <Slider id="stride" min={2} max={50} value={10} name="Stride" step={1} />
-        <Slider id="rotation" min={0} max={720} value={0} name="Rotation" />
-        <Slider id="radius-min" min={0} max={1000} value={5} name="Radius Min" />
-        <Slider id="radius-x" min={0} max={1} value={1} step={0.01} name="Radius X" />
-        <Slider id="radius-y" min={0} max={1} value={1} step={0.01} name="Radius Y" />
-        <Slider id="freq" min={-5} max={5} value={0} step={0.1} name="Frequency" />
-        <Slider id="offset-x" min={-500} max={500} value={0} name="Offset X" />
-        <Slider id="offset-y" min={-500} max={500} value={0} name="Offset Y" />
-        <Slider id="stroke-width" min={0} max={10} step={0.1} value={1} name="Stroke Width" />
+        <Slider id="stride" min={2} max={50} value={21} name="Stride" step={0.1} />
+        <Slider id="rotation" min={0} max={720} value={56} name="Rotation" />
+        <Slider id="radius-min" min={0} max={1000} value={7} name="Radius Min" />
+        <Slider id="radius-x" min={0} max={1} value={0.68} step={0.01} name="Radius X" />
+        <Slider id="radius-y" min={0} max={1} value={0.32} step={0.01} name="Radius Y" />
+        <Slider id="freq" min={-5} max={5} value={0.5} step={0.1} name="Frequency" />
+        <Slider id="offset-x" min={-500} max={500} value={170} name="Offset X" />
+        <Slider id="offset-y" min={-500} max={500} value={-280} name="Offset Y" />
 
         <div class="grid grid-cols-3 gap-4">
-            <Input type="color" id="fill-start" label="Fill Start" value="#2bff00" />
-            <Input type="color" id="fill-mid" label="Fill Mid" value="#2bff00" />
-            <Input type="color" id="fill-end" label="Fill End" value="#ff0000" />
-            <Slider class="col-span-3" id="fill-alpha" min={0} max={1} step={0.01} value={1} name="Fill Alpha" />
+            <Input type="color" id="fill-start" label="Fill Start" value="#ff0000" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#ff9500" />
+            <Input type="color" id="fill-end" label="Fill End" value="#007bff" />
+            <Slider class="col-span-3" id="fill-alpha" min={0} max={1} step={0.01} value={0.29} name="Fill Alpha" />
 
-            <Input type="color" id="stroke-start" label="Stroke Start" value="#00ff91" />
-            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#00ff91" />
-            <Input type="color" id="stroke-end" label="Stroke End" value="#ffae00" />
-            <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={1} name="Stroke Alpha" />
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#000000" />
+            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#0091ff" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#ff00ea" />
+            <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={0.44} name="Stroke Alpha" />
+            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={1.5} name="Stroke Width" />
 
             <Select id="color-space" label="Color Space" class="col-span-3">
                 <option value="lch" selected>LCH</option>
@@ -48,10 +48,10 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             </Select>
         </div>
 
-        <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
+        <Slider id="bg-angle" min={0} max={360} value={0} name="Bg Angle" />
         <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
-            <Input type="color" id="bg-start" label="Bg Start" value="#00ff40" />
-            <Input type="color" id="bg-end" label="Bg End" value="#00ffbf" />
+            <Input type="color" id="bg-start" label="Bg Start" value="#000000" />
+            <Input type="color" id="bg-end" label="Bg End" value="#000000" />
         </div>
     </Fragment>
 </SvgPlayground>
