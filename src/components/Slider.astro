@@ -10,11 +10,21 @@ type Props = {
 }
 
 const { id, name, min, max, value, step = 1, class: className, ...rest } = Astro.props
+const { pathname } = Astro.url
 ---
 
 <label class:list={['text-lg grid gap-2', className]} {...rest}>
     {name}
-    <input id={id} class="h-4" type="range" min={min} max={max} value={value} step={step} />
+    <input
+        id={id}
+        class="h-4"
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        step={step}
+        data-umami-event={`changed ${name} on ${pathname}`}
+    />
 </label>
 
 <style>

@@ -7,6 +7,7 @@ type Props = {
 }
 
 const { id, label, rounded, class: className } = Astro.props
+const { pathname } = Astro.url
 ---
 
 <label class:list={['text-lg grid gap-1', className]}>
@@ -20,6 +21,7 @@ const { id, label, rounded, class: className } = Astro.props
                 'rounded-full': rounded,
             },
         ]}
+        data-umami-event={`changed ${label} on ${pathname}`}
     >
         <slot />
     </select>
