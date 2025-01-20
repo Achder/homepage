@@ -24,7 +24,7 @@ export const GET: APIRoute = async (context) => {
 
     await page.goto(safeUrl)
     await page.evaluate(() => {
-        document.body.style.zoom = '0.65'
+        document.body.style.zoom = '0.64'
     })
 
     const imageBuffer = await page.screenshot({ type: 'png' })
