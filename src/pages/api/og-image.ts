@@ -9,14 +9,16 @@ export const GET: APIRoute = async (context) => {
         return new Response('No URL provided', { status: 400 })
     }
 
-    console.log(url)
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--force-device-scale-factor=0.75'],
+        args: ['--no-sandbox'],
     })
     const page = await browser.newPage()
+    await page.setViewport({ width: 1920, height: 1080 })
     await page.goto(url)
-
+    await page.evaluate(() => {
+        document.body.style.zoom = '0.65'
+    })
     const imageBuffer = await page.screenshot({ type: 'png' })
     await browser.close()
 
