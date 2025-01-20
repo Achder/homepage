@@ -9,7 +9,11 @@ export const GET: APIRoute = async (context) => {
         return new Response('No URL provided', { status: 400 })
     }
 
-    const browser = await puppeteer.launch()
+    console.log(url)
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox'],
+    })
     const page = await browser.newPage()
     await page.goto(url)
     const imageBuffer = await page.screenshot({ type: 'png' })
