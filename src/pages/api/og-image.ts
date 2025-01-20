@@ -12,10 +12,11 @@ export const GET: APIRoute = async (context) => {
     console.log(url)
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox'],
+        args: ['--no-sandbox', '--force-device-scale-factor=0.75'],
     })
     const page = await browser.newPage()
     await page.goto(url)
+
     const imageBuffer = await page.screenshot({ type: 'png' })
     await browser.close()
 
