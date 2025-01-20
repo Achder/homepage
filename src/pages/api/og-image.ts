@@ -1,8 +1,6 @@
 import puppeteer, { Browser } from 'puppeteer'
 import type { APIRoute } from 'astro'
 
-let browser: Browser | null = null
-
 export const GET: APIRoute = async (context) => {
     const { origin, searchParams } = new URL(context.request.url)
     const target = searchParams.get('url')
@@ -10,12 +8,10 @@ export const GET: APIRoute = async (context) => {
         return new Response('No URL provided', { status: 400 })
     }
 
-    if (!browser) {
-        browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox'],
-        })
-    }
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox'],
+    })
 
     const page = await browser.newPage()
     await page.setViewport({ width: 1920, height: 1080 })
@@ -24,7 +20,7 @@ export const GET: APIRoute = async (context) => {
     // We make sure to use the origin of the request URL
     const targetUrl = new URL(target)
     const { pathname: targetPath, searchParams: targetSearchParams } = targetUrl
-    const safeUrl = `${origin}${targetPath}${targetSearchParams.toString()}`
+    const safeUrl = `${origin}${targetPath}?${targetSearchParams.toString()}`
 
     await page.goto(safeUrl)
     await page.evaluate(() => {
