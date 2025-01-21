@@ -327,9 +327,9 @@ import Select from '../components/Select.astro'
         writeToUrl('balls', JSON.stringify(balls))
     }
 
-    const init = (svg: HTMLElement, size: Size) => {
+    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
         const connect = (id: string) => {
-            connectControl(id, () => render())
+            connectControl(id, () => render(), abortSignal)
         }
 
         connect('min-threshold')

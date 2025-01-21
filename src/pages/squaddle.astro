@@ -65,9 +65,9 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
     import Color from 'colorjs.io'
     import { mix } from '../utils/color'
 
-    const init = (svg: HTMLElement, size: Size) => {
+    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
         const connect = (id: string) => {
-            connectControl(id, () => render())
+            connectControl(id, () => render(), abortSignal)
         }
 
         connect('stride')

@@ -1,3 +1,5 @@
+import { pushUndo } from './state'
+
 export function get<T>(id: string) {
     const element = document.getElementById(id)! as HTMLInputElement
     if (!isNaN(element.valueAsNumber)) {
@@ -19,10 +21,10 @@ export function readFromUrl(id: string) {
 export function writeToUrl(id: string, value: string) {
     const searchParams = new URLSearchParams(window.location.search)
     searchParams.set(id, value)
-    window.history.replaceState({}, '', `?${searchParams.toString()}`)
+    pushUndo(`?${searchParams.toString()}`)
 }
 
-export function connect(id: string, callback: () => void) {
+export function connect(id: string, callback: () => void, abortSignal?: AbortSignal) {
     const element = document.getElementById(id) as HTMLInputElement | HTMLSelectElement
     if (!element) {
         throw new Error(`Element with id ${id} not found`)
@@ -33,14 +35,13 @@ export function connect(id: string, callback: () => void) {
         element.value = urlValue
     }
 
-    element.addEventListener('change', () => writeToUrl(id, element.value))
-    element.addEventListener('input', callback)
-    element.dispatchEvent(new Event('change'))
+    element.addEventListener('change', () => writeToUrl(id, element.value), { signal: abortSignal })
+    element.addEventListener('input', callback, { signal: abortSignal })
 }
 
-export function connectClick(id: string, callback: () => void) {
+export function connectClick(id: string, callback: () => void, abortSignal?: AbortSignal) {
     const element = document.getElementById(id)! as HTMLButtonElement
-    element.addEventListener('click', callback)
+    element.addEventListener('click', callback, { signal: abortSignal })
 }
 
 export function shiftLeft<T>(arr: T[]) {
