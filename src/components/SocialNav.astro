@@ -1,5 +1,6 @@
 ---
 import StyledLink from './StyledLink.astro'
+import Bluesky from './icons/Bluesky.astro'
 import Github from './icons/Github.astro'
 import LinkedIn from './icons/LinkedIn.astro'
 import Threads from './icons/Threads.astro'
@@ -16,9 +17,9 @@ const { class: className, ...rest } = Astro.props
         <span class="sr-only">LinkedIn</span>
         <LinkedIn />
     </StyledLink>
-    <StyledLink href="https://www.threads.net/@serranoschinken">
-        <span class="sr-only">Threads</span>
-        <Threads />
+    <StyledLink href="https://bsky.app/profile/meerpohl.dev">
+        <span class="sr-only">Bluesky</span>
+        <Bluesky />
     </StyledLink>
     <StyledLink href="https://github.com/Achder">
         <span class="sr-only">Github</span>
