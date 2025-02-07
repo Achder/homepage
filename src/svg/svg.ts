@@ -1,7 +1,44 @@
 import { redo, undo } from '../utils/state'
+import { getOrCreateDefs } from './gradient'
 
-export function save(id: string) {
-    const svgElement = document.getElementById(id)!
+function blobToBase64(blob: Blob) {
+    return new Promise<string | ArrayBuffer | null>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.readAsDataURL(blob)
+    })
+}
+
+async function embedFontInSVG(svg: HTMLElement) {
+    const fontResponse = await fetch(`/fonts/RethinkSans-ExtraBold.woff2`)
+    const fontBlob = await fontResponse.blob()
+    const dataUrl = await blobToBase64(fontBlob)
+
+    const style = document.createElement('style')
+    style.setAttribute('type', 'text/css')
+    style.textContent = `
+        <![CDATA[
+            @font-face {
+                font-family: 'Rethink Sans';
+                src: url(${dataUrl});
+                svg:font-weight: normal;
+                svg:font-style: normal;
+            }
+        ]]>
+    `
+
+    const defs = getOrCreateDefs(svg)
+    defs?.appendChild(style)
+}
+
+export async function save(id: string) {
+    const svgElement = document.getElementById(id)
+    if (!svgElement) {
+        console.error('Could not find SVG element.')
+        return
+    }
+
+    await embedFontInSVG(svgElement)
 
     // 1. Get SVG Content
     const svgString = new XMLSerializer().serializeToString(svgElement)
@@ -16,10 +53,12 @@ export function save(id: string) {
     const blob = new Blob([svgData], { type: 'image/svg+xml' })
     const url = URL.createObjectURL(blob)
 
+    const title = document.querySelector('h1')?.textContent ?? 'your-file'
+
     // 3. Trigger Download
     const downloadLink = document.createElement('a')
     downloadLink.href = url
-    downloadLink.download = 'squaddle'
+    downloadLink.download = title.trim()
     document.body.appendChild(downloadLink)
     downloadLink.click()
     document.body.removeChild(downloadLink)

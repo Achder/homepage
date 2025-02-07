@@ -1,0 +1,199 @@
+---
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Select from '../components/Select.astro'
+import SvgPlayground from '../layouts/SvgPlayground.astro'
+---
+
+<SvgPlayground pageDescription="SVG sketching tool for generating downloadable abstract SVG forms" heading="Wordy">
+    <Fragment slot="controls">
+        <Input type="text" id="text" label="Text" value="Hello" />
+
+        <Slider id="shapes" min={2} max={300} value={143} name="Shapes" />
+        <Slider id="stride" min={-50} max={50} value={-0.73} name="Stride" step={0.01} />
+        <Slider id="rotation" min={-720} max={720} value={40} name="Rotation" />
+
+        <Slider id="amplitude" min={-100} max={100} value={6} name="Amplitude" />
+        <Slider id="wobble" min={0} max={1} value={0} step={0.01} name="Wobble" />
+        <Slider id="wobble-freq" min={0.5} max={3} value={1.4} step={0.01} name="Wobble Frequency" />
+
+        <Slider id="font-size" min={5} max={100} value={19} name="Font Size" />
+        <Slider id="font-scale" min={-1} max={1} value={0.2} step={0.01} name="Font Scale" />
+
+        <div class="grid grid-cols-3 gap-4">
+            <Input type="color" id="fill-start" label="Fill Start" value="#ff00c8" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#ff0000" />
+            <Input type="color" id="fill-end" label="Fill End" value="#000000" />
+        </div>
+        <Slider id="fill-alpha" min={0} max={1} step={0.01} value={1} name="Fill Alpha" />
+        <Slider id="fill-alpha-scale" min={-1} max={1} step={0.01} value={0} name="Fill Alpha Scale" />
+
+        <div class="grid grid-cols-3 gap-4">
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#ff0000" />
+            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#00ff59" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#eeff00" />
+        </div>
+
+        <Slider id="stroke-width" min={0} max={10} step={0.1} value={0.6} name="Stroke Width" />
+        <Slider id="stroke-alpha" min={0} max={1} step={0.01} value={0.75} name="Stroke Alpha" />
+        <Slider id="stroke-alpha-scale" min={-1} max={1} step={0.01} value={0} name="Stroke Alpha Scale" />
+
+        <Select id="color-space" label="Color Space">
+            <option value="lch" selected>LCH</option>
+            <option value="acescc">ACEScc</option>
+            <option value="a98rgb">Adobe 98 RGB</option>
+            <option value="hpluv">HPLuv</option>
+            <option value="hsl">HSL</option>
+            <option value="hsluv">HSLuv</option>
+            <option value="hwb">HWB</option>
+            <option value="ictcp">ICTCQ</option>
+            <option value="jzczhz">JzCzHz</option>
+            <option value="lab">LAB</option>
+            <option value="oklch">Oklch</option>
+            <option value="p3">P3</option>
+            <option value="prophoto">ProPhoto</option>
+            <option value="rec2020">REC.2020</option>
+            <option value="rec2100hlg">REC.2100-HLG</option>
+            <option value="rec2100pq">REC.2100-PQ</option>
+        </Select>
+
+        <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
+        <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+            <Input type="color" id="bg-start" label="Bg Start" value="#000000" />
+            <Input type="color" id="bg-end" label="Bg End" value="#000000" />
+        </div>
+    </Fragment>
+</SvgPlayground>
+
+<script>
+    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
+    import { connect as connectControl, get } from '../utils/controls'
+    import { drawRect } from '../svg/rect'
+    import { createGradient } from '../svg/gradient'
+    import Color from 'colorjs.io'
+    import { mix } from '../utils/color'
+    import { drawText } from '../svg/text'
+
+    const seesaw = (c: number, t: number) => {
+        const a = c < 0 ? 1 - Math.abs(c) : 1
+        const b = c >= 0 ? 1 - c : 1
+        return a + (b - a) * t
+    }
+
+    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
+        const connect = (id: string) => {
+            connectControl(id, () => render(), abortSignal)
+        }
+
+        connect('text')
+        connect('shapes')
+        connect('stride')
+        connect('amplitude')
+        connect('wobble')
+        connect('wobble-freq')
+        connect('font-size')
+        connect('font-scale')
+        connect('fill-start')
+        connect('fill-mid')
+        connect('fill-end')
+        connect('fill-alpha')
+        connect('fill-alpha-scale')
+        connect('stroke-start')
+        connect('stroke-mid')
+        connect('stroke-end')
+        connect('stroke-width')
+        connect('stroke-alpha')
+        connect('stroke-alpha-scale')
+        connect('color-space')
+        connect('bg-angle')
+        connect('bg-start')
+        connect('bg-end')
+        connect('rotation')
+
+        const render = () => {
+            clear(svg)
+
+            const text = get<string>('text')
+            const rotation = get<number>('rotation')
+            const shapes = get<number>('shapes')
+            const stride = get<number>('stride')
+            const wobble = get<number>('wobble')
+            const amplitude = get<number>('amplitude')
+            const wobbleFreq = get<number>('wobble-freq')
+            const fontSize = get<number>('font-size')
+            const fontScale = get<number>('font-scale')
+            const fillStart = get<string>('fill-start')
+            const fillMid = get<string>('fill-mid')
+            const fillEnd = get<string>('fill-end')
+            const fillAlpha = get<number>('fill-alpha')
+            const fillAlphaScale = get<number>('fill-alpha-scale')
+            const strokeWidth = get<number>('stroke-width')
+            const strokeStart = get<string>('stroke-start')
+            const strokeMid = get<string>('stroke-mid')
+            const strokeEnd = get<string>('stroke-end')
+            const strokeAlpha = get<number>('stroke-alpha')
+            const strokeAlphaScale = get<number>('stroke-alpha-scale')
+            const colorSpace = get<string>('color-space')
+            const bgAngle = get<number>('bg-angle')
+            const bgStart = get<string>('bg-start')
+            const bgEnd = get<string>('bg-end')
+
+            const center = { x: size.w / 2, y: size.h / 2 }
+
+            const fs = new Color(fillStart)
+            const fm = new Color(fillMid)
+            const fe = new Color(fillEnd)
+            const ss = new Color(strokeStart)
+            const sm = new Color(strokeMid)
+            const se = new Color(strokeEnd)
+
+            createGradient(svg, {
+                id: 'bg-gradient',
+                start: bgStart,
+                end: bgEnd,
+                angle: bgAngle,
+            })
+
+            drawRect(svg, {
+                x: 0,
+                y: 0,
+                width: size.w,
+                height: size.h,
+                fill: 'url(#bg-gradient)',
+            })
+
+            for (let i = 0; i <= shapes; i++) {
+                const t = i / shapes
+                const nt = (t - 0.5) * 2
+                const pi_nt = nt * Math.PI * 2
+                const fill = mix(fs, fm, fe, t, colorSpace)
+                const stroke = mix(ss, sm, se, t, colorSpace)
+
+                const sineOffset = Math.sin(pi_nt * wobbleFreq) * amplitude
+                const linearOffset = nt * amplitude
+                const xOffset = linearOffset + (sineOffset - linearOffset) * wobble
+                const yOffset = (i - shapes / 2) * stride
+
+                drawText(svg, {
+                    content: text,
+                    x: center.x + xOffset,
+                    y: center.y + yOffset,
+                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    fillOpacity: fillAlpha * seesaw(fillAlphaScale, t),
+                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
+                    strokeOpacity: strokeAlpha * seesaw(strokeAlphaScale, t),
+                    strokeWidth: strokeWidth,
+                    rotation: (nt - 0.5) * rotation,
+                    fontSize: `${fontSize * seesaw(fontScale, t) * 16}px`,
+                    fontWeight: '900',
+                })
+            }
+        }
+
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>

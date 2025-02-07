@@ -7,7 +7,7 @@ type GradientParams = {
     angle: number
 }
 
-function getOrCreateDefs(svg: HTMLElement) {
+export function getOrCreateDefs(svg: HTMLElement) {
     const defs = svg.querySelector('defs')
     if (defs) {
         return defs
@@ -30,7 +30,8 @@ export function createGradient(svg: HTMLElement, params: GradientParams) {
 
     const gradient = document.createElementNS(ns, 'linearGradient')
     gradient.setAttribute('id', id)
-    gradient.setAttribute('gradientTransform', `rotate(${angle})`)
+    gradient.setAttribute('gradientUnits', `objectBoundingBox`)
+    gradient.setAttribute('gradientTransform', `rotate(${angle} 0.5 0.5)`)
 
     const stopStart = document.createElementNS(ns, 'stop')
     stopStart.setAttribute('offset', '0%')

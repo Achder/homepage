@@ -12,6 +12,8 @@ const { pageDescription, heading } = Astro.props
 ---
 
 <PageLayout description={pageDescription}>
+    <slot name="head" slot="head" />
+
     <Heading type="h1">{heading}</Heading>
 
     <div class="justify-self-stretch relative grid gap-10">

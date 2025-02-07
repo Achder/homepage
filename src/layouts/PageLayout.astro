@@ -43,6 +43,7 @@ const isProduction = import.meta.env.MODE === 'production'
 
         <link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="" />
+        <slot name="head" />
     </head>
 
     <body class="font-rethink font-normal bg-white text-black">
