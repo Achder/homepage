@@ -15,7 +15,7 @@ const { pathname } = Astro.url
     <select
         id={id}
         class:list={[
-            'appearance-none px-4 py-3 font-bold text-md tracking-widest bg-black hover:bg-fuchsia-500 text-white transition-colors',
+            'appearance-none px-4 py-3 font-bold text-md tracking-widest bg-black dark:bg-slate-200  hover:bg-fuchsia-500 text-white dark:text-black transition-colors',
             {
                 'rounded-sm': !rounded,
                 'rounded-full': rounded,

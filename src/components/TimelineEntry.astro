@@ -10,10 +10,7 @@ const { timerange, title, tech, class: className } = Astro.props
 ---
 
 <div class:list={['pl-16 sm:pl-24 py-8 text-xl relative', className]}>
-    <div
-        class="w-4 h-4 absolute bg-white rounded-full left-1 top-[50%] translate-y-[-50%]"
-    >
-    </div>
+    <div class="w-4 h-4 absolute bg-white dark:bg-slate-900 rounded-full left-1 top-[50%] translate-y-[-50%]"></div>
     <p class="text-base">{timerange}</p>
     <p class="font-bold">{title}</p>
     <slot />

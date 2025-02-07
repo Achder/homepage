@@ -18,45 +18,31 @@ import StyledLink from '../components/StyledLink.astro'
     <section class="w-full text-2xl text-pretty grid gap-4 justify-items-start">
         <img
             id="profile"
-            class="w-full aspect-square sm:aspect-[2/1] object-cover border-8 border-black shadow-2xl rounded-sm"
+            class="w-full aspect-square sm:aspect-[2/1] object-cover shadow-2xl rounded-sm"
             src={Me.src}
             loading="eager"
             alt="An image of me, Thomas Meerpohl"
         />
 
-        <LinkButton
-            href="mailto:thomas.meerpohl@gmail.com"
-            class="w-full sm:w-auto"
-        >
-            Contact me
-        </LinkButton>
+        <LinkButton href="mailto:thomas.meerpohl@gmail.com" class="w-full sm:w-auto"> Contact me </LinkButton>
     </section>
 
-    <section
-        class="w-full text-xl text-pretty grid gap-5 justify-items-start about px-8 py-12 bg-black rounded-sm text-white shadow-2xl"
-    >
+    <section class="w-full text-xl text-pretty grid gap-5 justify-items-start about py-12 rounded-sm">
         <Heading type="h2">About me</Heading>
 
         <article>
             <p>I'm a full-stack developer from Dresden, Germany.</p>
             <p>
-                My focus is on building applications <StyledLink href="/what"
-                    >using web technologies</StyledLink
-                >
+                My focus is on building applications <StyledLink href="/what">using web technologies</StyledLink>
             </p>
             <p>
-                In my 8 years professional career, I have worked in large
-                international SCRUM teams as well as small and highly dynamic
-                startups.
+                In my 8 years professional career, I have worked in large international SCRUM teams as well as small and
+                highly dynamic startups.
             </p>
-            <p>
-                The products I helped develop are being used by thousands of
-                users around the world.
-            </p>
+            <p>The products I helped develop are being used by thousands of users around the world.</p>
             <p>
                 If you need assistance with your next project, feel free to <StyledLink
-                    href="mailto:thomas.meerpohl@gmail.com"
-                    >contact me</StyledLink
+                    href="mailto:thomas.meerpohl@gmail.com">contact me</StyledLink
                 >and I will provide you with a detailed CV.
             </p>
         </article>

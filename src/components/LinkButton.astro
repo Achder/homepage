@@ -11,7 +11,7 @@ const { href, class: className, ...rest } = Astro.props
     href={href}
     class:list={[
         className,
-        'bg-black rounded-sm text-white hover:bg-fuchsia-500 hover:text-white shadow-xl transition-all px-8 py-6 font-extrabold tracking-wider flex gap-4 whitespace-nowrap',
+        'bg-black dark:bg-slate-300 rounded-sm text-white dark:text-slate-900 hover:bg-fuchsia-500 hover:text-white dark:hover:text-black shadow-xl transition-all px-8 py-6 font-extrabold tracking-wider flex gap-4 whitespace-nowrap',
     ]}
     {...rest}
 >

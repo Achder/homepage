@@ -20,12 +20,12 @@ const { class: className, ...rest } = Astro.props
         id="page-nav"
         class:list={[
             className,
-            'flex-col hidden sm:flex sm:flex-row justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-4 absolute sm:static bg-white z-50 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none',
+            'flex-col hidden sm:flex sm:flex-row justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-4 absolute sm:static z-50 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none',
         ]}
     >
         <StyledLink href="/">Home</StyledLink>
         <StyledLink href="/what"> What I do</StyledLink>
-        <StyledLink href="/snake">Ssssnake</StyledLink>
+        <!-- <StyledLink href="/snake">Ssssnake</StyledLink> -->
         <StyledLink
             href="/squaddle?stride=3.82&amplitude=239&amplitude-freq=1&radius-x=121&radius-y=300&radius-wobble=-31&radius-freq=1&fill-start=%23e1ff00&fill-mid=%237300ff&fill-end=%23ff0000&fill-alpha=0.03&stroke-start=%23ffae00&stroke-mid=%230011ff&stroke-end=%23ffea00&stroke-width=1.3&stroke-alpha=0.68&color-space=hwb&bg-angle=0&bg-start=%23000000&bg-end=%23000000&rotation=400"
             >Squaddle
