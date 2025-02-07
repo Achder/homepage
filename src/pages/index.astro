@@ -7,6 +7,34 @@ import Heading from '../components/Heading.astro'
 import StyledLink from '../components/StyledLink.astro'
 ---
 
+<style>
+    img {
+        animation-iteration-count: infinite;
+        animation-duration: 15s;
+        animation-name: wobble;
+        animation-direction: normal;
+        animation-timing-function: linear;
+    }
+
+    @keyframes wobble {
+        0% {
+            transform: perspective(500px) rotate3d(1, 0, 1, 0deg);
+        }
+
+        25% {
+            transform: perspective(500px) rotate3d(0, 1, 1, -2deg);
+        }
+
+        73% {
+            transform: perspective(500px) rotate3d(1, 1, 0, 2deg);
+        }
+
+        100% {
+            transform: perspective(500px) rotate3d(1, 0, 1, 0deg);
+        }
+    }
+</style>
+
 <PageLayout
     description="I'm Thomas Meerpohl, a freelancer based in Dresden, Germany. I'm a fullstack javascript web developer. I build websites, webapplications and mobile cross-plaform apps."
 >
@@ -15,7 +43,7 @@ import StyledLink from '../components/StyledLink.astro'
         <p class="leading-none">Thomas Meerpohl</p>
     </Heading>
 
-    <section class="w-full text-2xl text-pretty grid gap-4 justify-items-start">
+    <section class="w-full text-2xl text-pretty grid gap-8 justify-items-start">
         <img
             id="profile"
             class="w-full aspect-square sm:aspect-[2/1] object-cover shadow-2xl rounded-sm"
