@@ -1,9 +1,6 @@
 ---
 type Props = {
-    type: keyof Pick<
-        astroHTML.JSX.DefinedIntrinsicElements,
-        'h1' | 'h2' | 'h3' | 'h4'
-    >
+    type: keyof Pick<astroHTML.JSX.DefinedIntrinsicElements, 'h1' | 'h2' | 'h3' | 'h4'>
     class?: string
 }
 
@@ -13,7 +10,7 @@ const { class: className, type: Type, ...rest } = Astro.props
 <Type
     {...rest}
     class:list={[
-        'font-extrabold m-0 leading-[0.8] text-balance',
+        'font-extrabold m-0 leading-[0.8] text-balance text-dark underline',
         {
             'text-7xl': Type === 'h1',
             'text-6xl ': Type === 'h2',

@@ -6,6 +6,10 @@ export default {
             fontFamily: {
                 rethink: ['Rethink Sans'],
             },
+            colors: {
+                brand: '#ff1f1f',
+                dark: '#000000',
+            },
         },
     },
     plugins: [],
