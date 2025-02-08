@@ -45,24 +45,26 @@ const isProduction = import.meta.env.MODE === 'production'
     </head>
 
     <body
-        class="skew-x-0 md:skew-x-1 lg:skew-x-2 tracking-wider font-rethink font-normal bg-brand text-dark sm:outline sm:outline-8 sm:-outline-offset-8 sm:outline-dark px-2"
+        class="skew-x-0 md:skew-x-1 lg:skew-x-2 tracking-wider font-rethink font-normal bg-dark text-dark sm:outline sm:outline-8 sm:-outline-offset-8 sm:outline-dark px-2"
     >
-        <div class="body-wrapper min-h-dvh max-w-5xl mx-auto px-2 py-1">
-            <div class="flex justify-between gap-4">
-                <PageNav />
-                <SocialNav class="justify-end gap-8 py-8 hidden sm:flex" />
+        <div class="color-wrapper bg-brand">
+            <div class="body-wrapper min-h-dvh max-w-5xl mx-auto px-2 py-1">
+                <div class="flex justify-between gap-4">
+                    <PageNav />
+                    <SocialNav class="justify-end gap-8 py-8 hidden sm:flex" />
+                </div>
+
+                <main class="py-4 grid content-start justify-items-start gap-10">
+                    <slot />
+                </main>
+
+                <SocialNav class="flex justify-center gap-8 py-4 sm:hidden" />
+
+                <footer class="flex gap-4 py-4 justify-center justify-self-end sm:justify-end">
+                    ⓒ Thomas Meerpohl {new Date().getFullYear()}
+                    <StyledLink href="/imprint">Imprint</StyledLink>
+                </footer>
             </div>
-
-            <main class="py-4 grid content-start justify-items-start gap-10">
-                <slot />
-            </main>
-
-            <SocialNav class="flex justify-center gap-8 py-4 sm:hidden" />
-
-            <footer class="flex gap-4 py-4 justify-center justify-self-end sm:justify-end">
-                ⓒ Thomas Meerpohl {new Date().getFullYear()}
-                <StyledLink href="/imprint">Imprint</StyledLink>
-            </footer>
         </div>
     </body>
 </html>
