@@ -10,7 +10,7 @@ const { id, label, rounded, class: className } = Astro.props
 const { pathname } = Astro.url
 ---
 
-<label class:list={['font-bold text-lg grid gap-1 text-dark', className]}>
+<label class:list={['font-bold grid gap-1 text-dark text-xl', className]}>
     {label}
     <select
         id={id}

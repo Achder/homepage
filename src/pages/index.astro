@@ -5,32 +5,24 @@ import PageLayout from '../layouts/PageLayout.astro'
 import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
 import StyledLink from '../components/StyledLink.astro'
+import { Image } from 'astro:assets'
 ---
 
 <style>
     img {
         animation-iteration-count: infinite;
-        animation-duration: 15s;
+        animation-duration: 10s;
         animation-name: wobble;
-        animation-direction: normal;
-        animation-timing-function: linear;
+        animation-direction: alternate;
     }
 
     @keyframes wobble {
-        0% {
-            transform: perspective(500px) rotate3d(1, 0, 1, 0deg);
+        from {
+            filter: hue-rotate(0deg);
         }
 
-        25% {
-            transform: perspective(500px) rotate3d(0, 1, 1, -2deg);
-        }
-
-        73% {
-            transform: perspective(500px) rotate3d(1, 1, 0, 2deg);
-        }
-
-        100% {
-            transform: perspective(500px) rotate3d(1, 0, 1, 0deg);
+        to {
+            filter: hue-rotate(90deg);
         }
     }
 </style>
@@ -44,12 +36,11 @@ import StyledLink from '../components/StyledLink.astro'
     </Heading>
 
     <section class="w-full text-2xl text-pretty grid gap-8 justify-items-start">
-        <img
+        <Image
             id="profile"
             class="w-full aspect-square sm:aspect-[2/1] object-cover shadow-2xl rounded-sm outline outline-4 -outline-offset-4 outline-color"
-            src={Me.src}
-            loading="eager"
-            alt="An image of me, Thomas Meerpohl"
+            src={Me}
+            alt="A young and handsome Thomas Meerpohl"
         />
 
         <LinkButton href="mailto:thomas.meerpohl@gmail.com" class="w-full sm:w-auto"> Contact me </LinkButton>
