@@ -7,7 +7,7 @@ export default {
                 rethink: ['Rethink Sans'],
             },
             colors: {
-                brand: '#ff1f1f',
+                brand: '#1f7dff',
                 dark: '#000000',
             },
         },
