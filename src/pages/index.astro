@@ -35,7 +35,7 @@ import { Image } from 'astro:assets'
         <p class="leading-none decoration-8">Thomas Meerpohl</p>
     </Heading>
 
-    <section class="w-full text-2xl text-pretty grid gap-8 justify-items-start">
+    <section class="w-full text-2xl text-pretty grid gap-8">
         <Image
             id="profile"
             class="w-full aspect-square sm:aspect-[2/1] object-cover shadow-2xl rounded-sm outline outline-4 -outline-offset-4 outline-color"
@@ -44,7 +44,12 @@ import { Image } from 'astro:assets'
             loading="eager"
         />
 
-        <LinkButton href="mailto:thomas.meerpohl@gmail.com" class="w-full sm:w-auto"> Contact me </LinkButton>
+        <LinkButton
+            href="mailto:thomas.meerpohl@gmail.com"
+            class="w-full sm:w-auto flex items-center justify-center text-2xl"
+        >
+            <span class="text-[1.6em]">➪</span>Contact me<span class="text-[1.6em] rotate-180">➪</span>
+        </LinkButton>
     </section>
 
     <section class="w-full text-xl text-pretty grid gap-10 justify-items-start about py-12 rounded-sm">
