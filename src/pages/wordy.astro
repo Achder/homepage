@@ -17,7 +17,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
         <Slider id="wobble" min={0} max={1} value={0} step={0.01} name="Wobble" />
         <Slider id="wobble-freq" min={0.5} max={3} value={1.4} step={0.01} name="Wobble Frequency" />
 
-        <Slider id="font-size" min={5} max={100} value={19} name="Font Size" />
+        <Slider id="font-size" min={5} max={100} value={27} name="Font Size" />
         <Slider id="font-scale" min={-1} max={1} value={0.2} step={0.01} name="Font Scale" />
 
         <div class="grid grid-cols-3 gap-4">
@@ -34,7 +34,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             <Input type="color" id="stroke-end" label="Stroke End" value="#eeff00" />
         </div>
 
-        <Slider id="stroke-width" min={0} max={10} step={0.1} value={0.6} name="Stroke Width" />
+        <Slider id="stroke-width" min={0} max={10} step={0.1} value={4} name="Stroke Width" />
         <Slider id="stroke-alpha" min={0} max={1} step={0.01} value={0.75} name="Stroke Alpha" />
         <Slider id="stroke-alpha-scale" min={-1} max={1} step={0.01} value={0} name="Stroke Alpha Scale" />
 
@@ -59,8 +59,8 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 
         <Slider id="bg-angle" min={0} max={360} value={360} name="Bg Angle" />
         <div class="grid grid-cols-2 md:grid-cols-2 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
-            <Input type="color" id="bg-start" label="Bg Start" value="#000000" />
-            <Input type="color" id="bg-end" label="Bg End" value="#000000" />
+            <Input type="color" id="bg-start" label="Bg Start" value="#240042" />
+            <Input type="color" id="bg-end" label="Bg End" value="#380000" />
         </div>
     </Fragment>
 </SvgPlayground>
