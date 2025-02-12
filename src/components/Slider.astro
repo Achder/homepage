@@ -5,11 +5,12 @@ type Props = {
     min: number
     max: number
     value: number
+    reset?: number
     step?: number
     class?: string
 }
 
-const { id, name, min, max, value, step = 1, class: className, ...rest } = Astro.props
+const { id, name, min, max, value, reset, step = 1, class: className, ...rest } = Astro.props
 const { pathname } = Astro.url
 ---
 
@@ -26,6 +27,18 @@ const { pathname } = Astro.url
         data-umami-event={`changed ${name} on ${pathname}`}
     />
 </label>
+
+<script define:vars={{ id, reset }}>
+    const slider = document.getElementById(id)
+    slider?.addEventListener('dblclick', () => {
+        if (typeof reset === 'undefined') {
+            return
+        }
+
+        slider.value = reset
+        slider.dispatchEvent(new Event('input'))
+    })
+</script>
 
 <style>
     input[type='range'] {
