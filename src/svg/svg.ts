@@ -1,3 +1,4 @@
+import { addListener, clearAllListeners } from '../utils/controls'
 import { redo, undo } from '../utils/state'
 import { getOrCreateDefs } from './gradient'
 
@@ -103,14 +104,7 @@ export function initInteractiveSvg(params: InteractiveSvgParams) {
         h: container.clientHeight,
     }
 
-    let abortController = new AbortController()
-    let abortSignal = abortController.signal
-
     function restart() {
-        abortController.abort()
-        abortController = new AbortController()
-        abortSignal = abortController.signal
-
         size = {
             w: container.clientWidth,
             h: container.clientHeight,
@@ -120,21 +114,22 @@ export function initInteractiveSvg(params: InteractiveSvgParams) {
         svg.setAttribute('height', size.h.toString())
         svg.setAttribute('viewbox', `0 0 ${size.w.toString()} ${size.h.toString()}`)
 
+        clearAllListeners()
         resetControls()
-        init(svg, size, abortSignal)
+        init(svg, size)
     }
 
     const saveBtn = document.getElementById('save')!
-    saveBtn.addEventListener('click', () => save('svg'))
+    addListener(saveBtn, 'click', () => save('svg'))
 
     const undoBtn = document.getElementById('undo')!
-    undoBtn.addEventListener('click', () => {
+    addListener(undoBtn, 'click', () => {
         undo()
         restart()
     })
 
     const redoBtn = document.getElementById('redo')!
-    redoBtn.addEventListener('click', () => {
+    addListener(redoBtn, 'click', () => {
         redo()
         restart()
     })

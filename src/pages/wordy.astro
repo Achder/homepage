@@ -71,7 +71,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 
 <script>
     import { initInteractiveSvg, type Size, clear } from '../svg/svg'
-    import { connect as connectControl, get } from '../utils/controls'
+    import { getInputValue } from '../utils/controls'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
@@ -85,36 +85,9 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
     }
 
     const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
-        const connect = (id: string) => {
-            connectControl(id, () => render(), abortSignal)
+        function get<T>(id: string) {
+            return getInputValue<T>(id, () => render())
         }
-
-        connect('text')
-        connect('shapes')
-        connect('stride')
-        connect('rotation')
-        connect('x-amplitude')
-        connect('x-wobble-freq')
-        connect('y-amplitude')
-        connect('y-wobble-freq')
-        connect('wobble')
-        connect('font-size')
-        connect('font-scale')
-        connect('fill-start')
-        connect('fill-mid')
-        connect('fill-end')
-        connect('fill-alpha')
-        connect('fill-alpha-scale')
-        connect('stroke-start')
-        connect('stroke-mid')
-        connect('stroke-end')
-        connect('stroke-width')
-        connect('stroke-alpha')
-        connect('stroke-alpha-scale')
-        connect('color-space')
-        connect('bg-angle')
-        connect('bg-start')
-        connect('bg-end')
 
         const render = () => {
             clear(svg)

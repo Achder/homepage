@@ -53,7 +53,7 @@ import Select from '../components/Select.astro'
     import { isoBands } from 'marching-squares'
     import { drawPath } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
-    import { connect as connectControl, get, writeToUrl, readFromUrl } from '../utils/controls'
+    import { getInputValue, writeToUrl, readFromUrl, connect } from '../utils/controls'
     import isMobile from 'is-mobile'
     import { drawCircle } from '../svg/circle'
     import Color from 'colorjs.io'
@@ -327,23 +327,9 @@ import Select from '../components/Select.astro'
     }
 
     const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
-        const connect = (id: string) => {
-            connectControl(id, () => render(), abortSignal)
+        function get<T>(id: string) {
+            return getInputValue<T>(id, () => render())
         }
-
-        connect('min-threshold')
-        connect('max-threshold')
-        connect('resolution')
-        connect('iso-levels')
-        connect('stroke-width')
-
-        connect('fill-start')
-        connect('fill-mid')
-        connect('fill-end')
-        connect('stroke-start')
-        connect('stroke-mid')
-        connect('stroke-end')
-        connect('color-space')
 
         const render = () => {
             clear(svg)

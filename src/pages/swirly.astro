@@ -59,38 +59,16 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 <script>
     import { initInteractiveSvg, type Size, clear } from '../svg/svg'
     import { drawEllipse } from '../svg/ellipse'
-    import { connect as connectControl, get } from '../utils/controls'
+    import { getInputValue } from '../utils/controls'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
     import { mix } from '../utils/color'
 
-    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
-        const connect = (id: string) => {
-            connectControl(id, () => render(), abortSignal)
+    const init = (svg: HTMLElement, size: Size) => {
+        function get<T>(id: string) {
+            return getInputValue<T>(id, () => render())
         }
-
-        connect('stride')
-        connect('radius-min')
-        connect('radius-x')
-        connect('radius-y')
-        connect('freq')
-        connect('offset-x')
-        connect('offset-y')
-        connect('fill-start')
-        connect('fill-mid')
-        connect('fill-end')
-        connect('fill-alpha')
-        connect('stroke-start')
-        connect('stroke-mid')
-        connect('stroke-end')
-        connect('stroke-width')
-        connect('stroke-alpha')
-        connect('color-space')
-        connect('bg-angle')
-        connect('bg-start')
-        connect('bg-end')
-        connect('rotation')
 
         const render = () => {
             clear(svg)

@@ -1,10 +1,20 @@
 import { pushUndo } from './state'
 
-export function get<T>(id: string) {
+export function getInputValue<T>(id: string, renderCallback: () => void) {
     const element = document.getElementById(id)! as HTMLInputElement
+
+    // add initial listener
+    // this should only happen the first time after the page was initialized
+    const listener = listeners.get(element)
+    if (!listener) {
+        connect(id, renderCallback)
+    }
+
+    // parse value
     if (!isNaN(element.valueAsNumber)) {
         return element.valueAsNumber as T
     }
+
     return element.value as T
 }
 
@@ -24,7 +34,34 @@ export function writeToUrl(id: string, value: string) {
     pushUndo(`?${searchParams.toString()}`)
 }
 
-export function connect(id: string, callback: () => void, abortSignal?: AbortSignal) {
+export const listeners = new Map<Element, Partial<Record<keyof HTMLElementEventMap, () => void>>>()
+
+export function clearAllListeners() {
+    for (const [element, eventMap] of listeners) {
+        for (const [type, callback] of Object.entries(eventMap)) {
+            element.removeEventListener(type, callback)
+        }
+    }
+
+    listeners.clear()
+}
+
+export function addListener(element: Element, type: keyof HTMLElementEventMap, callback: () => void) {
+    const eventMap = listeners.get(element)
+    const existingListener = eventMap?.[type]
+
+    if (existingListener) {
+        element.removeEventListener(type, existingListener)
+    }
+
+    element.addEventListener(type, callback)
+    listeners.set(element, {
+        ...eventMap,
+        [type]: callback,
+    })
+}
+
+export function connect(id: string, callback: () => void) {
     const element = document.getElementById(id) as HTMLInputElement | HTMLSelectElement
     if (!element) {
         throw new Error(`Element with id ${id} not found`)
@@ -35,13 +72,13 @@ export function connect(id: string, callback: () => void, abortSignal?: AbortSig
         element.value = urlValue
     }
 
-    element.addEventListener('change', () => writeToUrl(id, element.value), { signal: abortSignal })
-    element.addEventListener('input', callback, { signal: abortSignal })
+    addListener(element, 'change', () => writeToUrl(id, element.value))
+    addListener(element, 'input', callback)
 }
 
-export function connectClick(id: string, callback: () => void, abortSignal?: AbortSignal) {
+export function connectClick(id: string, callback: () => void) {
     const element = document.getElementById(id)! as HTMLButtonElement
-    element.addEventListener('click', callback, { signal: abortSignal })
+    addListener(element, 'click', callback)
 }
 
 export function shiftLeft<T>(arr: T[]) {
