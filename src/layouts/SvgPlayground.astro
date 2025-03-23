@@ -2,6 +2,7 @@
 import Button from '../components/Button.astro'
 import PageLayout from './PageLayout.astro'
 import Heading from '../components/Heading.astro'
+import ControlSection from '../components/ControlSection.astro'
 
 type Props = {
     pageDescription: string
@@ -18,16 +19,19 @@ const { pageDescription, heading } = Astro.props
 
     <div class="justify-self-stretch relative grid gap-10">
         <div
-            class="grid content-start gap-4 origin-top-left rounded-xs sm:grid-cols-2 md:grid-cols-1 md:absolute md:top-2 md:left-2 md:scale-[0.6] z-10 md:w-[45ch] md:p-6 md:bg-white/20 backdrop-blur-xs md:shadow-2xl"
+            class="grid content-start gap-4 origin-top-left rounded-xs sm:grid-cols-2 md:grid-cols-1 md:absolute md:top-2 md:left-2 md:scale-[0.6] z-10 md:w-[45ch]"
         >
             <slot name="controls" />
-            <div class="grid grid-cols-2 gap-4">
-                <Button id="undo">Undo</Button>
-                <Button id="redo">Redo</Button>
-            </div>
-            <Button id="save" class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
-                >Save svg</Button
-            >
+
+            <ControlSection>
+                <div class="grid grid-cols-2 gap-4">
+                    <Button id="undo">Undo</Button>
+                    <Button id="redo">Redo</Button>
+                </div>
+                <Button id="save" class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
+                    >Save svg</Button
+                >
+            </ControlSection>
         </div>
 
         <div class="w-full aspect-1/2 md:aspect-[1/1.414] relative box-border">

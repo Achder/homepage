@@ -1,0 +1,11 @@
+---
+type Props = {
+    class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+<div class:list={['grid gap-4 md:bg-white/20 backdrop-blur-xs md:shadow-2xl md:p-6 md:hover:bg-white/50', className]}>
+    <slot />
+</div>

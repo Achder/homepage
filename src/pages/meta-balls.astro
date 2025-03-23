@@ -4,24 +4,32 @@ import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
 import Button from '../components/Button.astro'
 import Select from '../components/Select.astro'
+import ControlSection from '../components/ControlSection.astro'
 ---
 
 <SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Metaballs">
     <Fragment slot="controls">
-        <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.076} step={0.001} name="Min Threshold" />
-        <Slider id="max-threshold" min={-0.5} max={0.5} value={0.06} step={0.001} name="Max Threshold" />
-        <Slider id="resolution" min={4} max={20} value={20} name="Resolution" />
-        <Slider id="iso-levels" min={4} max={22} value={52} name="Iso Levels" />
-        <Slider id="stroke-width" min={0} max={10} step={0.1} value={2.2} name="Stroke Width" />
+        <ControlSection>
+            <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.076} step={0.001} name="Min Threshold" />
+            <Slider id="max-threshold" min={-0.5} max={0.5} value={0.06} step={0.001} name="Max Threshold" />
+            <Slider id="resolution" min={4} max={20} value={20} name="Resolution" />
+            <Slider id="iso-levels" min={4} max={22} value={52} name="Iso Levels" />
+        </ControlSection>
 
-        <div class="grid grid-cols-3 md:grid-cols-3 sm:grid-cols-4 gap-4 sm:col-start-1 sm:col-end-3 md:col-end-1">
+        <ControlSection class="grid-cols-3">
             <Input type="color" id="fill-start" label="Fill Start" value="#23ffea" />
             <Input type="color" id="fill-mid" label="Fill Mid" value="#23bb00" />
             <Input type="color" id="fill-end" label="Fill End" value="#230000" />
+        </ControlSection>
+
+        <ControlSection class="grid-cols-3">
             <Input type="color" id="stroke-start" label="Stroke Start" value="#23fff7" />
             <Input type="color" id="stroke-mid" label="Stroke Mid" value="#23b800" />
             <Input type="color" id="stroke-end" label="Stroke End" value="#230000" />
+            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={2.2} name="Stroke Width" />
+        </ControlSection>
 
+        <ControlSection>
             <Select id="color-space" label="Color Space" class="col-span-3">
                 <option value="lch" selected>LCH</option>
                 <option value="acescc">ACEScc</option>
@@ -40,12 +48,12 @@ import Select from '../components/Select.astro'
                 <option value="rec2100hlg">REC.2100-HLG</option>
                 <option value="rec2100pq">REC.2100-PQ</option>
             </Select>
-        </div>
+        </ControlSection>
 
-        <div class="grid grid-cols-2 gap-4">
+        <ControlSection class="grid-cols-2">
             <Button id="remove">-</Button>
             <Button id="add">+</Button>
-        </div>
+        </ControlSection>
     </Fragment>
 </SvgPlayground>
 
