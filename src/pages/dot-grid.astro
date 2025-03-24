@@ -1,0 +1,86 @@
+---
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Select from '../components/Select.astro'
+import SvgPlayground from '../layouts/SvgPlayground.astro'
+import ControlSection from '../components/ControlSection.astro'
+---
+
+<SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Dot Grid">
+    <Fragment slot="controls">
+        <ControlSection>
+            <Slider id="x-freq" min={0.5} max={3} value={1} reset={1} step={0.01} name="x - Freq" />
+            <Slider id="y-freq" min={0.5} max={3} value={1} reset={1} step={0.01} name="y - Freq" />
+            <Slider id="x-amp" min={1} max={100} value={1} reset={1} step={0.01} name="x - Amp" />
+            <Slider id="y-amp" min={1} max={100} value={1} reset={1} step={0.01} name="y - Amp" />
+            <Slider id="x-shapes" min={1} max={50} value={20} reset={20} name="x - Shapes" />
+            <Slider id="y-shapes" min={1} max={50} value={20} reset={20} name="y - Shapes" />
+            <Slider id="x-radius" min={5} max={100} value={20} reset={20} name="x - Radius" />
+            <Slider id="y-radius" min={5} max={100} value={20} reset={20} name="y - Radius" />
+        </ControlSection>
+    </Fragment>
+</SvgPlayground>
+
+<script>
+    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
+    import { getInputValue } from '../utils/controls'
+    import { mix } from '../utils/color'
+    import { drawText } from '../svg/text'
+    import { drawEllipse } from '../svg/ellipse'
+
+    const init = (svg: HTMLElement, size: Size) => {
+        function get<T>(id: string) {
+            return getInputValue<T>(id, () => render())
+        }
+
+        const render = () => {
+            clear(svg)
+
+            const xFreq = get<number>('x-freq')
+            const yFreq = get<number>('y-freq')
+            const xAmp = get<number>('x-amp')
+            const yAmp = get<number>('y-amp')
+            const xShapes = get<number>('x-shapes')
+            const yShapes = get<number>('y-shapes')
+            const xRadius = get<number>('x-radius')
+            const yRadius = get<number>('y-radius')
+
+            for (let yIdx = 0; yIdx < yShapes; yIdx++) {
+                for (let xIdx = 0; xIdx < xShapes; xIdx++) {
+                    const xt = xIdx / xShapes
+                    const yt = yIdx / yShapes
+                    const tt = (yIdx * xShapes + xIdx) / (xShapes + yShapes)
+
+                    const pxt = xt * Math.PI * 2
+                    const pyt = yt * Math.PI * 2
+
+                    const xStep = size.w / xShapes
+                    const yStep = size.h / yShapes
+
+                    const xOffset = Math.sin(pyt + pxt * xFreq) * xAmp
+                    const yOffset = Math.sin(pxt + pyt * yFreq) * yAmp
+
+                    const x = xOffset + xIdx * xStep + xStep / 2
+                    const y = yOffset + yIdx * yStep + yStep / 2
+
+                    drawEllipse(svg, {
+                        x,
+                        y,
+                        radiusX: xRadius,
+                        radiusY: yRadius,
+                        fill: 'black',
+                        stroke: 'black',
+                        strokeOpacity: 1,
+                        rotation: tt * Math.PI * 2,
+                    })
+                }
+            }
+        }
+
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>

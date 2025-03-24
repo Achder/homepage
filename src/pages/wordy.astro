@@ -107,7 +107,7 @@ import ControlSection from '../components/ControlSection.astro'
         return a + (b - a) * t
     }
 
-    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
+    const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
             return getInputValue<T>(id, () => render())
         }
