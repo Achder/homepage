@@ -32,7 +32,9 @@ export const GET: APIRoute = async (context) => {
     const svg = await page.$('#svg')
     const bb = await svg?.boundingBox()
     const imageBuffer = await svg?.screenshot({
-        type: 'png',
+        type: 'webp',
+        quality: 80,
+        optimizeForSpeed: true,
         clip: bb
             ? {
                   x: 0,
@@ -47,7 +49,7 @@ export const GET: APIRoute = async (context) => {
 
     return new Response(imageBuffer, {
         headers: {
-            'Content-Type': 'image/png',
+            'Content-Type': 'image/webp',
             'Cache-Control': 'public, max-age=31536000, immutable',
         },
     })
