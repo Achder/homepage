@@ -1,0 +1,18 @@
+---
+type Props = {
+    id?: string
+    src?: string
+    class?: string
+}
+
+const { id, src, class: className } = Astro.props
+---
+
+<img
+    id={id}
+    class:list={[
+        'shadow-md border-4 border-black hover:scale-105 transition-transform w-100 bg-black aspect-[1/1.414]',
+        className,
+    ]}
+    src={src}
+/>

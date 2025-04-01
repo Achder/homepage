@@ -16,7 +16,9 @@ export default defineConfig({
         prefetchAll: true,
         defaultStrategy: 'viewport',
     },
-
+    devToolbar: {
+        enabled: false,
+    },
     adapter: node({
         mode: 'standalone',
     }),

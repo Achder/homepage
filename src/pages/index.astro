@@ -1,6 +1,6 @@
 ---
 import Me from '../images/me.webp'
-import MePig from '../images/pig.jpg'
+import Preview from '../components/Preview.astro'
 import PageLayout from '../layouts/PageLayout.astro'
 import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
@@ -35,7 +35,7 @@ import { Image } from 'astro:assets'
         <p class="leading-none decoration-8">Thomas Meerpohl</p>
     </Heading>
 
-    <section class="w-full text-2xl text-pretty grid gap-8">
+    <section class="w-full text-2xl text-pretty grid gap-10 pb-12">
         <Image
             id="profile"
             class="w-full aspect-square sm:aspect-2/1 object-cover shadow-2xl rounded-xs outline outline-4 -outline-offset-4 outline-color"
@@ -50,6 +50,29 @@ import { Image } from 'astro:assets'
         >
             <span class="text-[1.6em]">➪</span>Contact me<span class="text-[1.6em] rotate-180">➪</span>
         </LinkButton>
+    </section>
+
+    <section class="w-full grid gap-10 py-12 grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
+        <Heading type="h2" class="col-start-1 col-end-[-1]">Gallery</Heading>
+
+        <Preview
+            src="/png/wordy?bg-start=%23bd008a&bg-end=%23000000&text=pow%21&fill-end=%23d4ff00&stroke-width=6.8&stride=-0.3&shapes=300&x-amplitude=40&wobble=1&font-size=99&rotation=28&stroke-end=%23fb00ff&fill-mid=%238000ff&fill-start=%23ff00ae&fill-alpha-scale=-0.39&font-scale=0.82&stroke-start=%238c00ff&stroke-alpha=1&y-amplitude=125&x-wobble-freq=0.5&color-space=hwb&stroke-alpha-scale=-1&bg-angle=101"
+        />
+        <Preview
+            src="/png/wordy?text=code&bg-start=%23000770&bg-end=%23000000&fill-end=%23000000&stroke-end=%23d400ff&stroke-alpha=0.75&stroke-width=2.1&stride=2.93&shapes=300&fill-alpha-scale=-1&stroke-alpha-scale=-0.84&rotation=70&wobble=1&y-amplitude=-236&x-amplitude=47&font-size=34&font-scale=0.42&x-wobble-freq=0.5&y-wobble-freq=0.5&stroke-mid=%23ffbb00&stroke-start=%23150b5b&color-space=hwb&fill-start=%2300818a&fill-mid=%23ff0000&bg-angle=111"
+        />
+        <Preview
+            src="/png/wordy?text=easy&bg-start=%23ff00ae&bg-end=%23000000&fill-end=%23fbff00&stroke-end=%23ffae00&stroke-alpha=1&stroke-width=0.9&stride=1.47&shapes=300&fill-alpha-scale=-1&stroke-alpha-scale=0.64&rotation=-34&wobble=1&y-amplitude=150&x-amplitude=-84&font-size=26&font-scale=-0.41&x-wobble-freq=0.5&y-wobble-freq=0.5&stroke-mid=%23ff00a2&stroke-start=%23fb00ff&color-space=hwb&fill-start=%2300818a&fill-mid=%23ff0000&bg-angle=111"
+        />
+        <Preview
+            src="/png/swirly?stride=8.4&radius-min=0&radius-x=0.32&radius-y=0.32&freq=0.8&offset-x=-84&offset-y=-2&fill-start=%23ff0095&fill-mid=%2300ff62&fill-end=%234d0099&fill-alpha=0.3&stroke-start=%23000000&stroke-mid=%238000ff&stroke-end=%235900ff&stroke-width=0.6&stroke-alpha=0.64&color-space=lch&bg-angle=0&bg-start=%23000000&bg-end=%23000000&rotation=146"
+        />
+        <Preview
+            src="/png/wordy?fill-start=%23ff00c8&fill-mid=%23ff0000&fill-end=%23000000&stroke-start=%23ff0000&stroke-mid=%2300ff59&stroke-end=%23eeff00&amplitude-freq=1.4&stride=-0.73&stroke-width=0.6&rotation=40&bg-start=%23000000&bg-end=%23000000&amplitude=6&fill-alpha=1&shapes=295&font-size=29&stroke-alpha=0.75"
+        />
+        <Preview
+            src="/png/swirly?stride=3.3&radius-min=0&radius-x=0.74&radius-y=0.06&freq=0.5&offset-x=242&offset-y=-398&fill-start=%23ff0000&fill-mid=%23ff9500&fill-end=%23007bff&fill-alpha=0.05&stroke-start=%23000000&stroke-mid=%230091ff&stroke-end=%23ff00ea&stroke-width=0.5&stroke-alpha=1&color-space=lch&bg-angle=0&bg-start=%23000000&bg-end=%23000000&rotation=192"
+        />
     </section>
 
     <section class="w-full text-xl text-pretty grid gap-10 justify-items-start about py-12 rounded-xs">
