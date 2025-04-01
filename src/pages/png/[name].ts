@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from 'puppeteer'
+import puppeteer from 'puppeteer'
 import type { APIRoute } from 'astro'
 
 export const GET: APIRoute = async (context) => {
@@ -14,7 +14,7 @@ export const GET: APIRoute = async (context) => {
     await page.setViewport({
         width: 1920,
         height: 1080,
-        deviceScaleFactor: 1,
+        deviceScaleFactor: 2,
     })
 
     const safeUrl = `${origin}/${name}?${searchParams.toString()}`
@@ -33,7 +33,7 @@ export const GET: APIRoute = async (context) => {
     const bb = await svg?.boundingBox()
     const imageBuffer = await svg?.screenshot({
         type: 'webp',
-        quality: 80,
+        quality: 100,
         optimizeForSpeed: true,
         clip: bb
             ? {
