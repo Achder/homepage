@@ -1,6 +1,8 @@
 import puppeteer, { Browser } from 'puppeteer'
 import type { APIRoute } from 'astro'
 
+export const prerender = false
+
 export const GET: APIRoute = async (context) => {
     const { origin, searchParams } = new URL(context.request.url)
     const target = searchParams.get('url')

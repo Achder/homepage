@@ -11,7 +11,7 @@ export default defineConfig({
         plugins: [tailwindcss()],
     },
     integrations: [mdx(), sitemap()],
-    output: 'server',
+    output: 'static',
     prefetch: {
         prefetchAll: true,
         defaultStrategy: 'viewport',
