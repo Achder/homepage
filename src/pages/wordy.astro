@@ -100,12 +100,7 @@ import ControlSection from '../components/ControlSection.astro'
     import Color from 'colorjs.io'
     import { mix } from '../utils/color'
     import { drawText } from '../svg/text'
-
-    const seesaw = (c: number, t: number) => {
-        const a = c < 0 ? 1 - Math.abs(c) : 1
-        const b = c >= 0 ? 1 - c : 1
-        return a + (b - a) * t
-    }
+    import { seesaw } from '../utils/form'
 
     const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
         function get<T>(id: string) {

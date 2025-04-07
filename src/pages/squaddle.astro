@@ -9,35 +9,47 @@ import ControlSection from '../components/ControlSection.astro'
 <SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Squaddle">
     <Fragment slot="controls">
         <ControlSection>
-            <Slider id="stride" min={0.1} max={6} value={6} name="Stride" step={0.01} />
-            <Slider id="rotation" min={0} max={720} value={400} name="Rotation" />
+            <Slider id="shapes" min={2} max={1500} value={541} reset={500} name="Shapes" />
+            <Slider id="rotation" min={0} max={720} value={361} reset={0} name="Rotation" />
         </ControlSection>
 
-        <ControlSection>
-            <Slider id="amplitude" min={-500} max={500} value={239} name="Amplitude" />
-            <Slider id="amplitude-freq" min={1} max={10} value={1} step={0.1} name="Amplitude Frequency" />
+        <ControlSection class="grid grid-cols-2">
+            <Slider id="x-stride" min={-10} max={10} value={0.6} reset={0} name="x - Stride" step={0.01} />
+            <Slider id="y-stride" min={-10} max={10} value={2.16} reset={0} name="y - Stride" step={0.01} />
+            <Slider id="x-amplitude" min={-500} max={500} value={154} reset={0} name="x - Amplitude" />
+            <Slider id="y-amplitude" min={-500} max={500} value={-111} reset={0} name="y - Amplitude" />
+            <Slider id="x-wobble-freq" min={0.1} max={2} value={0.59} step={0.01} name="x - Frequency" />
+            <Slider id="y-wobble-freq" min={0.1} max={2} value={0.6} step={0.01} name="y - Frequency" />
         </ControlSection>
 
-        <ControlSection>
-            <Slider id="radius-x" min={5} max={300} value={121} name="Radius X" />
-            <Slider id="radius-y" min={5} max={300} value={300} name="Radius Y" />
-            <Slider id="radius-wobble" min={-100} max={100} value={-31} name="Radius Wobble" />
-            <Slider id="radius-freq" min={1} max={10} value={1} step={0.1} name="Radius Frequency" />
+        <ControlSection class="grid grid-cols-2">
+            <Slider id="radius-x" min={5} max={500} value={194} name="Radius X" />
+            <Slider id="radius-y" min={5} max={500} value={300} name="Radius Y" />
+            <Slider
+                id="radius-wobble"
+                min={-100}
+                max={100}
+                value={-20}
+                reset={0}
+                name="Radius Wobble"
+                class="col-span-2"
+            />
+            <Slider id="radius-freq" min={1} max={10} value={1} step={0.1} name="Radius Frequency" class="col-span-2" />
         </ControlSection>
 
         <ControlSection class="grid-cols-3">
-            <Input type="color" id="fill-start" label="Fill Start" value="#e1ff00" />
+            <Input type="color" id="fill-start" label="Fill Start" value="#000000" />
             <Input type="color" id="fill-mid" label="Fill Mid" value="#7300ff" />
-            <Input type="color" id="fill-end" label="Fill End" value="#ff0000" />
-            <Slider class="col-span-3" id="fill-alpha" min={0} max={1} step={0.01} value={0.03} name="Fill Alpha" />
+            <Input type="color" id="fill-end" label="Fill End" value="#fbff00" />
+            <Slider class="col-span-3" id="fill-alpha" min={0} max={1} step={0.01} value={1} name="Fill Alpha" />
         </ControlSection>
 
         <ControlSection class="grid-cols-3">
-            <Input type="color" id="stroke-start" label="Stroke Start" value="#ffae00" />
+            <Input type="color" id="stroke-start" label="Stroke Start" value="#000000" />
             <Input type="color" id="stroke-mid" label="Stroke Mid" value="#0011ff" />
-            <Input type="color" id="stroke-end" label="Stroke End" value="#ffea00" />
-            <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={0.68} name="Stroke Alpha" />
-            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={0.68} name="Stroke Width" />
+            <Input type="color" id="stroke-end" label="Stroke End" value="#ff0000" />
+            <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={1} name="Stroke Alpha" />
+            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={0.6} name="Stroke Width" />
         </ControlSection>
 
         <ControlSection>
@@ -79,6 +91,7 @@ import ControlSection from '../components/ControlSection.astro'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
     import { mix } from '../utils/color'
+    import { stump } from '../utils/form'
 
     const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
@@ -88,30 +101,39 @@ import ControlSection from '../components/ControlSection.astro'
         const render = () => {
             clear(svg)
 
+            const shapes = get<number>('shapes')
+            const xStride = get<number>('x-stride')
+            const yStride = get<number>('y-stride')
+            const rotation = get<number>('rotation')
+
+            const xAmplitude = get<number>('x-amplitude')
+            const xWobbleFreq = get<number>('x-wobble-freq')
+            const yAmplitude = get<number>('y-amplitude')
+            const yWobbleFreq = get<number>('y-wobble-freq')
+
             const radiusX = get<number>('radius-x')
             const radiusY = get<number>('radius-y')
-            const rotation = get<number>('rotation')
             const radiusWobble = get<number>('radius-wobble')
             const radiusFreq = get<number>('radius-freq')
-            const stride = get<number>('stride')
-            const amplitude = get<number>('amplitude')
-            const amplitudeFreq = get<number>('amplitude-freq')
+
             const fillStart = get<string>('fill-start')
             const fillMid = get<string>('fill-mid')
             const fillEnd = get<string>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
+
             const strokeWidth = get<number>('stroke-width')
             const strokeStart = get<string>('stroke-start')
             const strokeMid = get<string>('stroke-mid')
             const strokeEnd = get<string>('stroke-end')
             const strokeAlpha = get<number>('stroke-alpha')
+
             const colorSpace = get<string>('color-space')
+
             const bgAngle = get<number>('bg-angle')
             const bgStart = get<string>('bg-start')
             const bgEnd = get<string>('bg-end')
 
-            const steps = (size.h + radiusY * 1.5) / stride
-            const center = { x: size.w / 2, y: -radiusY / 2 }
+            const center = { x: size.w / 2, y: size.h / 2 }
 
             const fs = new Color(fillStart)
             const fm = new Color(fillMid)
@@ -135,26 +157,30 @@ import ControlSection from '../components/ControlSection.astro'
                 fill: 'url(#bg-gradient)',
             })
 
-            for (let i = 0; i < steps; i++) {
-                const t = i / steps
-                const pi_t = t * Math.PI * 2
+            for (let i = 0; i <= shapes; i++) {
+                const t = i / shapes
+                const nt = (t - 0.5) * 2
+                const pi_nt = nt * Math.PI * 2
                 const fill = mix(fs, fm, fe, t, colorSpace)
                 const stroke = mix(ss, sm, se, t, colorSpace)
 
+                const xSineOffset = Math.sin(pi_nt * xWobbleFreq) * xAmplitude
+                const ySineOffset = Math.sin(pi_nt * yWobbleFreq) * yAmplitude
+                const xOffset = (i - shapes / 2) * xStride + xSineOffset
+                const yOffset = (i - shapes / 2) * yStride + ySineOffset
+
                 drawEllipse(svg, {
-                    x: center.x + Math.sin(pi_t * amplitudeFreq) * amplitude,
-                    y: center.y,
-                    radiusX: radiusX + Math.sin(pi_t * radiusFreq) * radiusWobble,
-                    radiusY: radiusY + Math.sin(pi_t * radiusFreq) * radiusWobble,
+                    x: center.x + xOffset,
+                    y: center.y + yOffset,
+                    radiusX: (radiusX + Math.sin(pi_nt * radiusFreq) * radiusWobble) * stump(t),
+                    radiusY: (radiusY + Math.sin(pi_nt * radiusFreq) * radiusWobble) * stump(t),
                     fill: fill.to('srgb').toString({ format: 'hex' }),
                     fillOpacity: fillAlpha,
                     stroke: stroke.to('srgb').toString({ format: 'hex' }),
                     strokeOpacity: strokeAlpha,
                     strokeWidth: strokeWidth,
-                    rotation: (t - 0.5) * rotation,
+                    rotation: nt * rotation,
                 })
-
-                center.y += stride
             }
         }
 
