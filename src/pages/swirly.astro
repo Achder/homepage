@@ -82,7 +82,7 @@ import ControlSection from '../components/ControlSection.astro'
 
     const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
-            return getInputValue<T>(id, () => render())
+            return getInputValue<T>(id, () => requestAnimationFrame(render))
         }
 
         const render = () => {
