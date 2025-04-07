@@ -59,7 +59,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 <script>
     import { initInteractiveSvg, type Size, clear } from '../svg/svg'
     import { drawEllipse } from '../svg/ellipse'
-    import { connect as connectControl, get } from '../utils/controls'
+    import { getInputValue } from '../utils/controls'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
@@ -67,31 +67,9 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
     import Zdog, { type EllipseOptions } from 'zdog'
 
     const init = (svg: HTMLElement, size: Size) => {
-        const connect = (id: string) => {
-            connectControl(id, () => render())
+        function get<T>(id: string) {
+            return getInputValue<T>(id, () => render())
         }
-
-        connect('stride')
-        connect('amplitude')
-        connect('amplitude-freq')
-        connect('radius-x')
-        connect('radius-y')
-        connect('radius-wobble')
-        connect('radius-freq')
-        connect('fill-start')
-        connect('fill-mid')
-        connect('fill-end')
-        connect('fill-alpha')
-        connect('stroke-start')
-        connect('stroke-mid')
-        connect('stroke-end')
-        connect('stroke-width')
-        connect('stroke-alpha')
-        connect('color-space')
-        connect('bg-angle')
-        connect('bg-start')
-        connect('bg-end')
-        connect('rotation')
 
         let illoRotation: Zdog.Vector | null = null
         let illo: Zdog.Illustration | null = null
@@ -106,27 +84,13 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
                 },
             })
 
-            const radiusX = get<number>('radius-x')
-            const radiusY = get<number>('radius-y')
-            const rotation = get<number>('rotation')
-            const radiusWobble = get<number>('radius-wobble')
-            const radiusFreq = get<number>('radius-freq')
-            const stride = get<number>('stride')
-            const amplitude = get<number>('amplitude')
-            const amplitudeFreq = get<number>('amplitude-freq')
             const fillStart = get<string>('fill-start')
             const fillMid = get<string>('fill-mid')
             const fillEnd = get<string>('fill-end')
-            const fillAlpha = get<number>('fill-alpha')
-            const strokeWidth = get<number>('stroke-width')
             const strokeStart = get<string>('stroke-start')
             const strokeMid = get<string>('stroke-mid')
             const strokeEnd = get<string>('stroke-end')
-            const strokeAlpha = get<number>('stroke-alpha')
             const colorSpace = get<string>('color-space')
-            const bgAngle = get<number>('bg-angle')
-            const bgStart = get<string>('bg-start')
-            const bgEnd = get<string>('bg-end')
 
             const fs = new Color(fillStart)
             const fm = new Color(fillMid)
@@ -135,7 +99,7 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
             const sm = new Color(strokeMid)
             const se = new Color(strokeEnd)
 
-            const numCircles = 100
+            const numCircles = 150
             const maxRadius = size.w * 0.4
 
             for (let i = 1; i < numCircles; i++) {
