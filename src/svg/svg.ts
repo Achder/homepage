@@ -120,16 +120,16 @@ export function initInteractiveSvg(params: InteractiveSvgParams) {
     }
 
     const saveBtn = document.getElementById('save')!
-    addListener(saveBtn, 'click', () => save('svg'))
+    saveBtn.addEventListener('click', () => save('svg'))
 
     const undoBtn = document.getElementById('undo')!
-    addListener(undoBtn, 'click', () => {
+    undoBtn.addEventListener('click', () => {
         undo()
         restart()
     })
 
     const redoBtn = document.getElementById('redo')!
-    addListener(redoBtn, 'click', () => {
+    redoBtn.addEventListener('click', () => {
         redo()
         restart()
     })
