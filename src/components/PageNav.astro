@@ -2,6 +2,7 @@
 import StyledLink from './StyledLink.astro'
 import Menu from './icons/Menu.astro'
 import Close from './icons/Close.astro'
+import Logo from '../components/icons/Logo.astro'
 
 type Props = {
     class?: string
@@ -11,20 +12,23 @@ const { class: className } = Astro.props
 ---
 
 <div>
-    <button id="menu" class="py-4 sm:hidden flex gap-4 text-4xl font-bold items-center" aria-label="Main menu">
-        <span id="menu-icon"><Menu /></span>
-        <span id="close-icon" class="hidden"><Close /></span>
-    </button>
+    <div class="flex">
+        <button id="menu" class="py-4 sm:hidden flex gap-4 text-4xl font-bold items-center" aria-label="Main menu">
+            <span id="menu-icon"><Menu /></span>
+            <span id="close-icon" class="hidden"><Close /></span>
+        </button>
+    </div>
     <nav
         id="page-nav"
         class:list={[
             className,
-            'flex-col hidden sm:flex sm:flex-row border-dark border-b-8 sm:border-0 justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-8 absolute sm:static z-50 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none bg-brand',
+            'flex-col hidden items-center sm:flex sm:flex-row border-dark border-b-8 sm:border-0 justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-8 absolute sm:static z-50 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none bg-brand',
         ]}
     >
-        <StyledLink href="/">Home</StyledLink>
+        <StyledLink href="/">
+            <Logo />
+        </StyledLink>
         <StyledLink href="/what"> What I do</StyledLink>
-        <!-- <StyledLink href="/snake">Ssssnake</StyledLink> -->
         <StyledLink href="/squaddle">Squaddle </StyledLink>
         <StyledLink
             href="/meta-balls?min-threshold=-0.076&max-threshold=0.06&resolution=20&iso-levels=52&stroke-width=2.2&fill-start=%23ffea00&fill-mid=%23bb00ff&fill-end=%23000000&stroke-start=%23fff700&stroke-mid=%23b800eb&stroke-end=%23000000&balls=%5B%7B%22x%22%3A486%2C%22y%22%3A439%2C%22radius%22%3A4232.81472224459%7D%2C%7B%22x%22%3A485%2C%22y%22%3A881%2C%22radius%22%3A3183.4431888056524%7D%2C%7B%22x%22%3A594%2C%22y%22%3A771%2C%22radius%22%3A-4163.980912161831%7D%2C%7B%22x%22%3A186%2C%22y%22%3A1403%2C%22radius%22%3A-4725.501975214774%7D%2C%7B%22x%22%3A945%2C%22y%22%3A10%2C%22radius%22%3A-4873.924446463103%7D%5D"

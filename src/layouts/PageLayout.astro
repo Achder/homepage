@@ -3,6 +3,7 @@ import StyledLink from '../components/StyledLink.astro'
 import SocialNav from '../components/SocialNav.astro'
 import PageNav from '../components/PageNav.astro'
 import '../app.css'
+import Logo from '../components/icons/Logo.astro'
 
 type Props = {
     description: string
@@ -48,7 +49,7 @@ const isProduction = import.meta.env.MODE === 'production'
     <body class="tracking-wider font-rethink font-normal bg-dark text-dark">
         <div class="color-wrapper bg-brand sm:outline-8 sm:-outline-offset-8 sm:outline-dark px-2">
             <div class="body-wrapper min-h-dvh max-w-5xl mx-auto px-2 py-1">
-                <div class="flex justify-between gap-4">
+                <div class="flex justify-between items-center gap-4">
                     <PageNav />
                     <SocialNav class="justify-end gap-8 py-8 hidden sm:flex" />
                 </div>
