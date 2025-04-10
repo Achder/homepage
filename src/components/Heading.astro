@@ -10,7 +10,7 @@ const { class: className, type: Type, ...rest } = Astro.props
 <Type
     {...rest}
     class:list={[
-        'font-extrabold m-0 leading-[0.8] text-balance text-white underline underline-offset-8 decoration-black decoration-8',
+        'font-extrabold m-0 leading-[0.8] text-balance text-white text-shadow-lg/10',
         {
             'text-7xl': Type === 'h1',
             'text-6xl ': Type === 'h2',

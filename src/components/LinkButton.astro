@@ -11,18 +11,9 @@ const { href, class: className, ...rest } = Astro.props
     href={href}
     class:list={[
         className,
-        'bg-dark rounded-xs text-brand hover:text-white px-8 py-6 font-extrabold tracking-wider flex gap-4 whitespace-nowrap',
+        'bg-dark rounded-full text-white px-10 py-6 font-extrabold tracking-wider flex gap-4 whitespace-nowrap transition-all hover:scale-105 shadow-md/30 hover:shadow-lg/50 shadow-black',
     ]}
     {...rest}
 >
     <slot />
 </a>
-
-<style>
-    @container (max-width: 500px) {
-        a {
-            width: 100%;
-            text-align: center;
-        }
-    }
-</style>

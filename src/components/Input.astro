@@ -6,10 +6,10 @@ type Props = {
 const { class: className, label, ...rest } = Astro.props
 ---
 
-<label class:list={['text-xl grid gap-1 text-dark font-bold', className]}>
+<label class:list={['text-xs grid gap-1 text-dark font-bold', className]}>
     {label}
     <input
         {...rest}
-        class=`font-bold text-xl text-brand focus-within:text-dark focus-within:bg-brand w-full h-10 rounded-xs appearance-none checked:bg-brand bg-dark outline outline-4 -outline-offset-4 outline-dark [&[type="text"]]:px-4 [&[type="text"]]:py-6`
+        class=`font-bold text-xs text-brand focus-within:text-dark focus-within:bg-brand w-full h-6 rounded-sm appearance-none checked:bg-brand bg-dark outline outline-2 -outline-offset-4 outline-dark hover:outline-brand [&[type="text"]]:px-4 [&[type="text"]]:py-4`
     />
 </label>

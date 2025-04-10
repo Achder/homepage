@@ -1,70 +1,75 @@
 ---
-import PageLayout from '../layouts/PageLayout.astro'
+import PageLayout from '../layouts/NewPageLayout.astro'
 import Heading from '../components/Heading.astro'
 import Timeline from '../components/Timeline.astro'
 import TimelineEntry from '../components/TimelineEntry.astro'
 ---
 
 <PageLayout description="Companies I worked for and projects I have worked on.">
-    <Heading type="h2" class="text-7xl">What I do</Heading>
+    <div class="px-4 sm:px-10 grid gap-10 w-full max-w-400">
+        <Heading type="h2" class="text-7xl">What I do</Heading>
 
-    <Timeline>
-        <TimelineEntry
-            timerange="02.2024 - ongoing"
-            title="Raycics"
-            tech="Nx Monorepo, Nestjs, GraphQl, AWS DynamoDB, React, TailwindCSS, Shadcn/UI"
-        >
-            <p>Developing a product management tool inspired by Jira.</p>
-        </TimelineEntry>
-        <TimelineEntry
-            timerange="02.2024 - ongoing"
-            title="enerithm"
-            tech="CapacitorJS, React, TailwindCSS, RadixUI, Framer Motion, Strapi"
-        >
-            <p>
-                Developing a cross-platform energy consultant app available on iOS, Android and the web using a single
-                codebase.
-            </p>
-        </TimelineEntry>
+        <Timeline>
+            <TimelineEntry
+                timerange="02.2024 - ongoing"
+                title="Raycics"
+                tech="Nx Monorepo, Nestjs, GraphQl, AWS DynamoDB, React, TailwindCSS, Shadcn/UI"
+            >
+                <p>Developing a product management tool inspired by Jira.</p>
+            </TimelineEntry>
+            <TimelineEntry
+                timerange="02.2024 - ongoing"
+                title="enerithm"
+                tech="CapacitorJS, React, TailwindCSS, RadixUI, Framer Motion, Strapi"
+            >
+                <p>
+                    Developing a cross-platform energy consultant app available on iOS, Android and the web using a
+                    single codebase.
+                </p>
+            </TimelineEntry>
 
-        <TimelineEntry timerange="12.2023 - 01.2024" title="Anvajo" tech="Vanilla JS, Nginx, Docker">
-            <p>Implementing an on-device file-browser and -exporter for an embedded mobile medical device.</p>
-        </TimelineEntry>
+            <TimelineEntry timerange="12.2023 - 01.2024" title="Anvajo" tech="Vanilla JS, Nginx, Docker">
+                <p>Implementing an on-device file-browser and -exporter for an embedded mobile medical device.</p>
+            </TimelineEntry>
 
-        <TimelineEntry timerange="12.2023" title="🚀 Official start working as a freelancer" />
+            <TimelineEntry timerange="12.2023" title="🚀 Official start working as a freelancer" />
 
-        <TimelineEntry
-            timerange="05.2022 - 11.2023"
-            title="Mercedes-Benz Tech Innovation"
-            tech="ASP.net, Vanilla JS, jQuery, Rx.js, Vue.js, Webpack"
-        >
-            <p>Implementing features and fixing bugs for an online vehicle booking system.</p>
-            <p>Refactoring the main booking calendar from an Ember.js app to an Rx.js based solution.</p>
-            <p>
-                Implementing a proof-of-concept for a micro-frontend architecture based on webpack module federation and
-                Vue.js.
-            </p>
-        </TimelineEntry>
+            <TimelineEntry
+                timerange="05.2022 - 11.2023"
+                title="Mercedes-Benz Tech Innovation"
+                tech="ASP.net, Vanilla JS, jQuery, Rx.js, Vue.js, Webpack"
+            >
+                <p>Implementing features and fixing bugs for an online vehicle booking system.</p>
+                <p>Refactoring the main booking calendar from an Ember.js app to an Rx.js based solution.</p>
+                <p>
+                    Implementing a proof-of-concept for a micro-frontend architecture based on webpack module federation
+                    and Vue.js.
+                </p>
+            </TimelineEntry>
 
-        <TimelineEntry
-            timerange="05.2020 - 04.2022"
-            title="Anvajo"
-            tech="Electron, React, Adobe Spectrum, Docker, Python"
-        >
-            <p>
-                Developing a desktop application for managing, previewing and exporting measurements on an embedded
-                mobile medical device.
-            </p>
-            <p>
-                Developing an internal desktop application for triggering and monitoring measurements on an embedded
-                prototype.
-            </p>
-        </TimelineEntry>
+            <TimelineEntry
+                timerange="05.2020 - 04.2022"
+                title="Anvajo"
+                tech="Electron, React, Adobe Spectrum, Docker, Python"
+            >
+                <p>
+                    Developing a desktop application for managing, previewing and exporting measurements on an embedded
+                    mobile medical device.
+                </p>
+                <p>
+                    Developing an internal desktop application for triggering and monitoring measurements on an embedded
+                    prototype.
+                </p>
+            </TimelineEntry>
 
-        <TimelineEntry timerange="09.2016 - 05.2020" title="Wave Casual" tech="C++, JUCE, Docker, React">
-            <p>Developing the frontend and backend of a software synthesizer VST plugin.</p>
-            <p>Developing a smart volume meter on an embedded platform including a companion app for iOS and Android</p>
-            <p>Developing a crowdsourcing PWA application based on React</p>
-        </TimelineEntry>
-    </Timeline>
+            <TimelineEntry timerange="09.2016 - 05.2020" title="Wave Casual" tech="C++, JUCE, Docker, React">
+                <p>Developing the frontend and backend of a software synthesizer VST plugin.</p>
+                <p>
+                    Developing a smart volume meter on an embedded platform including a companion app for iOS and
+                    Android
+                </p>
+                <p>Developing a crowdsourcing PWA application based on React</p>
+            </TimelineEntry>
+        </Timeline>
+    </div>
 </PageLayout>

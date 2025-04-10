@@ -14,11 +14,11 @@ const { id, name, min, max, value, reset, step = 1, class: className, ...rest } 
 const { pathname } = Astro.url
 ---
 
-<label class:list={['font-bold text-xl grid gap-2 text-dark', className]} {...rest}>
+<label class:list={['font-bold text-xs grid gap-1 text-dark', className]} {...rest}>
     {name}
     <input
         id={id}
-        class="h-4 min-w-0"
+        class="h-2 min-w-0"
         type="range"
         min={min}
         max={max}
@@ -46,24 +46,26 @@ const { pathname } = Astro.url
         appearance: none;
         margin: 0;
         background-color: transparent;
+        --height: 0.7rem;
+        --outline: 2px;
     }
 
     input[type='range']::-webkit-slider-runnable-track {
         -webkit-appearance: none;
         background-color: var(--color-dark);
         border-radius: 100vmax;
-        outline: 4px solid var(--color-dark);
-        outline-offset: -4px;
-        height: 1.5rem;
+        outline: var(--outline) solid var(--color-dark);
+        outline-offset: calc(-1 * var(--outline));
+        height: var(--height);
     }
 
     input[type='range']::-moz-range-track {
         -webkit-appearance: none;
         background-color: var(--color-dark);
         border-radius: 100vmax;
-        outline: 4px solid var(--color-dark);
-        outline-offset: -4px;
-        height: 1.5rem;
+        outline: var(--outline) solid var(--color-dark);
+        outline-offset: calc(-1 * var(--outline));
+        height: var(--height);
     }
 
     input[type='range']:hover::-webkit-slider-runnable-track {
@@ -78,22 +80,22 @@ const { pathname } = Astro.url
         -webkit-appearance: none; /* Override default look */
         appearance: none;
         background-color: var(--color-brand);
-        height: 1.5rem;
-        width: 1.5rem;
+        height: var(--height);
+        width: var(--height);
         border-radius: 100vmax;
-        outline: 6px solid var(--color-dark);
-        outline-offset: -6px;
+        outline: var(--outline) solid var(--color-dark);
+        outline-offset: calc(-1 * var(--outline));
     }
 
     input[type='range']::-moz-range-thumb {
         -webkit-appearance: none; /* Override default look */
         appearance: none;
         background-color: var(--color-brand);
-        height: 1rem;
-        width: 1rem;
+        height: var(--height);
+        width: var(--height);
         border-radius: 100vmax;
-        outline: 6px solid var(--color-dark);
-        outline-offset: -6px;
+        outline: var(--outline) solid var(--color-dark);
+        outline-offset: calc(-1 * var(--outline));
     }
 
     input[type='range']:hover::-webkit-slider-thumb {

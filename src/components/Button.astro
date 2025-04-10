@@ -12,10 +12,10 @@ const { pathname } = Astro.url
 <button
     id={id}
     class:list={[
-        'px-8 py-3 font-bold text-md tracking-widest bg-dark hover:bg-brand text-brand hover:text-dark',
+        'px-8 py-2 font-bold text-xs tracking-widest bg-dark hover:bg-brand text-brand hover:text-dark transition-colors',
         className,
         {
-            'rounded-xs': !rounded,
+            'rounded-sm': !rounded,
             'rounded-full': rounded,
         },
     ]}

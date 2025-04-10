@@ -1,6 +1,6 @@
 ---
 import Button from '../components/Button.astro'
-import PageLayout from './PageLayout.astro'
+import PageLayout from './NewPageLayout.astro'
 import Heading from '../components/Heading.astro'
 import ControlSection from '../components/ControlSection.astro'
 
@@ -13,35 +13,34 @@ const { pageDescription, heading } = Astro.props
 ---
 
 <PageLayout description={pageDescription}>
-    <slot name="head" slot="head" />
+    <section class="px-4 sm:px-10 grid gap-10 w-full max-w-400">
+        <slot name="head" slot="head" />
 
-    <Heading type="h1">{heading}</Heading>
+        <Heading type="h1">{heading}</Heading>
 
-    <div class="justify-self-stretch relative grid gap-10">
-        <div
-            id="svg-controls"
-            class="grid content-start gap-4 origin-top-left rounded-xs sm:grid-cols-2 md:grid-cols-1 md:absolute md:top-2 md:left-2 md:scale-[0.6] z-10 md:w-[45ch]"
-        >
-            <slot name="controls" />
+        <div class="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
+            <div id="svg-controls" class="grid content-start gap-2 rounded-xs lg:grid-cols-1">
+                <slot name="controls" />
 
-            <ControlSection>
-                <div class="grid grid-cols-2 gap-4">
-                    <Button id="undo">Undo</Button>
-                    <Button id="redo">Redo</Button>
-                </div>
-                <Button id="save" class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
-                    >Save svg</Button
+                <ControlSection>
+                    <div class="grid grid-cols-2 gap-4">
+                        <Button id="undo">Undo</Button>
+                        <Button id="redo">Redo</Button>
+                    </div>
+                    <Button id="save" class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
+                        >Save svg</Button
+                    >
+                </ControlSection>
+            </div>
+
+            <div class="aspect-[1/1.414] relative box-border">
+                <section
+                    id="container"
+                    class="h-full w-full shadow-lg relative overflow-clip outline-4 -outline-offset-4 outline-color rounded-sm"
                 >
-            </ControlSection>
+                    <svg id="svg" class="w-full" xmlns="http://www.w3.org/2000/svg"></svg>
+                </section>
+            </div>
         </div>
-
-        <div class="w-full aspect-1/2 md:aspect-[1/1.414] relative box-border">
-            <section
-                id="container"
-                class="h-full w-full shadow-2xl relative overflow-clip outline-4 -outline-offset-4 outline-color"
-            >
-                <svg id="svg" class="w-full" xmlns="http://www.w3.org/2000/svg"></svg>
-            </section>
-        </div>
-    </div>
+    </section>
 </PageLayout>

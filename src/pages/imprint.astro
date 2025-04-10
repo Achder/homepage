@@ -1,5 +1,5 @@
 ---
-import PageLayout from '../layouts/PageLayout.astro'
+import PageLayout from '../layouts/NewPageLayout.astro'
 import Heading from '../components/Heading.astro'
 import StyledLink from '../components/StyledLink.astro'
 ---
@@ -7,7 +7,7 @@ import StyledLink from '../components/StyledLink.astro'
 <PageLayout
     description="Imprint including address and contact info, as well as links to social media and job platforms."
 >
-    <div class="grid gap-8 justify-self-stretch">
+    <div class="grid gap-8 px-10 w-full">
         <Heading type="h1">Imprint</Heading>
 
         <div class="grid text-xl">
@@ -18,19 +18,9 @@ import StyledLink from '../components/StyledLink.astro'
         </div>
 
         <div class="grid text-xl">
-            <StyledLink href="mailto:thomas.meerpohl@gmail.com">
-                thomas.meerpohl@gmail.com
-            </StyledLink>
-            <StyledLink
-                href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/"
-            >
-                LinkedIn
-            </StyledLink>
-            <StyledLink
-                href="https://www.freelancermap.de/profil/thomas-meerpohl"
-            >
-                FreelancerMap
-            </StyledLink>
+            <StyledLink href="mailto:thomas.meerpohl@gmail.com"> thomas.meerpohl@gmail.com </StyledLink>
+            <StyledLink href="https://www.linkedin.com/in/thomas-meerpohl-0609b619b/"> LinkedIn </StyledLink>
+            <StyledLink href="https://www.freelancermap.de/profil/thomas-meerpohl"> FreelancerMap </StyledLink>
             <StyledLink href="https://github.com/Achder">Github</StyledLink>
         </div>
     </div>
