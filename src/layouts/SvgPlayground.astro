@@ -3,6 +3,7 @@ import Button from '../components/Button.astro'
 import PageLayout from './NewPageLayout.astro'
 import Heading from '../components/Heading.astro'
 import ControlSection from '../components/ControlSection.astro'
+import Slider from '../components/Slider.astro'
 
 type Props = {
     pageDescription: string
@@ -19,7 +20,7 @@ const { pageDescription, heading } = Astro.props
         <Heading type="h1">{heading}</Heading>
 
         <div class="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <div id="svg-controls" class="grid content-start gap-2 rounded-xs lg:grid-cols-1">
+            <div id="svg-controls" class="grid content-start gap-2 rounded-xs">
                 <slot name="controls" />
 
                 <ControlSection>
@@ -27,9 +28,16 @@ const { pageDescription, heading } = Astro.props
                         <Button id="undo">Undo</Button>
                         <Button id="redo">Redo</Button>
                     </div>
-                    <Button id="save" class="sm:justify-self-end sm:col-start-1 sm:col-end-3 md:col-end-1 md:w-full"
-                        >Save svg</Button
-                    >
+                    <Button id="save" class="md:w-full">Save svg</Button>
+                </ControlSection>
+
+                <ControlSection>
+                    <div class="grid grid-cols-2 gap-4">
+                        <Button id="animate-start">Start</Button>
+                        <Button id="animate-end">End</Button>
+                    </div>
+                    <Slider id="animate-seconds" min={1} max={10} value={4} step={0.01} name="Seconds" />
+                    <Button id="animate" class="w-full">Animate</Button>
                 </ControlSection>
             </div>
 

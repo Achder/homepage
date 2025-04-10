@@ -36,6 +36,10 @@ export function writeToUrl(id: string, value: string) {
 
 export const listeners = new Map<Element, Partial<Record<keyof HTMLElementEventMap, () => void>>>()
 
+export function getAllListenerElements() {
+    return [...listeners.keys()]
+}
+
 export function clearAllListeners() {
     for (const [element, eventMap] of listeners) {
         for (const [type, callback] of Object.entries(eventMap)) {

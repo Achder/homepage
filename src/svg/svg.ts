@@ -1,4 +1,5 @@
-import { addListener, clearAllListeners } from '../utils/controls'
+import { animate, setAnimation } from '../utils/animate'
+import { addListener, clearAllListeners, getAllListenerElements } from '../utils/controls'
 import { redo, undo } from '../utils/state'
 import { getOrCreateDefs } from './gradient'
 
@@ -132,6 +133,23 @@ export function initInteractiveSvg(params: InteractiveSvgParams) {
     redoBtn.addEventListener('click', () => {
         redo()
         restart()
+    })
+
+    const animateStartBtn = document.getElementById('animate-start')!
+    animateStartBtn.addEventListener('click', () => {
+        const inputs = getAllListenerElements()
+        setAnimation('start', inputs)
+    })
+
+    const animateEndBtn = document.getElementById('animate-end')!
+    animateEndBtn.addEventListener('click', () => {
+        const inputs = getAllListenerElements()
+        setAnimation('end', inputs)
+    })
+
+    const animateBtn = document.getElementById('animate')!
+    animateBtn.addEventListener('click', () => {
+        animate(2)
     })
 
     window.addEventListener('popstate', restart)
