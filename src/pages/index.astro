@@ -1,7 +1,12 @@
 ---
 import Me from '../images/me.webp'
 import MePig from '../images/pig.jpg'
-import Ball from '../images/ball.jpeg'
+import One from '../images/1.webp'
+import Two from '../images/2.webp'
+import Three from '../images/3.webp'
+import Smile from '../images/smile.webp'
+import Cobra from '../images/cobra.webp'
+import Ball from '../images/ball.webp'
 import Code from '../images/code.jpeg'
 import Easy from '../images/easy.jpeg'
 import Hello from '../images/hello.jpeg'
@@ -61,12 +66,19 @@ import { Image } from 'astro:assets'
         <Heading type="h2">Gallery</Heading>
 
         <!-- <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-6"> -->
-        <div class="grid justify-items-stretch sm:justify-items-center md:flex *:shrink *:min-w-0 gap-6 w-full">
-            <Preview src={Ball} />
-            <Preview src={Code} />
-            <Preview src={Easy} />
-            <Preview src={Hello} />
+        <div
+            class="grid justify-items-stretch sm:justify-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 w-full"
+        >
+            <Preview src={Cobra} />
+            <Preview src={One} />
             <Preview src={Pow} />
+            <Preview src={Ball} />
+            <Preview src={Easy} />
+            <Preview src={Smile} />
+            <Preview src={Three} />
+            <Preview src={Code} />
+            <Preview src={Two} />
+            <Preview src={Hello} />
             <Preview src={Swirl} />
         </div>
     </section>
