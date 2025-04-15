@@ -3,7 +3,6 @@ import StyledLink from '../components/StyledLink.astro'
 import SocialNav from '../components/SocialNav.astro'
 import PageNav from '../components/PageNav.astro'
 import '../app.css'
-import Logo from '../components/icons/Logo.astro'
 
 type Props = {
     description: string
@@ -37,6 +36,7 @@ const isProduction = import.meta.env.MODE === 'production'
                         defer
                         src="https://analytics.meerpohl.dev/script.js"
                         data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"
+                        data-exclude-search="true"
                     />
                 </>
             )
