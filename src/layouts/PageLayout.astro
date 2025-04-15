@@ -29,12 +29,18 @@ const isProduction = import.meta.env.MODE === 'production'
         <meta property="og:image" content={`/api/og-image?url=${encodeURIComponent(Astro.request.url)}`} />
         <meta property="og:description" content={description} />
 
-        <script
-            defer
-            src="https://analytics.meerpohl.dev/script.js"
-            data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"
-            data-exclude-search="true"
-            data-domains="meerpohl.dev"></script>
+        {
+            isProduction && (
+                <>
+                    <script
+                        defer
+                        src="https://analytics.meerpohl.dev/script.js"
+                        data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"
+                        data-exclude-search="true"
+                    />
+                </>
+            )
+        }
 
         <link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="" />
