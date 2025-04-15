@@ -3,7 +3,6 @@ import StyledLink from '../components/StyledLink.astro'
 import SocialNav from '../components/SocialNav.astro'
 import PageNav from '../components/PageNav.astro'
 import '../app.css'
-import Logo from '../components/icons/Logo.astro'
 
 type Props = {
     description: string
@@ -14,7 +13,7 @@ const isProduction = import.meta.env.MODE === 'production'
 ---
 
 <!doctype html>
-<html lang="en" class="snap-y snap-mandatory overflow-x-clip bg-dark" style={{ scrollbarGutter: 'stable' }}>
+<html lang="en" class="bg-dark h-full" style={{ scrollbarGutter: 'stable' }}>
     <head>
         <title>Homepage Thomas Meerpohl</title>
 
@@ -22,6 +21,7 @@ const isProduction = import.meta.env.MODE === 'production'
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charset="utf-8" />
         <meta name="theme-color" content="#000" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
         <meta property="og:title" content="Freelancer Thomas Meerpohl" />
         <meta property="og:type" content="website" />
@@ -29,76 +29,67 @@ const isProduction = import.meta.env.MODE === 'production'
         <meta property="og:image" content={`/api/og-image?url=${encodeURIComponent(Astro.request.url)}`} />
         <meta property="og:description" content={description} />
 
-        {
-            isProduction && (
-                <>
-                    <script
-                        defer
-                        src="https://analytics.meerpohl.dev/script.js"
-                        data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"
-                    />
-                </>
-            )
-        }
+        <script
+            defer
+            src="https://analytics.meerpohl.dev/script.js"
+            data-website-id="21f2d5b2-a302-478b-99a3-d117bd334e5f"
+            data-exclude-search="true"
+            data-domains="meerpohl.dev"></script>
 
         <link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="" />
         <slot name="head" />
     </head>
 
-    <body class="tracking-wider font-rethink font-normal bg-dark text-dark">
-        <div class="color-wrapper bg-brand sm:outline-8 sm:-outline-offset-8 sm:outline-dark px-2">
-            <div class="body-wrapper min-h-dvh max-w-5xl mx-auto px-2 py-1">
-                <div class="flex justify-between items-center gap-4">
-                    <PageNav />
-                    <SocialNav class="justify-end gap-8 py-8 hidden sm:flex" />
-                </div>
-
-                <main class="py-4 grid content-start justify-items-start gap-10">
-                    <slot />
-                </main>
-
-                <SocialNav class="flex justify-center gap-8 py-4 sm:hidden" />
-
-                <footer class="flex gap-4 py-4 justify-center justify-self-end sm:justify-end">
-                    ⓒ Thomas Meerpohl {new Date().getFullYear()}
-                    <StyledLink href="/imprint">Imprint</StyledLink>
-                </footer>
-            </div>
+    <body class="min-h-dvh tracking-wider font-rethink font-normal bg-brand text-dark">
+        <div class="px-4 sm:px-10 flex justify-between items-center gap-4">
+            <PageNav />
+            <SocialNav class="justify-end gap-8 py-8 hidden sm:flex" />
         </div>
+
+        <main class="grid justify-items-center gap-20 py-4 sm:py-10">
+            <slot />
+        </main>
+
+        <SocialNav class="flex justify-center gap-8 py-4 sm:hidden" />
+
+        <footer class="px-10 flex gap-4 py-4 justify-center justify-self-end sm:justify-end">
+            ⓒ Thomas Meerpohl {new Date().getFullYear()}
+            <StyledLink href="/imprint">Imprint</StyledLink>
+        </footer>
     </body>
+
+    <style is:global>
+        @font-face {
+            font-family: 'Rethink Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: url('/fonts/RethinkSans-Regular.woff2') format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Rethink Sans';
+            font-style: normal;
+            font-weight: 800;
+            src: url('/fonts/RethinkSans-ExtraBold.woff2') format('woff2');
+        }
+
+        ::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        ::-webkit-color-swatch {
+            border: 0;
+            border-radius: 0;
+        }
+
+        ::-moz-color-swatch,
+        ::-moz-focus-inner {
+            border: 0;
+        }
+
+        ::-moz-focus-inner {
+            padding: 0;
+        }
+    </style>
 </html>
-
-<style is:global>
-    @font-face {
-        font-family: 'Rethink Sans';
-        font-style: normal;
-        font-weight: 400;
-        src: url('/fonts/RethinkSans-Regular.woff2') format('woff2');
-    }
-
-    @font-face {
-        font-family: 'Rethink Sans';
-        font-style: normal;
-        font-weight: 800;
-        src: url('/fonts/RethinkSans-ExtraBold.woff2') format('woff2');
-    }
-
-    ::-webkit-color-swatch-wrapper {
-        padding: 0;
-    }
-
-    ::-webkit-color-swatch {
-        border: 0;
-        border-radius: 0;
-    }
-
-    ::-moz-color-swatch,
-    ::-moz-focus-inner {
-        border: 0;
-    }
-
-    ::-moz-focus-inner {
-        padding: 0;
-    }
-</style>
