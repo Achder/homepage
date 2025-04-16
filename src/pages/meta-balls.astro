@@ -62,7 +62,6 @@ import ControlSection from '../components/ControlSection.astro'
     import { drawPath } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
     import { getInputValue, writeToUrl, readFromUrl, connect } from '../utils/controls'
-    import isMobile from 'is-mobile'
     import { drawCircle } from '../svg/circle'
     import Color from 'colorjs.io'
     import { mix } from '../utils/color'
@@ -186,7 +185,7 @@ import ControlSection from '../components/ControlSection.astro'
         return {
             x: Math.random() * size.w,
             y: Math.random() * size.h,
-            radius: isMobile() ? genRadius(200, 700) : genRadius(400, 2000),
+            radius: genRadius(400, 2000),
         }
     }
 
