@@ -61,7 +61,7 @@ import ControlSection from '../components/ControlSection.astro'
     import { isoBands } from 'marching-squares'
     import { drawPath } from '../svg/path'
     import { clear, initInteractiveSvg, type Size } from '../svg/svg'
-    import { getInputValue, writeToUrl, readFromUrl, connect } from '../utils/controls'
+    import { getInputValue, writeToUrl, readFromUrl } from '../utils/controls'
     import { drawCircle } from '../svg/circle'
     import Color from 'colorjs.io'
     import { mix } from '../utils/color'
@@ -227,7 +227,7 @@ import ControlSection from '../components/ControlSection.astro'
                 onMoveCallback()
             }
 
-            function handleUp(e: PointerEvent) {
+            function handleUp() {
                 document.removeEventListener('pointermove', handleMove)
                 document.removeEventListener('pointerup', handleUp)
                 onUpCallback()
@@ -302,7 +302,7 @@ import ControlSection from '../components/ControlSection.astro'
 
         // init randomly if no balls are provided in the URL query string
         if (!ballsSearchParam) {
-            const numBalls = isMobile() ? 10 : 15
+            const numBalls = 15
             for (let idx = 0; idx < numBalls; idx++) {
                 balls.push(generateRandomBall(size))
             }
@@ -333,7 +333,7 @@ import ControlSection from '../components/ControlSection.astro'
         writeToUrl('balls', JSON.stringify(balls))
     }
 
-    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
+    const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
             return getInputValue<T>(id, () => requestAnimationFrame(render))
         }

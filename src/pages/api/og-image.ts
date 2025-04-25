@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from 'puppeteer'
+import puppeteer from 'puppeteer'
 import type { APIRoute } from 'astro'
 
 export const prerender = false

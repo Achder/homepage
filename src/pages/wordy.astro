@@ -118,7 +118,7 @@ import { Font } from 'astro:assets'
     import { drawText } from '../svg/text'
     import { seesaw } from '../utils/form'
 
-    const init = (svg: HTMLElement, size: Size, abortSignal?: AbortSignal) => {
+    const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
             return getInputValue<T>(id, () => requestAnimationFrame(render))
         }

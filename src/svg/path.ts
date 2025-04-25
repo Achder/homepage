@@ -15,7 +15,7 @@ type PathParams = {
 }
 
 export function drawPath(svg: HTMLElement, params: PathParams) {
-    const { d, stroke = 'black', strokeWidth = 2, fill = 'none', dashArray } = params
+    const { d, stroke = 'black', strokeWidth = 2, fill = 'none' } = params
 
     const path = document.createElementNS(ns, 'path')
 

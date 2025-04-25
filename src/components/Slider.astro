@@ -28,7 +28,7 @@ const { pathname } = Astro.url
     />
 </label>
 
-<script define:vars={{ id, reset }}>
+<script is:inline define:vars={{ id, reset }}>
     const slider = document.getElementById(id)
     slider?.addEventListener('dblclick', () => {
         if (typeof reset === 'undefined') {

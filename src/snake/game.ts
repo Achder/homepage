@@ -1,5 +1,5 @@
 import { Snake } from './snake'
-import type { Field, Direction, Position, Item } from './types'
+import type { Field, Direction, Item } from './types'
 import colors from 'tailwindcss/colors'
 
 export class Game {
@@ -44,14 +44,10 @@ export class Game {
             return snake
         }
 
-        const snake1 = initSnake(
-            Math.ceil(this.field.width / (this.numPlayers === 1 ? 2 : 3)),
-            this.field.height - 4,
-            {
-                x: 0,
-                y: -1,
-            }
-        )
+        const snake1 = initSnake(Math.ceil(this.field.width / (this.numPlayers === 1 ? 2 : 3)), this.field.height - 4, {
+            x: 0,
+            y: -1,
+        })
 
         this.onChangeDirection(snake1, 'ArrowLeft', 'ArrowRight')
         this.snakes.push(snake1)
@@ -61,14 +57,10 @@ export class Game {
             return
         }
 
-        const snake2 = initSnake(
-            Math.ceil((this.field.width / 3) * 2),
-            this.field.height + 4,
-            {
-                x: 0,
-                y: 1,
-            }
-        )
+        const snake2 = initSnake(Math.ceil((this.field.width / 3) * 2), this.field.height + 4, {
+            x: 0,
+            y: 1,
+        })
 
         this.onChangeDirection(snake2, 'a', 'd')
         this.snakes.push(snake2)
@@ -158,11 +150,7 @@ export class Game {
 
             // check snake bite
             const hasSnakeBite = this.snakes.some((subSnake) => {
-                return (
-                    subSnake != snake &&
-                    snake.first &&
-                    subSnake.collidesWith(snake.first.position)
-                )
+                return subSnake != snake && snake.first && subSnake.collidesWith(snake.first.position)
             })
             if (hasSnakeBite) {
                 throw new Error('Damn, somebody bit somebody!')
@@ -194,9 +182,7 @@ export class Game {
 
         ctx.clearRect(0, 0, canvas?.width ?? 0, canvas?.height ?? 0)
 
-        const docStyle = getComputedStyle(document.documentElement)
         const dark = colors.black
-        const light = colors.white
         const pink = colors.fuchsia[600]
 
         // draw grid
@@ -205,17 +191,11 @@ export class Game {
         ctx.lineWidth = 1
         for (let x = 1; x < this.field.width; x++) {
             ctx.moveTo(x * this.segmentSize, 0)
-            ctx.lineTo(
-                x * this.segmentSize,
-                this.field.height * this.segmentSize
-            )
+            ctx.lineTo(x * this.segmentSize, this.field.height * this.segmentSize)
         }
         for (let y = 1; y < this.field.height; y++) {
             ctx.moveTo(0, y * this.segmentSize)
-            ctx.lineTo(
-                this.field.width * this.segmentSize,
-                y * this.segmentSize
-            )
+            ctx.lineTo(this.field.width * this.segmentSize, y * this.segmentSize)
         }
         ctx.stroke()
         ctx.closePath()
