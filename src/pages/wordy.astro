@@ -26,25 +26,25 @@ import { Font } from 'astro:assets'
                 <option value="--font-caveat">Caveat</option>
                 <option value="--font-rowdies">Rowdies</option>
             </Select>
+            <Slider id="font-size" min={5} max={100} value={27} reset={20} step={0.01} name="Font Size" />
+            <Slider id="font-scale" min={-1} max={1} value={0.2} step={0.01} reset={0} name="Font Scale" />
         </ControlSection>
 
         <ControlSection>
             <Slider id="shapes" min={2} max={300} value={25} reset={50} name="Shapes" />
-            <Slider id="stride" min={-50} max={50} value={-0.73} reset={0} name="Stride" step={0.01} />
             <Slider id="rotation" min={-720} max={720} value={40} reset={0} name="Rotation" />
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
+            <Slider id="x-stride" min={-10} max={10} value={0.6} reset={0} name="x - Stride" step={0.01} />
+            <Slider id="y-stride" min={-10} max={10} value={2.16} reset={0} name="y - Stride" step={0.01} />
             <Slider id="x-amplitude" min={-100} max={100} value={6} reset={0} name="x - Amplitude" />
             <Slider id="y-amplitude" min={-500} max={500} value={6} reset={0} name="y - Amplitude" />
             <Slider id="x-wobble-freq" min={0.5} max={3} value={1.4} step={0.01} reset={0.5} name="x - Frequency" />
             <Slider id="y-wobble-freq" min={0.5} max={3} value={0} step={0.01} reset={0.5} name="y - Frequency" />
+            <Slider id="x-wobble-phase" min={0} max={Math.PI * 2} value={0} step={0.01} name="x - Phase" />
+            <Slider id="y-wobble-phase" min={0} max={Math.PI * 2} value={0} step={0.01} name="y - Phase" />
             <Slider id="wobble" min={0} max={1} value={0} step={0.01} reset={0} name="Wobble" class="col-span-2" />
-        </ControlSection>
-
-        <ControlSection>
-            <Slider id="font-size" min={5} max={100} value={27} reset={20} step={0.01} name="Font Size" />
-            <Slider id="font-scale" min={-1} max={1} value={0.2} step={0.01} reset={0} name="Font Scale" />
         </ControlSection>
 
         <ControlSection>
@@ -128,28 +128,37 @@ import { Font } from 'astro:assets'
 
             const text = get<string>('text')
             const font = get<string>('font')
-            const rotation = get<number>('rotation')
-            const shapes = get<number>('shapes')
-            const stride = get<number>('stride')
-            const xAmplitude = get<number>('x-amplitude')
-            const xWobbleFreq = get<number>('x-wobble-freq')
-            const yAmplitude = get<number>('y-amplitude')
-            const yWobbleFreq = get<number>('y-wobble-freq')
-            const wobble = get<number>('wobble')
             const fontSize = get<number>('font-size')
             const fontScale = get<number>('font-scale')
+
+            const rotation = get<number>('rotation')
+            const shapes = get<number>('shapes')
+            const xStride = get<number>('x-stride')
+            const yStride = get<number>('y-stride')
+
+            const xAmplitude = get<number>('x-amplitude')
+            const xWobbleFreq = get<number>('x-wobble-freq')
+            const xWobblePhase = get<number>('x-wobble-phase')
+            const yAmplitude = get<number>('y-amplitude')
+            const yWobbleFreq = get<number>('y-wobble-freq')
+            const yWobblePhase = get<number>('y-wobble-phase')
+            const wobble = get<number>('wobble')
+
             const fillStart = get<string>('fill-start')
             const fillMid = get<string>('fill-mid')
             const fillEnd = get<string>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
             const fillAlphaScale = get<number>('fill-alpha-scale')
+
             const strokeWidth = get<number>('stroke-width')
             const strokeStart = get<string>('stroke-start')
             const strokeMid = get<string>('stroke-mid')
             const strokeEnd = get<string>('stroke-end')
             const strokeAlpha = get<number>('stroke-alpha')
             const strokeAlphaScale = get<number>('stroke-alpha-scale')
+
             const colorSpace = get<string>('color-space')
+
             const bgAngle = get<number>('bg-angle')
             const bgStart = get<string>('bg-start')
             const bgEnd = get<string>('bg-end')
@@ -185,12 +194,12 @@ import { Font } from 'astro:assets'
                 const fill = mix(fs, fm, fe, t, colorSpace)
                 const stroke = mix(ss, sm, se, t, colorSpace)
 
-                const xSineOffset = Math.sin(pi_nt * xWobbleFreq) * xAmplitude
-                const ySineOffset = Math.sin(pi_nt * yWobbleFreq) * yAmplitude
+                const xSineOffset = Math.sin(pi_nt * xWobbleFreq + xWobblePhase) * xAmplitude
+                const ySineOffset = Math.sin(pi_nt * yWobbleFreq + yWobblePhase) * yAmplitude
                 const xLinearOffset = nt * xAmplitude
                 const yLinearOffset = nt * yAmplitude
-                const xOffset = xLinearOffset + (xSineOffset - xLinearOffset) * wobble
-                const yOffset = (i - shapes / 2) * stride + yLinearOffset + (ySineOffset - yLinearOffset) * wobble
+                const xOffset = (i - shapes / 2) * xStride + xLinearOffset + (xSineOffset - xLinearOffset) * wobble
+                const yOffset = (i - shapes / 2) * yStride + yLinearOffset + (ySineOffset - yLinearOffset) * wobble
 
                 drawText(svg, {
                     content: text,
