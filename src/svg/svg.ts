@@ -1,14 +1,6 @@
 import { clearAllListeners } from '../utils/controls'
 import { redo, undo } from '../utils/state'
 
-function blobToBase64(blob: Blob) {
-    return new Promise<string | ArrayBuffer | null>((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result)
-        reader.readAsDataURL(blob)
-    })
-}
-
 function getFontFamilyName() {
     const fontSelector = document.getElementById('font') as HTMLSelectElement | null
     const fontOption = document.querySelector(`#font option[value="${fontSelector?.value}"]`) as HTMLElement | null
