@@ -1,6 +1,5 @@
 import { clearAllListeners } from '../utils/controls'
 import { redo, undo } from '../utils/state'
-import { getOrCreateDefs } from './gradient'
 
 function blobToBase64(blob: Blob) {
     return new Promise<string | ArrayBuffer | null>((resolve) => {
