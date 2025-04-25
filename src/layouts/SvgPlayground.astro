@@ -13,9 +13,8 @@ const { pageDescription, heading } = Astro.props
 ---
 
 <PageLayout description={pageDescription}>
+    <slot name="head" slot="head" />
     <section class="px-4 sm:px-10 grid gap-10 w-full max-w-400">
-        <slot name="head" slot="head" />
-
         <Heading type="h1">{heading}</Heading>
 
         <div class="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">

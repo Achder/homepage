@@ -1,4 +1,4 @@
-import { defineConfig, passthroughImageService } from 'astro/config'
+import { defineConfig, passthroughImageService, fontProviders } from 'astro/config'
 import mdx from '@astrojs/mdx'
 import sitemap from '@astrojs/sitemap'
 import tailwindcss from '@tailwindcss/vite'
@@ -24,5 +24,34 @@ export default defineConfig({
     }),
     image: {
         service: passthroughImageService(),
+    },
+    experimental: {
+        fonts: [
+            {
+                provider: fontProviders.google(),
+                name: 'Rowdies',
+                cssVariable: '--font-rowdies',
+            },
+            {
+                provider: fontProviders.google(),
+                name: 'Cal Sans',
+                cssVariable: '--font-cal-sans',
+            },
+            {
+                provider: fontProviders.google(),
+                name: 'Bebas Neue',
+                cssVariable: '--font-bebas-neue',
+            },
+            {
+                provider: fontProviders.google(),
+                name: 'Pacifico',
+                cssVariable: '--font-pacifico',
+            },
+            {
+                provider: fontProviders.google(),
+                name: 'Caveat',
+                cssVariable: '--font-caveat',
+            },
+        ],
     },
 })

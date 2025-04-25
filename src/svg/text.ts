@@ -40,17 +40,16 @@ export function drawText(svg: HTMLElement, params: TextParams) {
     text.setAttribute('fill-opacity', fillOpacity.toString())
     text.setAttribute('stroke-opacity', strokeOpacity.toString())
     text.setAttribute('stroke', stroke)
+    text.setAttribute('stroke-width', `${strokeWidth}`)
     text.setAttribute('text-anchor', 'middle')
     text.setAttribute('dominant-baseline', 'middle')
+    text.setAttribute('paint-order', 'stroke fill')
+    text.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) translate(${-x}, ${-y})`)
 
-    text.style.fill = fill
-    text.style.stroke = stroke
-    text.style.strokeWidth = `${strokeWidth}`
     text.style.fontSize = fontSize
     text.style.fontWeight = fontWeight
     text.style.fontFamily = fontFamily
 
-    text.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) translate(${-x}, ${-y})`)
     text.appendChild(document.createTextNode(content))
 
     svg.append(text)

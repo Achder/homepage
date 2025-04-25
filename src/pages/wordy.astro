@@ -4,12 +4,28 @@ import Input from '../components/Input.astro'
 import Select from '../components/Select.astro'
 import SvgPlayground from '../layouts/SvgPlayground.astro'
 import ControlSection from '../components/ControlSection.astro'
+import { Font } from 'astro:assets'
 ---
 
 <SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Wordy">
+    <Fragment slot="head">
+        <Font cssVariable="--font-rowdies" preload />
+        <Font cssVariable="--font-cal-sans" preload />
+        <Font cssVariable="--font-pacifico" preload />
+        <Font cssVariable="--font-caveat" preload />
+        <Font cssVariable="--font-bebas-neue" preload />
+    </Fragment>
+
     <Fragment slot="controls">
         <ControlSection>
             <Input type="text" id="text" label="Text" value="Hello" />
+            <Select id="font" label="Font">
+                <option value="--font-cal-sans" selected>Cal Sans</option>
+                <option value="--font-bebas-neue">Bebas Neue</option>
+                <option value="--font-pacifico">Pacifico</option>
+                <option value="--font-caveat">Caveat</option>
+                <option value="--font-rowdies">Rowdies</option>
+            </Select>
         </ControlSection>
 
         <ControlSection>
@@ -111,6 +127,7 @@ import ControlSection from '../components/ControlSection.astro'
             clear(svg)
 
             const text = get<string>('text')
+            const font = get<string>('font')
             const rotation = get<number>('rotation')
             const shapes = get<number>('shapes')
             const stride = get<number>('stride')
@@ -185,6 +202,7 @@ import ControlSection from '../components/ControlSection.astro'
                     strokeOpacity: strokeAlpha * seesaw(strokeAlphaScale, t),
                     strokeWidth: strokeWidth,
                     rotation: (nt - 0.5) * rotation,
+                    fontFamily: `var(${font})`,
                     fontSize: `${fontSize * seesaw(fontScale, t) * 16}px`,
                     fontWeight: '900',
                 })

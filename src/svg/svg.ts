@@ -1,4 +1,4 @@
-import { addListener, clearAllListeners } from '../utils/controls'
+import { clearAllListeners } from '../utils/controls'
 import { redo, undo } from '../utils/state'
 import { getOrCreateDefs } from './gradient'
 
@@ -10,26 +10,14 @@ function blobToBase64(blob: Blob) {
     })
 }
 
-async function embedFontInSVG(svg: HTMLElement) {
-    const fontResponse = await fetch(`/fonts/RethinkSans-ExtraBold.woff2`)
-    const fontBlob = await fontResponse.blob()
-    const dataUrl = await blobToBase64(fontBlob)
+function getFontFamilyName() {
+    const fontSelector = document.getElementById('font') as HTMLSelectElement | null
+    const fontOption = document.querySelector(`#font option[value="${fontSelector?.value}"]`) as HTMLElement | null
 
-    const style = document.createElement('style')
-    style.setAttribute('type', 'text/css')
-    style.textContent = `
-        <![CDATA[
-            @font-face {
-                font-family: 'Rethink Sans';
-                src: url(${dataUrl});
-                svg:font-weight: normal;
-                svg:font-style: normal;
-            }
-        ]]>
-    `
-
-    const defs = getOrCreateDefs(svg)
-    defs?.appendChild(style)
+    return {
+        fontVariable: fontSelector?.value,
+        fontFamily: fontOption?.textContent,
+    }
 }
 
 export async function save(id: string) {
@@ -39,19 +27,18 @@ export async function save(id: string) {
         return
     }
 
-    await embedFontInSVG(svgElement)
-
-    // 1. Get SVG Content
     const svgString = new XMLSerializer().serializeToString(svgElement)
-
-    // 2. Prepare Data
     const svgData =
         `<?xml version="1.0" standalone="no"?>\r\n` +
         `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ` +
         `"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\r\n` +
         svgString
 
-    const blob = new Blob([svgData], { type: 'image/svg+xml' })
+    // replace font variable with font family
+    const font = getFontFamilyName()
+    const finalSvgData = svgData.replaceAll(`var(${font.fontVariable})`, `${font.fontFamily ?? ''}`)
+
+    const blob = new Blob([finalSvgData], { type: 'image/svg+xml' })
     const url = URL.createObjectURL(blob)
 
     const title = document.querySelector('h1')?.textContent ?? 'your-file'
