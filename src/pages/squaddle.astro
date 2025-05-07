@@ -1,7 +1,6 @@
 ---
 import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
-import Select from '../components/Select.astro'
 import SvgPlayground from '../layouts/SvgPlayground.astro'
 import ControlSection from '../components/ControlSection.astro'
 ---
@@ -61,27 +60,6 @@ import ControlSection from '../components/ControlSection.astro'
                 <Input type="color" id="bg-end" label="Bg End" value="#000000" />
             </div>
         </ControlSection>
-
-        <ControlSection>
-            <Select id="color-space" label="Color Space" class="col-span-3">
-                <option value="lch">LCH</option>
-                <option value="acescc">ACEScc</option>
-                <option value="a98rgb">Adobe 98 RGB</option>
-                <option value="hpluv">HPLuv</option>
-                <option value="hsl">HSL</option>
-                <option value="hsluv">HSLuv</option>
-                <option value="hwb" selected>HWB</option>
-                <option value="ictcp">ICTCQ</option>
-                <option value="jzczhz">JzCzHz</option>
-                <option value="lab">LAB</option>
-                <option value="oklch">Oklch</option>
-                <option value="p3">P3</option>
-                <option value="prophoto">ProPhoto</option>
-                <option value="rec2020">REC.2020</option>
-                <option value="rec2100hlg">REC.2100-HLG</option>
-                <option value="rec2100pq">REC.2100-PQ</option>
-            </Select>
-        </ControlSection>
     </Fragment>
 </SvgPlayground>
 
@@ -92,11 +70,11 @@ import ControlSection from '../components/ControlSection.astro'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
-    import { mix } from '../utils/color'
+    import { mix, toProofed } from '../utils/color'
     import { stump } from '../utils/form'
 
     const init = (svg: HTMLElement, size: Size) => {
-        function get<T>(id: string) {
+        function get<T>(id: string): T {
             return getInputValue<T>(id, () => requestAnimationFrame(render))
         }
 
@@ -120,36 +98,31 @@ import ControlSection from '../components/ControlSection.astro'
             const radiusWobble = get<number>('radius-wobble')
             const radiusFreq = get<number>('radius-freq')
 
-            const fillStart = get<string>('fill-start')
-            const fillMid = get<string>('fill-mid')
-            const fillEnd = get<string>('fill-end')
+            const colorSpace = get<string>('color-space')
+            const proof = get<string>('proof')
+            const shouldProof = proof === 'proof'
+
+            const fillStart = get<Color>('fill-start')
+            const fillMid = get<Color>('fill-mid')
+            const fillEnd = get<Color>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
 
             const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<string>('stroke-start')
-            const strokeMid = get<string>('stroke-mid')
-            const strokeEnd = get<string>('stroke-end')
+            const strokeStart = get<Color>('stroke-start')
+            const strokeMid = get<Color>('stroke-mid')
+            const strokeEnd = get<Color>('stroke-end')
             const strokeAlpha = get<number>('stroke-alpha')
 
-            const colorSpace = get<string>('color-space')
-
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<string>('bg-start')
-            const bgEnd = get<string>('bg-end')
+            const bgStart = get<Color>('bg-start')
+            const bgEnd = get<Color>('bg-end')
 
             const center = { x: size.w / 2, y: size.h / 2 }
 
-            const fs = new Color(fillStart)
-            const fm = new Color(fillMid)
-            const fe = new Color(fillEnd)
-            const ss = new Color(strokeStart)
-            const sm = new Color(strokeMid)
-            const se = new Color(strokeEnd)
-
             createGradient(svg, {
                 id: 'bg-gradient',
-                start: bgStart,
-                end: bgEnd,
+                start: (shouldProof ? toProofed(bgStart) : bgStart.to('srgb')).toString({ format: 'hex' }),
+                end: (shouldProof ? toProofed(bgEnd) : bgEnd.to('srgb')).toString({ format: 'hex' }),
                 angle: bgAngle,
             })
 
@@ -165,8 +138,12 @@ import ControlSection from '../components/ControlSection.astro'
                 const t = i / shapes
                 const nt = (t - 0.5) * 2
                 const pi_nt = nt * Math.PI * 2
-                const fill = mix(fs, fm, fe, t, colorSpace)
-                const stroke = mix(ss, sm, se, t, colorSpace)
+
+                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
+                const proofedFill = toProofed(fill)
+
+                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
+                const proofedStroke = toProofed(stroke)
 
                 const xSineOffset = Math.sin(pi_nt * xWobbleFreq + xWobblePhase) * xAmplitude
                 const ySineOffset = Math.sin(pi_nt * yWobbleFreq + yWobblePhase) * yAmplitude
@@ -178,9 +155,9 @@ import ControlSection from '../components/ControlSection.astro'
                     y: center.y + yOffset,
                     radiusX: (radiusX + Math.sin(pi_nt * radiusFreq) * radiusWobble) * stump(t),
                     radiusY: (radiusY + Math.sin(pi_nt * radiusFreq) * radiusWobble) * stump(t),
-                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex' }),
                     fillOpacity: fillAlpha,
-                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
+                    stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex' }),
                     strokeOpacity: strokeAlpha,
                     strokeWidth: strokeWidth,
                     rotation: nt * rotation,

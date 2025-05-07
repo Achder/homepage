@@ -84,27 +84,6 @@ import { Font } from 'astro:assets'
                 <Input type="color" id="bg-end" label="Bg End" value="#380000" />
             </div>
         </ControlSection>
-
-        <ControlSection>
-            <Select id="color-space" label="Color Space">
-                <option value="lch" selected>LCH</option>
-                <option value="acescc">ACEScc</option>
-                <option value="a98rgb">Adobe 98 RGB</option>
-                <option value="hpluv">HPLuv</option>
-                <option value="hsl">HSL</option>
-                <option value="hsluv">HSLuv</option>
-                <option value="hwb">HWB</option>
-                <option value="ictcp">ICTCQ</option>
-                <option value="jzczhz">JzCzHz</option>
-                <option value="lab">LAB</option>
-                <option value="oklch">Oklch</option>
-                <option value="p3">P3</option>
-                <option value="prophoto">ProPhoto</option>
-                <option value="rec2020">REC.2020</option>
-                <option value="rec2100hlg">REC.2100-HLG</option>
-                <option value="rec2100pq">REC.2100-PQ</option>
-            </Select>
-        </ControlSection>
     </Fragment>
 </SvgPlayground>
 
@@ -114,7 +93,7 @@ import { Font } from 'astro:assets'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
-    import { mix } from '../utils/color'
+    import { mix, toProofed } from '../utils/color'
     import { drawText } from '../svg/text'
     import { seesaw } from '../utils/form'
 
@@ -144,38 +123,33 @@ import { Font } from 'astro:assets'
             const yWobblePhase = get<number>('y-wobble-phase')
             const wobble = get<number>('wobble')
 
-            const fillStart = get<string>('fill-start')
-            const fillMid = get<string>('fill-mid')
-            const fillEnd = get<string>('fill-end')
+            const fillStart = get<Color>('fill-start')
+            const fillMid = get<Color>('fill-mid')
+            const fillEnd = get<Color>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
             const fillAlphaScale = get<number>('fill-alpha-scale')
 
             const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<string>('stroke-start')
-            const strokeMid = get<string>('stroke-mid')
-            const strokeEnd = get<string>('stroke-end')
+            const strokeStart = get<Color>('stroke-start')
+            const strokeMid = get<Color>('stroke-mid')
+            const strokeEnd = get<Color>('stroke-end')
             const strokeAlpha = get<number>('stroke-alpha')
             const strokeAlphaScale = get<number>('stroke-alpha-scale')
 
             const colorSpace = get<string>('color-space')
+            const proof = get<string>('proof')
+            const shouldProof = proof === 'proof'
 
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<string>('bg-start')
-            const bgEnd = get<string>('bg-end')
+            const bgStart = get<Color>('bg-start')
+            const bgEnd = get<Color>('bg-end')
 
             const center = { x: size.w / 2, y: size.h / 2 }
 
-            const fs = new Color(fillStart)
-            const fm = new Color(fillMid)
-            const fe = new Color(fillEnd)
-            const ss = new Color(strokeStart)
-            const sm = new Color(strokeMid)
-            const se = new Color(strokeEnd)
-
             createGradient(svg, {
                 id: 'bg-gradient',
-                start: bgStart,
-                end: bgEnd,
+                start: (shouldProof ? toProofed(bgStart) : bgStart.to('srgb')).toString({ format: 'hex' }),
+                end: (shouldProof ? toProofed(bgEnd) : bgEnd.to('srgb')).toString({ format: 'hex' }),
                 angle: bgAngle,
             })
 
@@ -191,8 +165,12 @@ import { Font } from 'astro:assets'
                 const t = i / shapes
                 const nt = (t - 0.5) * 2
                 const pi_nt = nt * Math.PI * 2
-                const fill = mix(fs, fm, fe, t, colorSpace)
-                const stroke = mix(ss, sm, se, t, colorSpace)
+
+                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
+                const proofedFill = toProofed(fill)
+
+                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
+                const proofedStroke = toProofed(stroke)
 
                 const xSineOffset = Math.sin(pi_nt * xWobbleFreq + xWobblePhase) * xAmplitude
                 const ySineOffset = Math.sin(pi_nt * yWobbleFreq + yWobblePhase) * yAmplitude
@@ -205,9 +183,9 @@ import { Font } from 'astro:assets'
                     content: text,
                     x: center.x + xOffset,
                     y: center.y + yOffset,
-                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex' }),
                     fillOpacity: fillAlpha * seesaw(fillAlphaScale, t),
-                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
+                    stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex' }),
                     strokeOpacity: strokeAlpha * seesaw(strokeAlphaScale, t),
                     strokeWidth: strokeWidth,
                     rotation: (nt - 0.5) * rotation,

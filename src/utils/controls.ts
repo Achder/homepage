@@ -1,6 +1,10 @@
 import { pushUndo } from './state'
+import Color from 'colorjs.io'
 
-export function getInputValue<T>(id: string, renderCallback: () => void) {
+// export function getInputValue(type: 'number', id: string, renderCallback: () => void): number
+// export function getInputValue(type: 'string', id: string, renderCallback: () => void): string
+// export function getInputValue(type: 'Color', id: string, renderCallback: () => void): Color
+export function getInputValue<T>(id: string, renderCallback: () => void): T {
     const element = document.getElementById(id)! as HTMLInputElement
 
     // add initial listener
@@ -11,11 +15,13 @@ export function getInputValue<T>(id: string, renderCallback: () => void) {
     }
 
     // parse value
-    if (!isNaN(element.valueAsNumber)) {
+    if (element.type === 'color') {
+        return new Color(element.value).to('p3') as T
+    } else if (element.type === 'range') {
         return element.valueAsNumber as T
+    } else {
+        return element.value as T
     }
-
-    return element.value as T
 }
 
 export function getChecked(id: string) {

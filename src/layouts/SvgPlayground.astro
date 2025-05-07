@@ -3,6 +3,7 @@ import Button from '../components/Button.astro'
 import PageLayout from './PageLayout.astro'
 import Heading from '../components/Heading.astro'
 import ControlSection from '../components/ControlSection.astro'
+import Select from '../components/Select.astro'
 
 type Props = {
     pageDescription: string
@@ -20,6 +21,32 @@ const { pageDescription, heading } = Astro.props
         <div class="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
             <div id="svg-controls" class="grid content-start gap-2 rounded-xs lg:grid-cols-1">
                 <slot name="controls" />
+
+                <ControlSection>
+                    <Select id="color-space" label="Color Space" class="col-span-3">
+                        <option value="lch">LCH</option>
+                        <option value="acescc">ACEScc</option>
+                        <option value="a98rgb">Adobe 98 RGB</option>
+                        <option value="hpluv">HPLuv</option>
+                        <option value="hsl">HSL</option>
+                        <option value="hsluv">HSLuv</option>
+                        <option value="hwb" selected>HWB</option>
+                        <option value="ictcp">ICTCQ</option>
+                        <option value="jzczhz">JzCzHz</option>
+                        <option value="lab">LAB</option>
+                        <option value="oklch">Oklch</option>
+                        <option value="p3">P3</option>
+                        <option value="prophoto">ProPhoto</option>
+                        <option value="rec2020">REC.2020</option>
+                        <option value="rec2100hlg">REC.2100-HLG</option>
+                        <option value="rec2100pq">REC.2100-PQ</option>
+                    </Select>
+
+                    <Select id="proof" label="Soft Proofing" class="col-span-3">
+                        <option value="regular" selected>regular</option>
+                        <option value="proof">soft-proof</option>
+                    </Select>
+                </ControlSection>
 
                 <ControlSection>
                     <div class="grid grid-cols-2 gap-4">

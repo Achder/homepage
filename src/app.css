@@ -6,3 +6,7 @@
     --color-brand: #ff3c1a;
     --color-dark: #000000;
 }
+
+@color-profile --iso-coated {
+    src: url('/iso-coated-v2.icc');
+}

@@ -78,7 +78,7 @@ import ControlSection from '../components/ControlSection.astro'
     import { drawRect } from '../svg/rect'
     import { createGradient } from '../svg/gradient'
     import Color from 'colorjs.io'
-    import { mix } from '../utils/color'
+    import { mix, toProofed } from '../utils/color'
 
     const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
@@ -96,34 +96,33 @@ import ControlSection from '../components/ControlSection.astro'
             const offsetY = get<number>('offset-y')
             const rotation = get<number>('rotation')
             const stride = get<number>('stride')
-            const fillStart = get<string>('fill-start')
-            const fillMid = get<string>('fill-mid')
-            const fillEnd = get<string>('fill-end')
+
+            const fillStart = get<Color>('fill-start')
+            const fillMid = get<Color>('fill-mid')
+            const fillEnd = get<Color>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
+
             const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<string>('stroke-start')
-            const strokeMid = get<string>('stroke-mid')
-            const strokeEnd = get<string>('stroke-end')
+            const strokeStart = get<Color>('stroke-start')
+            const strokeMid = get<Color>('stroke-mid')
+            const strokeEnd = get<Color>('stroke-end')
             const strokeAlpha = get<number>('stroke-alpha')
+
             const colorSpace = get<string>('color-space')
+            const proof = get<string>('proof')
+            const shouldProof = proof === 'proof'
+
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<string>('bg-start')
-            const bgEnd = get<string>('bg-end')
+            const bgStart = get<Color>('bg-start')
+            const bgEnd = get<Color>('bg-end')
 
             const steps = (size.h + radiusY) / stride
             const center = { x: size.w / 2, y: size.h / 2 }
 
-            const fs = new Color(fillStart)
-            const fm = new Color(fillMid)
-            const fe = new Color(fillEnd)
-            const ss = new Color(strokeStart)
-            const sm = new Color(strokeMid)
-            const se = new Color(strokeEnd)
-
             createGradient(svg, {
                 id: 'bg-gradient',
-                start: bgStart,
-                end: bgEnd,
+                start: (shouldProof ? toProofed(bgStart) : bgStart.to('srgb')).toString({ format: 'hex' }),
+                end: (shouldProof ? toProofed(bgEnd) : bgEnd.to('srgb')).toString({ format: 'hex' }),
                 angle: bgAngle,
             })
 
@@ -138,8 +137,12 @@ import ControlSection from '../components/ControlSection.astro'
             for (let i = 0; i < steps; i++) {
                 const t = i / steps
                 const pi_t = t * Math.PI * 2 * freq
-                const fill = mix(fs, fm, fe, t, colorSpace)
-                const stroke = mix(ss, sm, se, t, colorSpace)
+
+                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
+                const proofedFill = toProofed(fill)
+
+                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
+                const proofedStroke = toProofed(stroke)
 
                 const r = (1 - t) * size.h + 10
 
@@ -148,9 +151,9 @@ import ControlSection from '../components/ControlSection.astro'
                     y: center.y + Math.cos(pi_t) * offsetY,
                     radiusX: radiusMin + r * radiusX,
                     radiusY: radiusMin + r * radiusY,
-                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex', precision: 0 }),
                     fillOpacity: fillAlpha,
-                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
+                    stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex', precision: 0 }),
                     strokeOpacity: strokeAlpha,
                     strokeWidth: strokeWidth,
                     rotation: (t - 0.5) * rotation,
