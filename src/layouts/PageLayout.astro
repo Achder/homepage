@@ -100,3 +100,10 @@ const isProduction = import.meta.env.MODE === 'production'
         }
     </style>
 </html>
+
+<script>
+    import { gsap } from 'gsap'
+    import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+    gsap.registerPlugin(ScrollTrigger)
+</script>

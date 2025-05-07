@@ -12,7 +12,7 @@ const { class: className } = Astro.props
 ---
 
 <div>
-    <div class="flex">
+    <div class="flex relative z-20">
         <button id="menu" class="py-4 sm:hidden flex gap-4 text-4xl font-bold items-center" aria-label="Main menu">
             <span id="menu-icon"><Menu /></span>
             <span id="close-icon" class="hidden"><Close /></span>
@@ -22,7 +22,7 @@ const { class: className } = Astro.props
         id="page-nav"
         class:list={[
             className,
-            'flex-col hidden items-center sm:flex sm:flex-row border-dark border-b-8 sm:border-0 justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-8 absolute sm:static z-50 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none bg-brand',
+            'flex-col hidden items-center sm:flex sm:flex-row border-dark border-b-8 sm:border-0 justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-8 absolute sm:static z-10 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none bg-brand',
         ]}
     >
         <StyledLink href="/">
@@ -40,12 +40,30 @@ const { class: className } = Astro.props
 </div>
 
 <script>
+    import { gsap } from 'gsap'
+
     const pageNav = document.getElementById('page-nav')!
     const menuButton = document.getElementById('menu')!
     const menuIcon = document.getElementById('menu-icon')!
     const closeIcon = document.getElementById('close-icon')!
 
     menuButton.addEventListener('click', () => {
+        if (pageNav.classList.contains('hidden')) {
+            gsap.fromTo(
+                '#page-nav',
+                {
+                    y: '-100%',
+                },
+                {
+                    opacity: 1,
+                    y: 0,
+                    ease: 'power4.out',
+                    duration: 0.6,
+                    onComplete: () => {},
+                }
+            )
+        }
+
         pageNav.classList.toggle('hidden')
         pageNav.classList.toggle('flex')
         menuIcon.classList.toggle('hidden')

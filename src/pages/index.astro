@@ -50,7 +50,7 @@ import { Image } from 'astro:assets'
             loading="eager"
         />
 
-        <div class="grid justify-items-start gap-8 col-start-1 row-start-1 z-10 px-6 md:px-10 py-10 md:py-20">
+        <div class="contact grid justify-items-start gap-8 col-start-1 row-start-1 z-10 px-6 md:px-10 py-10 md:py-20">
             <Heading type="h1" class="grid gap-2">
                 <p class="text-3xl text-shadow-lg/30">Hi, I'm your freelance developer</p>
                 <p class="leading-none text-shadow-lg/30">Thomas Meerpohl</p>
@@ -68,17 +68,17 @@ import { Image } from 'astro:assets'
         <div
             class="grid justify-items-stretch sm:justify-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 w-full"
         >
-            <Preview src={Cobra} />
-            <Preview src={One} />
-            <Preview src={Pow} />
-            <Preview src={Ball} />
-            <Preview src={Easy} />
-            <Preview src={Smile} />
-            <Preview src={Three} />
-            <Preview src={Code} />
-            <Preview src={Two} />
-            <Preview src={Hello} />
-            <Preview src={Swirl} />
+            <Preview src={Cobra} class="gallery-image" />
+            <Preview src={One} class="gallery-image" />
+            <Preview src={Pow} class="gallery-image" />
+            <Preview src={Ball} class="gallery-image" />
+            <Preview src={Easy} class="gallery-image" />
+            <Preview src={Smile} class="gallery-image" />
+            <Preview src={Three} class="gallery-image" />
+            <Preview src={Code} class="gallery-image" />
+            <Preview src={Two} class="gallery-image" />
+            <Preview src={Hello} class="gallery-image" />
+            <Preview src={Swirl} class="gallery-image" />
         </div>
     </section>
 
@@ -106,3 +106,10 @@ import { Image } from 'astro:assets'
         </article>
     </section>
 </PageLayout>
+
+<script>
+    import { fadeIn } from '../utils/animation'
+
+    fadeIn('.contact > *', '.contact', 50)
+    fadeIn('.gallery-image', '.gallery-image', 100)
+</script>
