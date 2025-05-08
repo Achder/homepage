@@ -74,5 +74,5 @@ const { pageDescription, heading } = Astro.props
 <script>
     import { fadeIn } from '../utils/animation'
 
-    fadeIn('.playground > *', '.playground', 100)
+    fadeIn('.playground > *', '.playground', { startOffset: 100 })
 </script>

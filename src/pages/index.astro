@@ -110,6 +110,6 @@ import { Image } from 'astro:assets'
 <script>
     import { fadeIn } from '../utils/animation'
 
-    fadeIn('.contact > *', '.contact', 50)
-    fadeIn('.gallery-image', '.gallery-image', 100)
+    fadeIn('.contact > *', '.contact', { startOffset: 50 })
+    fadeIn('.gallery-image', '.gallery-image', { startOffset: 100 })
 </script>
