@@ -20,25 +20,6 @@ import StyledLink from '../components/StyledLink.astro'
 import { Image } from 'astro:assets'
 ---
 
-<style>
-    img {
-        animation-iteration-count: infinite;
-        animation-duration: 10s;
-        animation-name: wobble;
-        animation-direction: alternate;
-    }
-
-    @keyframes wobble {
-        from {
-            filter: hue-rotate(0deg);
-        }
-
-        to {
-            filter: hue-rotate(30deg);
-        }
-    }
-</style>
-
 <PageLayout
     description="I'm Thomas Meerpohl, a freelancer based in Dresden, Germany. I'm a fullstack javascript web developer. I build websites, webapplications and mobile cross-plaform apps."
 >
@@ -69,18 +50,18 @@ import { Image } from 'astro:assets'
         <div
             class="grid justify-items-stretch sm:justify-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 w-full"
         >
-            <Preview src={Cobra} class="gallery-image" />
-            <Preview src={One} class="gallery-image" />
-            <Preview src={Dunes} class="gallery-image" />
-            <Preview src={Pow} class="gallery-image" />
-            <Preview src={Ball} class="gallery-image" />
-            <Preview src={Easy} class="gallery-image" />
-            <Preview src={Smile} class="gallery-image" />
-            <Preview src={Three} class="gallery-image" />
-            <Preview src={Code} class="gallery-image" />
-            <Preview src={Two} class="gallery-image" />
-            <Preview src={Hello} class="gallery-image" />
-            <Preview src={Swirl} class="gallery-image" />
+            <Preview src={Cobra} class="gallery-image opacity-0" />
+            <Preview src={One} class="gallery-image opacity-0" />
+            <Preview src={Dunes} class="gallery-image opacity-0" />
+            <Preview src={Pow} class="gallery-image opacity-0" />
+            <Preview src={Ball} class="gallery-image opacity-0" />
+            <Preview src={Easy} class="gallery-image opacity-0" />
+            <Preview src={Smile} class="gallery-image opacity-0" />
+            <Preview src={Three} class="gallery-image opacity-0" />
+            <Preview src={Code} class="gallery-image opacity-0" />
+            <Preview src={Two} class="gallery-image opacity-0" />
+            <Preview src={Hello} class="gallery-image opacity-0" />
+            <Preview src={Swirl} class="gallery-image opacity-0" />
         </div>
     </section>
 
@@ -111,7 +92,32 @@ import { Image } from 'astro:assets'
 
 <script>
     import { fadeIn } from '../utils/animation'
+    import { gsap } from 'gsap'
+    import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
     fadeIn('.contact > *', '.contact', { startOffset: 50 })
-    fadeIn('.gallery-image', '.gallery-image', { startOffset: 100 })
+    ScrollTrigger.batch('.gallery-image', {
+        interval: 0.1,
+        start: 'top bottom-=100px',
+        once: true,
+        onEnter(elements) {
+            gsap.fromTo(
+                elements,
+                {
+                    opacity: 0,
+                    y: '20%',
+                    filter: 'blur(10px) hue-rotate(180deg)',
+                },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.5,
+                    stagger: 0.3,
+                    ease: 'power1.out',
+                    grid: 'auto',
+                    filter: 'blur(0px) hue-rotate(0deg)',
+                }
+            )
+        },
+    })
 </script>

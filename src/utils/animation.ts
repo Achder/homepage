@@ -15,6 +15,7 @@ export function fadeIn(
         {
             opacity: 0,
             y: startOffset ?? '100%',
+            filter: 'blur(2px) hue-rotate(180deg)',
         },
         {
             scrollTrigger: {
@@ -25,9 +26,10 @@ export function fadeIn(
             },
             opacity: 1,
             y: 0,
+            filter: 'blur(0px) hue-rotate(0deg)',
             duration: 0.5,
             stagger: 0.2,
-            ease: 'sine',
+            ease: 'power1.out',
         }
     )
 }
