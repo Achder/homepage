@@ -15,11 +15,11 @@ const { pageDescription, heading } = Astro.props
 
 <PageLayout description={pageDescription}>
     <slot name="head" slot="head" />
-    <section class="px-4 sm:px-10 grid gap-10 w-full max-w-400">
+    <section class="px-4 sm:px-10 grid gap-10 w-full max-w-350">
         <Heading type="h1">{heading}</Heading>
 
-        <div class="playground grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <div id="svg-controls" class="opacity-0 grid content-start gap-2 rounded-xs lg:grid-cols-1">
+        <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
+            <div id="svg-controls" class="grid content-start gap-2 rounded-xs">
                 <slot name="controls" />
 
                 <ControlSection>
@@ -59,7 +59,7 @@ const { pageDescription, heading } = Astro.props
                 </ControlSection>
             </div>
 
-            <div class="opacity-0 aspect-[1/1.414] relative box-border">
+            <div class="aspect-[1/1.414] box-border h-[calc(100dvh-16px)] sticky top-[8px]">
                 <section
                     id="container"
                     class="h-full w-full shadow-lg relative overflow-clip outline-4 -outline-offset-4 outline-color rounded-sm"

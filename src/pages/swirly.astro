@@ -9,20 +9,20 @@ import ControlSection from '../components/ControlSection.astro'
 <SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Swirly">
     <Fragment slot="controls">
         <ControlSection>
-            <Slider id="stride" min={2} max={50} value={21} name="Stride" step={0.1} />
+            <Slider id="stride" min={0.05} max={1} value={0.4} name="Stride" step={0.001} />
             <Slider id="rotation" min={0} max={720} value={56} name="Rotation" />
         </ControlSection>
 
         <ControlSection>
-            <Slider id="radius-min" min={0} max={1000} value={7} name="Radius Min" />
-            <Slider id="radius-x" min={0} max={1} value={0.68} step={0.01} name="Radius X" />
-            <Slider id="radius-y" min={0} max={1} value={0.32} step={0.01} name="Radius Y" />
+            <Slider id="radius-min" min={0} max={1} value={0.01} step={0.001} name="Radius Min" />
+            <Slider id="radius-x" min={0} max={1} value={0.68} step={0.001} name="Radius X" />
+            <Slider id="radius-y" min={0} max={1} value={0.32} step={0.001} name="Radius Y" />
         </ControlSection>
 
         <ControlSection>
             <Slider id="freq" min={-5} max={5} value={0.5} step={0.1} name="Frequency" />
-            <Slider id="offset-x" min={-500} max={500} value={170} name="Offset X" />
-            <Slider id="offset-y" min={-500} max={500} value={-280} name="Offset Y" />
+            <Slider id="offset-x" min={-1} max={1} value={0.35} step={0.001} name="Offset X" />
+            <Slider id="offset-y" min={-1} max={1} value={-0.6} step={0.001} name="Offset Y" />
         </ControlSection>
 
         <ControlSection class="grid-cols-3">
@@ -37,7 +37,7 @@ import ControlSection from '../components/ControlSection.astro'
             <Input type="color" id="stroke-mid" label="Stroke Mid" value="#0091ff" />
             <Input type="color" id="stroke-end" label="Stroke End" value="#ff00ea" />
             <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={0.44} name="Stroke Alpha" />
-            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={1.5} name="Stroke Width" />
+            <Slider class="col-span-3" id="stroke-width" min={0} max={1} step={0.001} value={0.2} name="Stroke Width" />
         </ControlSection>
 
         <ControlSection>
@@ -85,24 +85,29 @@ import ControlSection from '../components/ControlSection.astro'
             return getInputValue<T>(id, () => requestAnimationFrame(render))
         }
 
+        function getScaled(id: string, max: number) {
+            const value = getInputValue<number>(id, () => requestAnimationFrame(render))
+            return value * max
+        }
+
         const render = () => {
             clear(svg)
 
-            const radiusMin = get<number>('radius-min')
+            const radiusMin = getScaled('radius-min', size.w / 2)
             const radiusX = get<number>('radius-x')
             const radiusY = get<number>('radius-y')
             const freq = get<number>('freq')
-            const offsetX = get<number>('offset-x')
-            const offsetY = get<number>('offset-y')
+            const offsetX = getScaled('offset-x', size.w / 2)
+            const offsetY = getScaled('offset-y', size.w / 2)
             const rotation = get<number>('rotation')
-            const stride = get<number>('stride')
+            const stride = getScaled('stride', size.w / 10)
 
             const fillStart = get<Color>('fill-start')
             const fillMid = get<Color>('fill-mid')
             const fillEnd = get<Color>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
 
-            const strokeWidth = get<number>('stroke-width')
+            const strokeWidth = getScaled('stroke-width', size.w / 100)
             const strokeStart = get<Color>('stroke-start')
             const strokeMid = get<Color>('stroke-mid')
             const strokeEnd = get<Color>('stroke-end')

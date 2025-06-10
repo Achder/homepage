@@ -26,7 +26,7 @@ import { Font } from 'astro:assets'
                 <option value="--font-caveat">Caveat</option>
                 <option value="--font-rowdies">Rowdies</option>
             </Select>
-            <Slider id="font-size" min={5} max={100} value={27} reset={20} step={0.01} name="Font Size" />
+            <Slider id="font-size" min={0.1} max={1} value={0.3} reset={0.25} step={0.001} name="Font Size" />
             <Slider id="font-scale" min={-1} max={1} value={0.2} step={0.01} reset={0} name="Font Scale" />
         </ControlSection>
 
@@ -36,10 +36,10 @@ import { Font } from 'astro:assets'
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
-            <Slider id="x-stride" min={-10} max={10} value={0.6} reset={0} name="x - Stride" step={0.01} />
-            <Slider id="y-stride" min={-10} max={10} value={2.16} reset={0} name="y - Stride" step={0.01} />
-            <Slider id="x-amplitude" min={-100} max={100} value={6} reset={0} name="x - Amplitude" />
-            <Slider id="y-amplitude" min={-500} max={500} value={6} reset={0} name="y - Amplitude" />
+            <Slider id="x-stride" min={-1} max={1} value={0} reset={0} step={0.001} name="x - Stride" />
+            <Slider id="y-stride" min={-1} max={1} value={0} reset={0} step={0.001} name="y - Stride" />
+            <Slider id="x-amplitude" min={-1} max={1} value={0} reset={0} step={0.001} name="x - Amplitude" />
+            <Slider id="y-amplitude" min={-1} max={1} value={0} reset={0} step={0.001} name="y - Amplitude" />
             <Slider id="x-wobble-freq" min={0.5} max={3} value={1.4} step={0.01} reset={0.5} name="x - Frequency" />
             <Slider id="y-wobble-freq" min={0.5} max={3} value={0} step={0.01} reset={0.5} name="y - Frequency" />
             <Slider id="x-wobble-phase" min={0} max={Math.PI * 2} value={0} step={0.01} name="x - Phase" />
@@ -64,7 +64,7 @@ import { Font } from 'astro:assets'
                 <Input type="color" id="stroke-end" label="Stroke End" value="#eeff00" />
             </div>
 
-            <Slider id="stroke-width" min={0} max={20} step={0.1} value={4} reset={1} name="Stroke Width" />
+            <Slider id="stroke-width" min={0} max={1} step={0.001} value={0.1} reset={0.1} name="Stroke Width" />
             <Slider id="stroke-alpha" min={0} max={1} step={0.01} value={0.75} reset={1} name="Stroke Alpha" />
             <Slider
                 id="stroke-alpha-scale"
@@ -102,23 +102,28 @@ import { Font } from 'astro:assets'
             return getInputValue<T>(id, () => requestAnimationFrame(render))
         }
 
+        function getScaled(id: string, max: number) {
+            const value = getInputValue<number>(id, () => requestAnimationFrame(render))
+            return value * max
+        }
+
         const render = () => {
             clear(svg)
 
             const text = get<string>('text')
             const font = get<string>('font')
-            const fontSize = get<number>('font-size')
+            const fontSize = getScaled('font-size', size.w / 10)
             const fontScale = get<number>('font-scale')
 
             const rotation = get<number>('rotation')
             const shapes = get<number>('shapes')
-            const xStride = get<number>('x-stride')
-            const yStride = get<number>('y-stride')
+            const xStride = getScaled('x-stride', size.w / 10)
+            const yStride = getScaled('y-stride', size.w / 10)
 
-            const xAmplitude = get<number>('x-amplitude')
+            const xAmplitude = getScaled('x-amplitude', size.w)
             const xWobbleFreq = get<number>('x-wobble-freq')
             const xWobblePhase = get<number>('x-wobble-phase')
-            const yAmplitude = get<number>('y-amplitude')
+            const yAmplitude = getScaled('y-amplitude', size.h)
             const yWobbleFreq = get<number>('y-wobble-freq')
             const yWobblePhase = get<number>('y-wobble-phase')
             const wobble = get<number>('wobble')
@@ -129,7 +134,7 @@ import { Font } from 'astro:assets'
             const fillAlpha = get<number>('fill-alpha')
             const fillAlphaScale = get<number>('fill-alpha-scale')
 
-            const strokeWidth = get<number>('stroke-width')
+            const strokeWidth = getScaled('stroke-width', size.w / 25)
             const strokeStart = get<Color>('stroke-start')
             const strokeMid = get<Color>('stroke-mid')
             const strokeEnd = get<Color>('stroke-end')
