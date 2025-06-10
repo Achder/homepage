@@ -165,8 +165,8 @@ import ControlSection from '../../components/ControlSection.astro'
                 const t = i / shapes
                 const nt = (t - 0.5) * 2
                 const pi_nt = nt * Math.PI * 2
-                const fill = mix(fs, fm, fe, t, colorSpace)
-                const stroke = mix(ss, sm, se, t, colorSpace)
+                const fill = mix(fs, fm, fe, t, colorSpace, 'srgb')
+                const stroke = mix(ss, sm, se, t, colorSpace, 'srgb')
 
                 const xSineOffset = Math.sin(pi_nt * xWobbleFreq + xWobblePhase) * xAmplitude
                 const ySineOffset = Math.sin(pi_nt * yWobbleFreq + yWobblePhase) * yAmplitude
