@@ -17,7 +17,7 @@ const { pageDescription, heading } = Astro.props
     <section class="px-4 sm:px-10 grid gap-10 w-full max-w-350">
         <Heading type="h1">{heading}</Heading>
 
-        <div class="grid gap-8 lg:grid-cols-[1fr_auto]">
+        <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
             <div id="svg-controls" class="grid content-start gap-2 rounded-xs">
                 <slot name="controls" />
 
@@ -32,7 +32,7 @@ const { pageDescription, heading } = Astro.props
                 </ControlSection>
             </div>
 
-            <div class="aspect-[1/1.414] box-border h-[calc(90dvh-16px)] sticky top-[8px]">
+            <div class="aspect-[1/1.414] box-border h-[calc(100dvh-16px)] sticky top-[8px]">
                 <section
                     id="container"
                     class="h-full w-full shadow-lg relative overflow-clip outline-4 -outline-offset-4 outline-color rounded-sm"
