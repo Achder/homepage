@@ -31,12 +31,13 @@ export function getChecked(id: string) {
 
 export function readFromUrl(id: string) {
     const searchParams = new URLSearchParams(window.location.search)
-    return searchParams.get(id)
+    const value = searchParams.get(id)
+    return value ? decodeURIComponent(value) : null
 }
 
 export function writeToUrl(id: string, value: string) {
     const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set(id, value)
+    searchParams.set(id, encodeURIComponent(value))
     pushUndo(`?${searchParams.toString()}`)
 }
 
