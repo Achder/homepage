@@ -1,7 +1,6 @@
 ---
 import Slider from '../../components/Slider.astro'
 import Input from '../../components/Input.astro'
-import Select from '../../components/Select.astro'
 import SvgPlayground from '../../layouts/SvgPlayground.astro'
 import ControlSection from '../../components/ControlSection.astro'
 ---
@@ -14,10 +13,10 @@ import ControlSection from '../../components/ControlSection.astro'
         </ControlSection>
 
         <ControlSection class="grid grid-cols-2">
-            <Slider id="x-stride" min={-10} max={10} value={0.6} reset={0} name="x - Stride" step={0.01} />
-            <Slider id="y-stride" min={-10} max={10} value={2.16} reset={0} name="y - Stride" step={0.01} />
-            <Slider id="x-amplitude" min={-500} max={500} value={154} reset={0} name="x - Amplitude" />
-            <Slider id="y-amplitude" min={-500} max={500} value={-111} reset={0} name="y - Amplitude" />
+            <Slider id="x-stride" min={-1} max={1} value={0.1} reset={0} step={0.001} name="x - Stride" />
+            <Slider id="y-stride" min={-1} max={1} value={0.2} reset={0} step={0.001} name="y - Stride" />
+            <Slider id="x-amplitude" min={-1} max={1} value={0.3} reset={0} step={0.001} name="x - Amplitude" />
+            <Slider id="y-amplitude" min={-1} max={1} value={-0.1} reset={0} step={0.001} name="y - Amplitude" />
             <Slider id="x-wobble-freq" min={0.1} max={2} value={0.59} step={0.01} name="x - Frequency" />
             <Slider id="y-wobble-freq" min={0.1} max={2} value={0.6} step={0.01} name="y - Frequency" />
             <Slider id="x-wobble-phase" min={0} max={Math.PI * 2} value={0} step={0.01} name="x - Phase" />
@@ -25,14 +24,15 @@ import ControlSection from '../../components/ControlSection.astro'
         </ControlSection>
 
         <ControlSection class="grid grid-cols-2">
-            <Slider id="radius-x" min={5} max={500} value={194} name="Radius X" />
-            <Slider id="radius-y" min={5} max={500} value={300} name="Radius Y" />
+            <Slider id="radius-x" min={0} max={1} value={0.2} step={0.001} name="Radius X" />
+            <Slider id="radius-y" min={0} max={1} value={0.3} step={0.001} name="Radius Y" />
             <Slider
                 id="radius-wobble"
-                min={-100}
-                max={100}
-                value={-20}
+                min={-1}
+                max={1}
+                value={0}
                 reset={0}
+                step={0.001}
                 name="Radius Wobble"
                 class="col-span-2"
             />
@@ -51,7 +51,7 @@ import ControlSection from '../../components/ControlSection.astro'
             <Input type="color" id="stroke-mid" label="Stroke Mid" value="#0011ff" />
             <Input type="color" id="stroke-end" label="Stroke End" value="#ff0000" />
             <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={1} name="Stroke Alpha" />
-            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={0.6} name="Stroke Width" />
+            <Slider class="col-span-3" id="stroke-width" min={0} max={1} step={0.001} value={0.1} name="Stroke Width" />
         </ControlSection>
 
         <ControlSection>
@@ -60,27 +60,6 @@ import ControlSection from '../../components/ControlSection.astro'
                 <Input type="color" id="bg-start" label="Bg Start" value="#000000" />
                 <Input type="color" id="bg-end" label="Bg End" value="#000000" />
             </div>
-        </ControlSection>
-
-        <ControlSection>
-            <Select id="color-space" label="Color Space" class="col-span-3">
-                <option value="lch">LCH</option>
-                <option value="acescc">ACEScc</option>
-                <option value="a98rgb">Adobe 98 RGB</option>
-                <option value="hpluv">HPLuv</option>
-                <option value="hsl">HSL</option>
-                <option value="hsluv">HSLuv</option>
-                <option value="hwb" selected>HWB</option>
-                <option value="ictcp">ICTCQ</option>
-                <option value="jzczhz">JzCzHz</option>
-                <option value="lab">LAB</option>
-                <option value="oklch">Oklch</option>
-                <option value="p3">P3</option>
-                <option value="prophoto">ProPhoto</option>
-                <option value="rec2020">REC.2020</option>
-                <option value="rec2100hlg">REC.2100-HLG</option>
-                <option value="rec2100pq">REC.2100-PQ</option>
-            </Select>
         </ControlSection>
     </Fragment>
 </SvgPlayground>
@@ -92,64 +71,64 @@ import ControlSection from '../../components/ControlSection.astro'
     import { drawRect } from '../../svg/rect'
     import { createGradient } from '../../svg/gradient'
     import Color from 'colorjs.io'
-    import { mix } from '../../utils/color'
+    import { mix, toProofed } from '../../utils/color'
     import { stump } from '../../utils/form'
 
     const init = (svg: HTMLElement, size: Size) => {
-        function get<T>(id: string) {
+        function get<T>(id: string): T {
             return getInputValue<T>(id, () => requestAnimationFrame(render))
+        }
+
+        function getScaled(id: string, max: number) {
+            const value = getInputValue<number>(id, () => requestAnimationFrame(render))
+            return value * max
         }
 
         const render = () => {
             clear(svg)
 
             const shapes = get<number>('shapes')
-            const xStride = get<number>('x-stride')
-            const yStride = get<number>('y-stride')
+            const xStride = getScaled('x-stride', size.w / 100)
+            const yStride = getScaled('y-stride', size.w / 100)
             const rotation = get<number>('rotation')
 
-            const xAmplitude = get<number>('x-amplitude')
+            const xAmplitude = getScaled('x-amplitude', size.w / 2)
             const xWobbleFreq = get<number>('x-wobble-freq')
             const xWobblePhase = get<number>('x-wobble-phase')
-            const yAmplitude = get<number>('y-amplitude')
+            const yAmplitude = getScaled('y-amplitude', size.h / 2)
             const yWobbleFreq = get<number>('y-wobble-freq')
             const yWobblePhase = get<number>('y-wobble-phase')
 
-            const radiusX = get<number>('radius-x')
-            const radiusY = get<number>('radius-y')
-            const radiusWobble = get<number>('radius-wobble')
+            const radiusX = getScaled('radius-x', size.w)
+            const radiusY = getScaled('radius-y', size.w)
+            const radiusWobble = getScaled('radius-wobble', size.w / 10)
             const radiusFreq = get<number>('radius-freq')
 
-            const fillStart = get<string>('fill-start')
-            const fillMid = get<string>('fill-mid')
-            const fillEnd = get<string>('fill-end')
+            const colorSpace = get<string>('color-space')
+            const proof = get<string>('proof')
+            const shouldProof = proof === 'proof'
+
+            const fillStart = get<Color>('fill-start')
+            const fillMid = get<Color>('fill-mid')
+            const fillEnd = get<Color>('fill-end')
             const fillAlpha = get<number>('fill-alpha')
 
-            const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<string>('stroke-start')
-            const strokeMid = get<string>('stroke-mid')
-            const strokeEnd = get<string>('stroke-end')
+            const strokeWidth = getScaled('stroke-width', size.w / 100)
+            const strokeStart = get<Color>('stroke-start')
+            const strokeMid = get<Color>('stroke-mid')
+            const strokeEnd = get<Color>('stroke-end')
             const strokeAlpha = get<number>('stroke-alpha')
 
-            const colorSpace = get<string>('color-space')
-
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<string>('bg-start')
-            const bgEnd = get<string>('bg-end')
+            const bgStart = get<Color>('bg-start')
+            const bgEnd = get<Color>('bg-end')
 
             const center = { x: size.w / 2, y: size.h / 2 }
 
-            const fs = new Color(fillStart)
-            const fm = new Color(fillMid)
-            const fe = new Color(fillEnd)
-            const ss = new Color(strokeStart)
-            const sm = new Color(strokeMid)
-            const se = new Color(strokeEnd)
-
             createGradient(svg, {
                 id: 'bg-gradient',
-                start: bgStart,
-                end: bgEnd,
+                start: (shouldProof ? toProofed(bgStart) : bgStart.to('srgb')).toString({ format: 'hex' }),
+                end: (shouldProof ? toProofed(bgEnd) : bgEnd.to('srgb')).toString({ format: 'hex' }),
                 angle: bgAngle,
             })
 
@@ -165,8 +144,12 @@ import ControlSection from '../../components/ControlSection.astro'
                 const t = i / shapes
                 const nt = (t - 0.5) * 2
                 const pi_nt = nt * Math.PI * 2
-                const fill = mix(fs, fm, fe, t, colorSpace, 'srgb')
-                const stroke = mix(ss, sm, se, t, colorSpace, 'srgb')
+
+                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
+                const proofedFill = toProofed(fill)
+
+                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
+                const proofedStroke = toProofed(stroke)
 
                 const xSineOffset = Math.sin(pi_nt * xWobbleFreq + xWobblePhase) * xAmplitude
                 const ySineOffset = Math.sin(pi_nt * yWobbleFreq + yWobblePhase) * yAmplitude
@@ -178,9 +161,9 @@ import ControlSection from '../../components/ControlSection.astro'
                     y: center.y + yOffset,
                     radiusX: (radiusX + Math.sin(pi_nt * radiusFreq) * radiusWobble) * stump(t),
                     radiusY: (radiusY + Math.sin(pi_nt * radiusFreq) * radiusWobble) * stump(t),
-                    fill: fill.to('srgb').toString({ format: 'hex' }),
+                    fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex' }),
                     fillOpacity: fillAlpha,
-                    stroke: stroke.to('srgb').toString({ format: 'hex' }),
+                    stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex' }),
                     strokeOpacity: strokeAlpha,
                     strokeWidth: strokeWidth,
                     rotation: nt * rotation,
