@@ -9,17 +9,17 @@ import ControlSection from '../../components/ControlSection.astro'
 <SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Metaballs">
     <Fragment slot="controls">
         <ControlSection>
-            <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.076} step={0.001} name="Min Threshold" />
-            <Slider id="max-threshold" min={-0.5} max={0.5} value={0.06} step={0.001} name="Max Threshold" />
-            <Slider id="resolution" min={0.005} max={0.1} value={0.05} step={0.0001} name="Resolution" />
-            <Slider id="iso-levels" min={1} max={100} value={52} name="Iso Levels" />
-            <Slider id="falloff" min={1} max={100} value={10} name="Falloff" />
+            <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.054} step={0.001} name="Min Threshold" />
+            <Slider id="max-threshold" min={-0.5} max={0.5} value={0.061} step={0.001} name="Max Threshold" />
+            <Slider id="resolution" min={0.005} max={0.1} value={0.0415} step={0.0001} name="Resolution" />
+            <Slider id="iso-levels" min={1} max={100} value={100} name="Iso Levels" />
+            <Slider id="falloff" min={1} max={100} value={18} name="Falloff" />
         </ControlSection>
 
         <ControlSection class="grid-cols-3">
-            <Input type="color" id="fill-start" label="Fill Start" value="#23ffea" />
-            <Input type="color" id="fill-mid" label="Fill Mid" value="#23bb00" />
-            <Input type="color" id="fill-end" label="Fill End" value="#230000" />
+            <Input type="color" id="fill-start" label="Fill Start" value="#ffc800" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#ff0000" />
+            <Input type="color" id="fill-end" label="Fill End" value="#12001f" />
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
@@ -201,10 +201,36 @@ import ControlSection from '../../components/ControlSection.astro'
 
             // init randomly if no balls are provided in the URL query string
             if (!ballsSearchParam) {
-                const numBalls = 4
-                for (let idx = 0; idx < numBalls; idx++) {
-                    balls.push(generateRandomBall())
-                }
+                balls.push({
+                    x: 0.31625441696113077,
+                    y: 1.2143972517176764,
+                    radius: 0.7472224639448626,
+                })
+                balls.push({
+                    x: 0.7800353356890459,
+                    y: 0.8575852592129918,
+                    radius: -0.9408659170687433,
+                })
+                balls.push({
+                    x: 0.12809187279151943,
+                    y: 0.06094066208619612,
+                    radius: -0.09964753211457122,
+                })
+                balls.push({
+                    x: 0.8268551236749117,
+                    y: 0.34003123048094935,
+                    radius: 0.5336042778399835,
+                })
+                balls.push({
+                    x: 0.0715547703180212,
+                    y: 0.7904622111180512,
+                    radius: -0.09813380419584605,
+                })
+                balls.push({
+                    x: 0.5856890459363958,
+                    y: 0.8045933791380387,
+                    radius: 0.23446259894957294,
+                })
             }
 
             for (const ball of balls) {
@@ -326,6 +352,15 @@ import ControlSection from '../../components/ControlSection.astro'
         const render = () => {
             clear(svg)
 
+            const searchParams = new URLSearchParams(window.location.search)
+            for (const [key, value] of searchParams.entries()) {
+                console.log(`${key}: ${value}`)
+            }
+
+            const bs = searchParams.get('balls')
+            if (bs) {
+                console.log(JSON.parse(decodeURIComponent(bs)))
+            }
             const resolution = get<number>('resolution')
             const minThreshold = get<number>('min-threshold')
             const maxThreshold = get<number>('max-threshold')
