@@ -8,10 +8,11 @@ type RectParams = {
     fill?: string
     stroke?: string
     strokeWidth?: number
+    maskId?: string
 }
 
 export function drawRect(svg: HTMLElement, params: RectParams) {
-    const { x, y, width, height, fill, stroke, strokeWidth } = params
+    const { x, y, width, height, fill, stroke, strokeWidth, maskId } = params
 
     const rect = document.createElementNS(ns, 'rect')
 
@@ -30,6 +31,10 @@ export function drawRect(svg: HTMLElement, params: RectParams) {
 
     if (strokeWidth) {
         rect.setAttribute('stroke-width', `${strokeWidth}`)
+    }
+
+    if (maskId) {
+        rect.setAttribute('mask', `url(#${maskId})`)
     }
 
     svg.append(rect)

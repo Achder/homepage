@@ -1,0 +1,224 @@
+---
+import Slider from '../../components/Slider.astro'
+import Input from '../../components/Input.astro'
+import SvgPlayground from '../../layouts/SvgPlayground.astro'
+import ControlSection from '../../components/ControlSection.astro'
+---
+
+<SvgPlayground
+    pageDescription="An SVG tool for generating downloadable abstract SVG forms"
+    heading="Grid"
+    colorspace={false}
+    softproof={false}
+>
+    <Fragment slot="controls">
+        <ControlSection>
+            <Slider
+                id="noise-freq"
+                min={0.00001}
+                max={0.01}
+                value={0.001}
+                step={0.00001}
+                reset={0.001}
+                name="Noise Freq"
+            />
+            <Slider id="time" min={0.001} max={2} value={0.001} step={0.0001} reset={0.001} name="Time" />
+            <Slider id="scale" min={0.1} max={2} value={1} step={0.01} reset={1} name="Scale" />
+            <Slider id="octaves" min={1} max={16} value={1} step={1} reset={1} name="Octaves" />
+            <Slider id="lacunarity" min={0.1} max={2} value={1} step={0.001} reset={1} name="Lacunarity" />
+            <Slider id="gain" min={0} max={1} value={0.5} step={0.001} reset={0.5} name="Gain" />
+        </ControlSection>
+
+        <ControlSection class="grid-cols-2">
+            <Slider id="x-shapes" min={1} max={500} value={20} reset={20} name="x - Shapes" />
+            <Slider id="y-shapes" min={1} max={500} value={20} reset={20} name="y - Shapes" />
+            <Slider id="x-amp" min={-500} max={500} value={1} reset={1} step={0.01} name="x - Amp" />
+            <Slider id="y-amp" min={-500} max={500} value={1} reset={1} step={0.01} name="y - Amp" />
+        </ControlSection>
+
+        <ControlSection class="grid-cols-2">
+            <Slider id="x-stroke-width" min={0} max={20} value={1} reset={1} step={0.01} name="x - Stroke Width" />
+            <Slider id="y-stroke-width" min={0} max={20} value={1} reset={1} step={0.01} name="y - Stroke Width" />
+            <Input type="color" id="color" label="Grid" value="#ff0000" class="col-span-2" />
+            <Input type="color" id="bg" label="Background" value="#000000" class="col-span-2" />
+        </ControlSection>
+    </Fragment>
+</SvgPlayground>
+
+<script>
+    import { initInteractiveSvg, type Size, clear } from '../../svg/svg'
+    import { getInputValue } from '../../utils/controls'
+    import { drawRect } from '../../svg/rect'
+    import { createNoise3D } from 'simplex-noise'
+    import Color from 'colorjs.io'
+    import type { Point } from 'puppeteer'
+    import { drawPath } from '../../svg/path'
+    import { addMask } from '../../svg/mask'
+    import { createGradient } from '../../svg/gradient'
+
+    const init = (svg: HTMLElement, size: Size) => {
+        function get<T>(id: string) {
+            return getInputValue<T>(id, () => render())
+        }
+
+        function getSeed() {
+            const searchParams = new URLSearchParams(window.location.search)
+            const value = searchParams.get('seed')
+            if (value) {
+                return Number(value)
+            }
+
+            const seed = Math.random()
+            searchParams.set('seed', seed.toString())
+            window.history.replaceState({}, '', `?${searchParams.toString()}`)
+            return seed
+        }
+
+        function generatePath(points: Point[]) {
+            let d = ''
+
+            for (let idx = 0; idx < points.length; idx++) {
+                const point = points[idx]
+
+                if (idx === 0) {
+                    d += `M ${point.x} ${point.y} `
+                } else {
+                    d += `L ${point.x} ${point.y} `
+                }
+            }
+
+            return d
+        }
+
+        function scaleAroundCenter(p: Point, factor: number) {
+            // translate
+            p.x -= size.w / 2
+            p.y -= size.h / 2
+
+            p.x *= factor
+            p.y *= factor
+
+            p.x += size.w / 2
+            p.y += size.h / 2
+
+            return p
+        }
+
+        const render = () => {
+            clear(svg)
+
+            const seed = getSeed()
+            const noise = createNoise3D(() => seed)
+
+            const noiseFreq = get<number>('noise-freq')
+            const time = get<number>('time')
+            const scale = get<number>('scale')
+            const octaves = get<number>('octaves')
+            const lacunarity = get<number>('lacunarity')
+            const gain = get<number>('gain')
+
+            const xShapes = get<number>('x-shapes')
+            const yShapes = get<number>('y-shapes')
+
+            const xAmp = get<number>('x-amp')
+            const yAmp = get<number>('y-amp')
+
+            const xStrokeWidth = get<number>('x-stroke-width')
+            const yStrokeWidth = get<number>('y-stroke-width')
+
+            const color = get<Color>('color')
+            const background = get<Color>('bg')
+
+            const mask = addMask(svg, {
+                id: 'mask',
+                maskType: 'luminance',
+            })
+
+            drawRect(svg, {
+                x: 0,
+                y: 0,
+                width: size.w,
+                height: size.h,
+                fill: background.to('srgb').toString({ format: 'hex' }),
+            })
+
+            const grid: Point[][] = []
+            for (let yIdx = 0; yIdx < yShapes; yIdx++) {
+                const points: Point[] = []
+                for (let xIdx = 0; xIdx < xShapes; xIdx++) {
+                    const xStep = size.w / xShapes
+                    const yStep = size.h / yShapes
+
+                    let sumx = 0
+                    let sumy = 0
+                    let freq = noiseFreq
+                    let amp = 0.5
+
+                    for (let o = 0; o < octaves; o++) {
+                        sumx += amp * noise(xIdx * xStep * freq, yIdx * yStep * freq, time)
+                        sumy += amp * noise(xIdx * xStep * freq + 1000, yIdx * yStep * freq + 1000, time)
+                        freq *= lacunarity
+                        amp *= gain
+                    }
+
+                    const x = xIdx * xStep + xStep / 2 + sumx * xAmp
+                    const y = yIdx * yStep + yStep / 2 + sumy * yAmp
+
+                    points.push(scaleAroundCenter({ x, y }, scale))
+                }
+
+                grid.push(points)
+            }
+
+            // horizontal lines
+            const maxHLines = grid.length
+            for (let idx = 0; idx < maxHLines; idx++) {
+                const hLine = grid[idx]
+                const d = generatePath(hLine)
+
+                drawPath(mask, {
+                    d,
+                    fill: 'transparent',
+                    stroke: 'white',
+                    strokeWidth: xStrokeWidth,
+                })
+            }
+
+            // vertical lines
+            const maxVLines = grid[0].length
+            for (let idx = 0; idx < maxVLines; idx++) {
+                const vLine = grid.map((hLine) => hLine[idx])
+                const d = generatePath(vLine)
+
+                drawPath(mask, {
+                    d,
+                    fill: 'transparent',
+                    stroke: 'white',
+                    strokeWidth: yStrokeWidth,
+                })
+            }
+
+            createGradient(svg, {
+                id: 'bg-gradient',
+                start: 'red',
+                end: '#ffff00',
+                angle: 45,
+            })
+
+            drawRect(svg, {
+                x: 0,
+                y: 0,
+                width: size.w,
+                height: size.h,
+                fill: 'url(#bg-gradient)',
+                maskId: mask.id,
+            })
+        }
+
+        render()
+    }
+
+    initInteractiveSvg({
+        init,
+    })
+</script>
