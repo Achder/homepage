@@ -1,9 +1,12 @@
+import type Color from 'colorjs.io'
+import { mixN } from '../utils/color'
+
 const ns = 'http://www.w3.org/2000/svg'
 
 type GradientParams = {
     id: string
-    start: string
-    end: string
+    colors: Color[]
+    stops: number
     angle: number
 }
 
@@ -19,7 +22,7 @@ export function getOrCreateDefs(svg: HTMLElement) {
 }
 
 export function createGradient(svg: HTMLElement, params: GradientParams) {
-    const { id, start, end, angle } = params
+    const { id, colors, angle, stops } = params
 
     const defs = getOrCreateDefs(svg)
 
@@ -33,15 +36,16 @@ export function createGradient(svg: HTMLElement, params: GradientParams) {
     gradient.setAttribute('gradientUnits', `objectBoundingBox`)
     gradient.setAttribute('gradientTransform', `rotate(${angle} 0.5 0.5)`)
 
-    const stopStart = document.createElementNS(ns, 'stop')
-    stopStart.setAttribute('offset', '0%')
-    stopStart.setAttribute('stop-color', start)
-    gradient.append(stopStart)
+    for (let idx = 0; idx < stops; idx++) {
+        const t = idx / stops
+        const offset = t * 100
+        const color = mixN(colors, t, 'hwb', 'srgb')
 
-    const stopEnd = document.createElementNS(ns, 'stop')
-    stopEnd.setAttribute('offset', '100%')
-    stopEnd.setAttribute('stop-color', end)
-    gradient.append(stopEnd)
+        const stopStart = document.createElementNS(ns, 'stop')
+        stopStart.setAttribute('offset', `${offset}%`)
+        stopStart.setAttribute('stop-color', color.toString({ format: 'hex' }))
+        gradient.append(stopStart)
+    }
 
     defs.append(gradient)
 }

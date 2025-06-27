@@ -121,8 +121,8 @@ import ControlSection from '../components/ControlSection.astro'
 
             createGradient(svg, {
                 id: 'bg-gradient',
-                start: (shouldProof ? toProofed(bgStart) : bgStart.to('srgb')).toString({ format: 'hex' }),
-                end: (shouldProof ? toProofed(bgEnd) : bgEnd.to('srgb')).toString({ format: 'hex' }),
+                colors: [shouldProof ? toProofed(bgStart) : bgStart, shouldProof ? toProofed(bgEnd) : bgEnd],
+                stops: 10,
                 angle: bgAngle,
             })
 

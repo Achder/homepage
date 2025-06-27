@@ -13,38 +13,39 @@ import ControlSection from '../../components/ControlSection.astro'
 >
     <Fragment slot="controls">
         <ControlSection>
-            <Slider
-                id="noise-freq"
-                min={0.00001}
-                max={0.01}
-                value={0.001}
-                step={0.00001}
-                reset={0.001}
-                name="Noise Freq"
-            />
-            <Slider id="time" min={0.001} max={2} value={0.001} step={0.0001} reset={0.001} name="Time" />
-            <Slider id="scale" min={0.1} max={2} value={1} step={0.01} reset={1} name="Scale" />
-            <Slider id="octaves" min={1} max={16} value={1} step={1} reset={1} name="Octaves" />
-            <Slider id="lacunarity" min={0.1} max={2} value={1} step={0.001} reset={1} name="Lacunarity" />
-            <Slider id="gain" min={0} max={1} value={0.5} step={0.001} reset={0.5} name="Gain" />
+            <Slider id="noise-freq" min={0.1} max={1} value={0.78821} step={0.00001} reset={0.001} name="Noise Freq" />
+            <Slider id="time" min={0.001} max={2} value={0.8924} step={0.0001} reset={0.001} name="Time" />
+            <Slider id="scale" min={0.1} max={2} value={0.59} step={0.01} reset={1} name="Scale" />
+            <Slider id="octaves" min={1} max={16} value={13} step={1} reset={1} name="Octaves" />
+            <Slider id="lacunarity" min={0.1} max={3} value={2.231} step={0.001} reset={1} name="Lacunarity" />
+            <Slider id="gain" min={0} max={1} value={0.357} step={0.001} reset={0.5} name="Gain" />
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
-            <Slider id="x-shapes" min={1} max={500} value={20} reset={20} name="x - Shapes" />
-            <Slider id="y-shapes" min={1} max={500} value={20} reset={20} name="y - Shapes" />
-            <Slider id="x-amp" min={-500} max={500} value={1} reset={1} step={0.01} name="x - Amp" />
-            <Slider id="y-amp" min={-500} max={500} value={1} reset={1} step={0.01} name="y - Amp" />
+            <Slider id="x-shapes" min={1} max={500} value={135} reset={20} name="x - Shapes" />
+            <Slider id="y-shapes" min={1} max={500} value={371} reset={20} name="y - Shapes" />
+            <Slider id="x-amp" min={-1} max={1} value={0.848} reset={1} step={0.001} name="x - Amp" />
+            <Slider id="y-amp" min={-1} max={1} value={0.698} reset={1} step={0.001} name="y - Amp" />
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
-            <Slider id="x-stroke-width" min={0} max={20} value={1} reset={1} step={0.01} name="x - Stroke Width" />
-            <Slider id="y-stroke-width" min={0} max={20} value={1} reset={1} step={0.01} name="y - Stroke Width" />
-            <Input type="color" id="color" label="Grid" value="#ff0000" class="col-span-2" />
-            <Input type="color" id="bg" label="Background" value="#000000" class="col-span-2" />
+            <Slider id="x-stroke-width" min={0} max={1} step={0.001} value={0.159} name="x - Stroke Width" />
+            <Slider id="y-stroke-width" min={0} max={1} step={0.001} value={0} name="y - Stroke Width" />
+        </ControlSection>
+
+        <ControlSection class="grid-cols-2">
+            <Slider id="grid-angle" min={0} max={360} value={271} name="Grid Angle" class="col-span-2" />
+            <Input type="color" id="grid-start" label="Grid Start" value="#a6ff00" />
+            <Input type="color" id="grid-end" label="Grid End" value="#00ffe1" />
+        </ControlSection>
+
+        <ControlSection class="grid-cols-2">
+            <Slider id="bg-angle" min={0} max={360} value={132} name="Bg Angle" class="col-span-2" />
+            <Input type="color" id="bg-start" label="Background Start" value="#3d0000" />
+            <Input type="color" id="bg-end" label="Background End" value="#1b0029" />
         </ControlSection>
     </Fragment>
 </SvgPlayground>
-
 <script>
     import { initInteractiveSvg, type Size, clear } from '../../svg/svg'
     import { getInputValue } from '../../utils/controls'
@@ -59,6 +60,11 @@ import ControlSection from '../../components/ControlSection.astro'
     const init = (svg: HTMLElement, size: Size) => {
         function get<T>(id: string) {
             return getInputValue<T>(id, () => render())
+        }
+
+        function getScaled(id: string, max: number) {
+            const value = getInputValue<number>(id, () => requestAnimationFrame(render))
+            return value * max
         }
 
         function getSeed() {
@@ -107,6 +113,9 @@ import ControlSection from '../../components/ControlSection.astro'
         const render = () => {
             clear(svg)
 
+            const params = new URLSearchParams(window.location.search)
+            console.log(Object.fromEntries(params.entries()))
+
             const seed = getSeed()
             const noise = createNoise3D(() => seed)
 
@@ -120,18 +129,30 @@ import ControlSection from '../../components/ControlSection.astro'
             const xShapes = get<number>('x-shapes')
             const yShapes = get<number>('y-shapes')
 
-            const xAmp = get<number>('x-amp')
-            const yAmp = get<number>('y-amp')
+            const xAmp = getScaled('x-amp', size.w)
+            const yAmp = getScaled('y-amp', size.h)
 
-            const xStrokeWidth = get<number>('x-stroke-width')
-            const yStrokeWidth = get<number>('y-stroke-width')
+            const xStrokeWidth = getScaled('x-stroke-width', size.w / 100)
+            const yStrokeWidth = getScaled('y-stroke-width', size.w / 100)
 
-            const color = get<Color>('color')
-            const background = get<Color>('bg')
+            const gridAngle = get<number>('grid-angle')
+            const gridStart = get<Color>('grid-start')
+            const gridEnd = get<Color>('grid-end')
+
+            const bgAngle = get<number>('bg-angle')
+            const bgStart = get<Color>('bg-start')
+            const bgEnd = get<Color>('bg-end')
 
             const mask = addMask(svg, {
                 id: 'mask',
                 maskType: 'luminance',
+            })
+
+            createGradient(svg, {
+                id: 'bg-gradient',
+                colors: [bgStart, bgEnd],
+                stops: 10,
+                angle: bgAngle,
             })
 
             drawRect(svg, {
@@ -139,15 +160,15 @@ import ControlSection from '../../components/ControlSection.astro'
                 y: 0,
                 width: size.w,
                 height: size.h,
-                fill: background.to('srgb').toString({ format: 'hex' }),
+                fill: 'url(#bg-gradient)',
             })
 
             const grid: Point[][] = []
             for (let yIdx = 0; yIdx < yShapes; yIdx++) {
                 const points: Point[] = []
                 for (let xIdx = 0; xIdx < xShapes; xIdx++) {
-                    const xStep = size.w / xShapes
-                    const yStep = size.h / yShapes
+                    const xt = xIdx / xShapes
+                    const yt = yIdx / yShapes
 
                     let sumx = 0
                     let sumy = 0
@@ -155,11 +176,14 @@ import ControlSection from '../../components/ControlSection.astro'
                     let amp = 0.5
 
                     for (let o = 0; o < octaves; o++) {
-                        sumx += amp * noise(xIdx * xStep * freq, yIdx * yStep * freq, time)
-                        sumy += amp * noise(xIdx * xStep * freq + 1000, yIdx * yStep * freq + 1000, time)
+                        sumx += amp * noise(xt * freq, yt * freq, time)
+                        sumy += amp * noise(xt * freq + 1000, yt * freq + 1000, time)
                         freq *= lacunarity
                         amp *= gain
                     }
+
+                    const xStep = size.w / xShapes
+                    const yStep = size.h / yShapes
 
                     const x = xIdx * xStep + xStep / 2 + sumx * xAmp
                     const y = yIdx * yStep + yStep / 2 + sumy * yAmp
@@ -199,10 +223,10 @@ import ControlSection from '../../components/ControlSection.astro'
             }
 
             createGradient(svg, {
-                id: 'bg-gradient',
-                start: 'red',
-                end: '#ffff00',
-                angle: 45,
+                id: 'grid-gradient',
+                colors: [gridStart, gridEnd],
+                stops: 10,
+                angle: gridAngle,
             })
 
             drawRect(svg, {
@@ -210,7 +234,7 @@ import ControlSection from '../../components/ControlSection.astro'
                 y: 0,
                 width: size.w,
                 height: size.h,
-                fill: 'url(#bg-gradient)',
+                fill: 'url(#grid-gradient)',
                 maskId: mask.id,
             })
         }

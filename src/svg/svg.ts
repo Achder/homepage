@@ -72,6 +72,7 @@ type InteractiveSvgParams = {
 }
 
 export function initInteractiveSvg(params: InteractiveSvgParams) {
+    console.log('initInteractiveSvg')
     const { init } = params
 
     const container = document.getElementById('container')!
@@ -92,6 +93,7 @@ export function initInteractiveSvg(params: InteractiveSvgParams) {
         svg.setAttribute('height', size.h.toString())
         svg.setAttribute('viewbox', `0 0 ${size.w.toString()} ${size.h.toString()}`)
 
+        console.log('RESTART')
         clearAllListeners()
         resetControls()
         init(svg, size)

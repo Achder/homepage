@@ -134,8 +134,8 @@ import ControlSection from '../components/ControlSection.astro'
             const colorSpace = get<string>('color-space')
 
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<string>('bg-start')
-            const bgEnd = get<string>('bg-end')
+            const bgStart = get<Color>('bg-start')
+            const bgEnd = get<Color>('bg-end')
 
             const center = { x: size.w / 2, y: size.h / 2 }
 
@@ -148,8 +148,8 @@ import ControlSection from '../components/ControlSection.astro'
 
             createGradient(svg, {
                 id: 'bg-gradient',
-                start: bgStart,
-                end: bgEnd,
+                colors: [bgStart, bgEnd],
+                stops: 10,
                 angle: bgAngle,
             })
 
