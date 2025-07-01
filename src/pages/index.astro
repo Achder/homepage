@@ -96,28 +96,39 @@ import { Image } from 'astro:assets'
     import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
     fadeIn('.contact > *', '.contact', { startOffset: 50 })
-    ScrollTrigger.batch('.gallery-image', {
-        interval: 0.1,
-        start: 'top bottom-=100px',
-        once: true,
-        onEnter(elements) {
-            gsap.fromTo(
-                elements,
-                {
-                    opacity: 0,
-                    y: '20%',
-                    filter: 'blur(10px) hue-rotate(180deg)',
-                },
-                {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.5,
-                    stagger: 0.3,
-                    ease: 'power1.out',
-                    grid: 'auto',
-                    filter: 'blur(0px) hue-rotate(0deg)',
-                }
-            )
-        },
-    })
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const to: gsap.TweenVars = {
+        opacity: 1,
+        y: 0,
+        filter: 'blur(0px) hue-rotate(0deg)',
+    }
+
+    if (prefersReducedMotion) {
+        gsap.to('.gallery-image', to)
+    } else {
+        ScrollTrigger.batch('.gallery-image', {
+            interval: 0.1,
+            start: 'top bottom-=100px',
+            once: true,
+            onEnter(elements) {
+                gsap.fromTo(
+                    elements,
+                    {
+                        opacity: 0,
+                        y: '20%',
+                        filter: 'blur(10px) hue-rotate(180deg)',
+                    },
+                    {
+                        ...to,
+                        duration: 0.5,
+                        stagger: 0.3,
+                        ease: 'power1.out',
+                        grid: 'auto',
+                    }
+                )
+            },
+        })
+    }
 </script>

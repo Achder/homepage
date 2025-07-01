@@ -18,6 +18,9 @@ export const GET: APIRoute = async (context) => {
     const page = await browser.newPage()
     await page.setViewport({ width: 1920, height: 1080 })
 
+    // skip initial animations
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }])
+
     // Ensure the target URL is safe and secure
     // We make sure to use the origin of the request URL
     const targetUrl = new URL(target)
