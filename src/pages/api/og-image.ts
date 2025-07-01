@@ -28,9 +28,10 @@ export const GET: APIRoute = async (context) => {
     const safeUrl = `${origin}${targetPath}?${targetSearchParams.toString()}`
 
     await page.goto(safeUrl)
-    await page.evaluate(() => {
-        document.body.style.zoom = '0.64'
-    })
+    const elementHandle = await page.$('#svg-controls')
+    await page.evaluate((el) => {
+        el?.scrollIntoView({ behavior: 'auto', block: 'center' })
+    }, elementHandle)
 
     await new Promise((resolve) => setTimeout(resolve, 50))
     const imageBuffer = await page.screenshot({ type: 'png' })
