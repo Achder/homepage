@@ -192,30 +192,32 @@ import ControlSection from '../../components/ControlSection.astro'
             }
 
             // horizontal lines
+            let hd = ''
             const maxHLines = grid.length
             for (let idx = 0; idx < maxHLines; idx++) {
                 const hLine = grid[idx]
-                const d = generatePath(hLine)
-
-                drawPath(mask, {
-                    d,
-                    stroke: 'white',
-                    strokeWidth: xStrokeWidth,
-                })
+                hd += generatePath(hLine)
             }
 
+            drawPath(mask, {
+                d: hd,
+                stroke: 'white',
+                strokeWidth: xStrokeWidth,
+            })
+
             // vertical lines
+            let vd = ''
             const maxVLines = grid[0].length
             for (let idx = 0; idx < maxVLines; idx++) {
                 const vLine = grid.map((hLine) => hLine[idx])
-                const d = generatePath(vLine)
-
-                drawPath(mask, {
-                    d,
-                    stroke: 'white',
-                    strokeWidth: yStrokeWidth,
-                })
+                vd += generatePath(vLine)
             }
+
+            drawPath(mask, {
+                d: vd,
+                stroke: 'white',
+                strokeWidth: yStrokeWidth,
+            })
 
             createGradient(svg, {
                 id: 'grid-gradient',
@@ -233,18 +235,6 @@ import ControlSection from '../../components/ControlSection.astro'
                 maskId: mask.id,
             })
         }
-
-        let interval: number | undefined = undefined
-        const timeStep = 0.01
-        const time = document.getElementById('time') as HTMLInputElement
-
-        time?.addEventListener('change', () => {
-            clearInterval(interval)
-            setInterval(() => {
-                time.value = `${time.valueAsNumber + timeStep}`
-                render()
-            }, 1000 / 30)
-        })
 
         render()
     }
