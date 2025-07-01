@@ -14,7 +14,7 @@ import ControlSection from '../../components/ControlSection.astro'
     <Fragment slot="controls">
         <ControlSection>
             <Slider id="noise-freq" min={0.1} max={1} value={0.78821} step={0.00001} reset={0.001} name="Noise Freq" />
-            <Slider id="time" min={0.001} max={2} value={0.8924} step={0.0001} reset={0.001} name="Time" />
+            <Slider id="time" min={0.001} max={5} value={0.8924} step={0.0001} reset={0.001} name="Time" />
             <Slider id="scale" min={0.1} max={2} value={0.59} step={0.01} reset={1} name="Scale" />
             <Slider id="octaves" min={1} max={16} value={13} step={1} reset={1} name="Octaves" />
             <Slider id="lacunarity" min={0.1} max={3} value={2.231} step={0.001} reset={1} name="Lacunarity" />
@@ -113,9 +113,6 @@ import ControlSection from '../../components/ControlSection.astro'
         const render = () => {
             clear(svg)
 
-            const params = new URLSearchParams(window.location.search)
-            console.log(Object.fromEntries(params.entries()))
-
             const seed = getSeed()
             const noise = createNoise3D(() => seed)
 
@@ -202,7 +199,6 @@ import ControlSection from '../../components/ControlSection.astro'
 
                 drawPath(mask, {
                     d,
-                    fill: 'transparent',
                     stroke: 'white',
                     strokeWidth: xStrokeWidth,
                 })
@@ -216,7 +212,6 @@ import ControlSection from '../../components/ControlSection.astro'
 
                 drawPath(mask, {
                     d,
-                    fill: 'transparent',
                     stroke: 'white',
                     strokeWidth: yStrokeWidth,
                 })
@@ -238,6 +233,18 @@ import ControlSection from '../../components/ControlSection.astro'
                 maskId: mask.id,
             })
         }
+
+        let interval: number | undefined = undefined
+        const timeStep = 0.01
+        const time = document.getElementById('time') as HTMLInputElement
+
+        time?.addEventListener('change', () => {
+            clearInterval(interval)
+            setInterval(() => {
+                time.value = `${time.valueAsNumber + timeStep}`
+                render()
+            }, 1000 / 30)
+        })
 
         render()
     }
