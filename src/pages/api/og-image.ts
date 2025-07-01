@@ -32,6 +32,7 @@ export const GET: APIRoute = async (context) => {
         document.body.style.zoom = '0.64'
     })
 
+    await new Promise((resolve) => setTimeout(resolve, 50))
     const imageBuffer = await page.screenshot({ type: 'png' })
     await browser.close()
 
