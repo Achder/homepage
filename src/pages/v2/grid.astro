@@ -22,6 +22,8 @@ import ControlSection from '../../components/ControlSection.astro'
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
+            <Slider id="x-offset" min={-1} max={1} value={0} reset={0} step={0.001} name="x - Offset" />
+            <Slider id="y-offset" min={-1} max={1} value={0} reset={0} step={0.001} name="y - Offset" />
             <Slider id="x-shapes" min={1} max={500} value={135} reset={20} name="x - Shapes" />
             <Slider id="y-shapes" min={1} max={500} value={371} reset={20} name="y - Shapes" />
             <Slider id="x-amp" min={-1} max={1} value={0.848} reset={1} step={0.001} name="x - Amp" />
@@ -123,6 +125,9 @@ import ControlSection from '../../components/ControlSection.astro'
             const lacunarity = get<number>('lacunarity')
             const gain = get<number>('gain')
 
+            const xOffset = getScaled('x-offset', size.w)
+            const yOffset = getScaled('y-offset', size.h)
+
             const xShapes = get<number>('x-shapes')
             const yShapes = get<number>('y-shapes')
 
@@ -182,8 +187,8 @@ import ControlSection from '../../components/ControlSection.astro'
                     const xStep = size.w / xShapes
                     const yStep = size.h / yShapes
 
-                    const x = xIdx * xStep + xStep / 2 + sumx * xAmp
-                    const y = yIdx * yStep + yStep / 2 + sumy * yAmp
+                    const x = xOffset + xIdx * xStep + sumx * xAmp
+                    const y = yOffset + yIdx * yStep + sumy * yAmp
 
                     points.push(scaleAroundCenter({ x, y }, scale))
                 }
