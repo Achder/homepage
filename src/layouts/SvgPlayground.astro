@@ -30,6 +30,9 @@ const {
     colorspace = true,
     softproof = true,
 } = Astro.props
+
+const previewTargetPath = (canonicalPath ?? Astro.url.pathname).replace(/^\/+|\/+$/g, '')
+const ogImagePath = previewTargetPath ? `/preview/${previewTargetPath}` : undefined
 ---
 
 <PageLayout
@@ -38,6 +41,7 @@ const {
     canonicalPath={canonicalPath}
     ogTitle={ogTitle}
     ogDescription={ogDescription}
+    ogImagePath={ogImagePath}
     ogImageTarget={ogImageTarget}
     robots={robots}
 >
