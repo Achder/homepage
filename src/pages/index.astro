@@ -18,11 +18,41 @@ import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
 import StyledLink from '../components/StyledLink.astro'
 import { Image } from 'astro:assets'
+
+const siteUrl = Astro.site?.toString() ?? 'https://meerpohl.dev'
+const personSchema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Thomas Meerpohl',
+    url: siteUrl,
+    jobTitle: 'Freelance JavaScript and TypeScript Developer',
+    description:
+        'Freelance JavaScript and TypeScript developer building websites, web applications, and cross-platform apps.',
+    email: 'mailto:thomas.meerpohl@gmail.com',
+    address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Dresden',
+        addressCountry: 'DE',
+    },
+    sameAs: [
+        'https://www.linkedin.com/in/thomas-meerpohl-0609b619b/',
+        'https://bsky.app/profile/meerpohl.dev',
+        'https://github.com/Achder',
+        'https://www.freelancermap.de/profil/thomas-meerpohl',
+    ],
+    knowsAbout: ['JavaScript', 'TypeScript', 'React', 'NestJS', 'Astro', 'GraphQL', 'Nx', 'Docker'],
+})
 ---
 
 <PageLayout
-    description="I'm Thomas Meerpohl, a freelancer based in Dresden, Germany. I'm a fullstack javascript web developer. I build websites, webapplications and mobile cross-plaform apps."
+    title="Freelance JavaScript And TypeScript Developer In Dresden | Thomas Meerpohl"
+    description="Thomas Meerpohl is a freelance JavaScript and TypeScript developer based in Dresden, Germany. He builds websites, web applications, and cross-platform apps."
+    ogImageTarget="#profile"
 >
+    <Fragment slot="head">
+        <script is:inline type="application/ld+json" set:html={personSchema} />
+    </Fragment>
+
     <section class="px-4 sm:px-10 text-2xl text-pretty grid gap-10 items-end w-full max-w-400">
         <Image
             id="profile"

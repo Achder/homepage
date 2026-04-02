@@ -6,16 +6,41 @@ import ControlSection from '../components/ControlSection.astro'
 import Select from '../components/Select.astro'
 
 type Props = {
+    pageTitle: string
     pageDescription: string
     heading: string
+    canonicalPath?: string
+    ogTitle?: string
+    ogDescription?: string
+    ogImageTarget?: string
+    robots?: string
     colorspace?: boolean
     softproof?: boolean
 }
 
-const { pageDescription, heading, colorspace = true, softproof = true } = Astro.props
+const {
+    pageTitle,
+    pageDescription,
+    heading,
+    canonicalPath,
+    ogTitle,
+    ogDescription,
+    ogImageTarget = '#container',
+    robots,
+    colorspace = true,
+    softproof = true,
+} = Astro.props
 ---
 
-<PageLayout description={pageDescription}>
+<PageLayout
+    title={pageTitle}
+    description={pageDescription}
+    canonicalPath={canonicalPath}
+    ogTitle={ogTitle}
+    ogDescription={ogDescription}
+    ogImageTarget={ogImageTarget}
+    robots={robots}
+>
     <slot name="head" slot="head" />
     <section class="px-4 sm:px-10 grid gap-10 w-full max-w-350">
         <Heading type="h1">{heading}</Heading>

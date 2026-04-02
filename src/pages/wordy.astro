@@ -7,7 +7,11 @@ import ControlSection from '../components/ControlSection.astro'
 import { Font } from 'astro:assets'
 ---
 
-<SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Wordy">
+<SvgPlayground
+    pageTitle="Wordy SVG Typography Generator | Thomas Meerpohl"
+    pageDescription="Interactive SVG typography generator for downloadable word art with custom text, font choices, gradients, and layered motion controls."
+    heading="Wordy"
+>
     <Fragment slot="head">
         <Font cssVariable="--font-rowdies" preload />
         <Font cssVariable="--font-cal-sans" preload />

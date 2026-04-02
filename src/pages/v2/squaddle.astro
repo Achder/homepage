@@ -5,7 +5,13 @@ import SvgPlayground from '../../layouts/SvgPlayground.astro'
 import ControlSection from '../../components/ControlSection.astro'
 ---
 
-<SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Squaddle">
+<SvgPlayground
+    pageTitle="Squaddle SVG Generator V2 Preview | Thomas Meerpohl"
+    pageDescription="Preview version of the SVG ellipse generator for downloadable abstract artwork with gradients, wobble controls, and layered compositions."
+    canonicalPath="/squaddle"
+    robots="noindex,follow"
+    heading="Squaddle"
+>
     <Fragment slot="controls">
         <ControlSection>
             <Slider id="shapes" min={2} max={1500} value={541} reset={500} name="Shapes" />

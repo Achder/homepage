@@ -6,7 +6,11 @@ import SvgPlayground from '../layouts/SvgPlayground.astro'
 import ControlSection from '../components/ControlSection.astro'
 ---
 
-<SvgPlayground pageDescription="An SVG tool for generating downloadable abstract SVG forms" heading="Swirly">
+<SvgPlayground
+    pageTitle="Swirly SVG Generator | Thomas Meerpohl"
+    pageDescription="Interactive SVG swirl generator for exportable abstract posters with layered ellipses, gradients, and print-friendly color controls."
+    heading="Swirly"
+>
     <Fragment slot="controls">
         <ControlSection>
             <Slider id="stride" min={2} max={50} value={21} name="Stride" step={0.1} />

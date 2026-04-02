@@ -9,7 +9,11 @@ export default defineConfig({
     vite: {
         plugins: [tailwindcss()],
     },
-    integrations: [sitemap()],
+    integrations: [
+        sitemap({
+            filter: (page) => !new URL(page).pathname.startsWith('/v2/'),
+        }),
+    ],
     output: 'static',
     prefetch: {
         prefetchAll: true,
