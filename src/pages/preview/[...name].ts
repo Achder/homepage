@@ -1,16 +1,65 @@
 import puppeteer from 'puppeteer'
 import type { APIRoute } from 'astro'
+import type { Page } from 'puppeteer'
 
 export const prerender = false
 const ogWidth = 1200
 const ogHeight = 630
 const captureScale = 4
 const ogAspectRatio = 1200 / 630
+const indexPreviewToken = '__index__'
+
+async function waitForLayout(page: Page, selector?: string) {
+    await page.waitForSelector('body')
+    await page.evaluate(async () => {
+        if ('fonts' in document) {
+            await document.fonts.ready
+        }
+
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    })
+
+    if (!selector) {
+        return
+    }
+
+    try {
+        await page.waitForSelector(selector, { timeout: 1500 })
+        const elementHandle = await page.$(selector)
+        await page.evaluate((element) => {
+            element?.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
+        }, elementHandle)
+        await page.evaluate(async () => {
+            await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+        })
+    } catch {
+        // Ignore unknown selectors and fall back to a broader page capture.
+    }
+}
+
+async function getVisibleTarget(page: Page, selectors: string[]) {
+    for (const selector of selectors) {
+        const element = await page.$(selector)
+
+        if (!element) {
+            continue
+        }
+
+        const bounds = await element.boundingBox()
+
+        if (bounds && bounds.width > 0 && bounds.height > 0) {
+            return element
+        }
+    }
+
+    return null
+}
 
 export const GET: APIRoute = async (context) => {
     const rawName = context.params.name
     const { origin, searchParams } = new URL(context.request.url)
-    const name = rawName?.replace(/^\/+|\/+$/g, '')
+    const name = rawName?.replace(/^\/+|\/+$/g, '') ?? indexPreviewToken
+    const selector = searchParams.get('selector')?.trim() || undefined
 
     if (!name) {
         return new Response('Missing preview target', { status: 400 })
@@ -53,20 +102,40 @@ export const GET: APIRoute = async (context) => {
             deviceScaleFactor: captureScale,
         })
 
-        const safeUrl = new URL(`/${name}`, origin)
+        const safePath = name === indexPreviewToken ? '/' : `/${name}`
+        const safeUrl = new URL(safePath, origin)
         safeUrl.search = searchParams.toString()
+        safeUrl.searchParams.delete('selector')
 
-        await page.goto(safeUrl.toString())
+        const response = await page.goto(safeUrl.toString(), {
+            waitUntil: 'domcontentloaded',
+        })
 
-        await page.waitForSelector('#svg-controls')
+        if (!response || !response.ok()) {
+            return new Response('Unable to render preview target', { status: 502 })
+        }
 
-        const previewTarget = (await page.$('#container')) ?? (await page.$('#svg'))
-        await previewTarget?.evaluate((element) => {
+        await waitForLayout(page, selector)
+
+        const previewTarget = await getVisibleTarget(
+            page,
+            selector ? [selector, '#container', '#svg', 'main', 'body'] : ['#container', '#svg', 'main', 'body']
+        )
+
+        if (!previewTarget) {
+            return new Response('Unable to find preview target', { status: 500 })
+        }
+
+        const previewTargetId = await previewTarget.evaluate((element) => element.id)
+        const useStructuredClip = previewTargetId === 'container' || previewTargetId === 'svg'
+
+        await previewTarget.evaluate((element) => {
             element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
         })
         await page.evaluate(async () => {
             await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
         })
+
         const previewMetrics = await page.evaluate(() => {
             const container = document.querySelector('#container')
             const svg = document.querySelector('#svg')
@@ -158,13 +227,13 @@ export const GET: APIRoute = async (context) => {
 
             return document.title.split('|')[0]?.trim() || 'Preview'
         })
-        const bb = await previewTarget?.boundingBox()
-        const clip = bb
+        const bb = await previewTarget.boundingBox()
+        const clip = bb && (selector || useStructuredClip)
             ? (() => {
-                  const baseBounds = previewMetrics.containerBounds ?? bb
+                  const baseBounds = useStructuredClip ? previewMetrics.containerBounds ?? bb : bb
                   const outlineInset = previewMetrics.containerOutlineInset ?? 0
                   const insetBounds =
-                      outlineInset > 0
+                      useStructuredClip && outlineInset > 0
                           ? {
                                 x: baseBounds.x + outlineInset,
                                 y: baseBounds.y + outlineInset,
@@ -172,7 +241,7 @@ export const GET: APIRoute = async (context) => {
                                 height: Math.max(baseBounds.height - outlineInset * 2, 1),
                             }
                           : baseBounds
-                  const focusBounds = previewMetrics.contentBounds ?? insetBounds
+                  const focusBounds = useStructuredClip ? previewMetrics.contentBounds ?? insetBounds : insetBounds
                   const sourceAspectRatio = insetBounds.width / insetBounds.height
 
                   if (sourceAspectRatio > ogAspectRatio) {
@@ -201,10 +270,14 @@ export const GET: APIRoute = async (context) => {
               })()
             : undefined
 
-        const croppedImageBuffer = await page.screenshot({
-            type: 'png',
-            clip,
-        })
+        const croppedImageBuffer = clip
+            ? await page.screenshot({
+                  type: 'png',
+                  clip,
+              })
+            : await page.screenshot({
+                  type: 'png',
+              })
 
         const outputPage = await browser.newPage()
         await outputPage.setViewport({

@@ -28,11 +28,10 @@ const {
 const isProduction = import.meta.env.MODE === 'production'
 const siteUrl = Astro.site ?? Astro.url
 const canonicalUrl = new URL(canonicalPath, siteUrl)
-const ogImageUrl = ogImagePath ? new URL(ogImagePath, siteUrl) : new URL('/api/og-image', siteUrl)
+const previewTargetPath = canonicalPath.replace(/^\/+|\/+$/g, '') || '__index__'
+const ogImageUrl = ogImagePath ? new URL(ogImagePath, siteUrl) : new URL(`/preview/${previewTargetPath}`, siteUrl)
 
 if (!ogImagePath) {
-    ogImageUrl.searchParams.set('url', canonicalUrl.toString())
-
     if (ogImageTarget) {
         ogImageUrl.searchParams.set('selector', ogImageTarget)
     }
