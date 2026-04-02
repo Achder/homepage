@@ -1,0 +1,55 @@
+---
+type Props = {
+    title: string
+    imageSrc: string
+}
+
+const { title, imageSrc } = Astro.props
+---
+
+<div class="frame">
+    <img src={imageSrc} alt="" class="photo" />
+    <div class="overlay"></div>
+    <div class="title">{title}</div>
+</div>
+
+<style>
+    .frame {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: black;
+        font-family: 'Rethink Sans', system-ui, sans-serif;
+    }
+
+    .photo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+        display: block;
+    }
+
+    .overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.35) 28%, rgba(0, 0, 0, 0) 55%);
+    }
+
+    .title {
+        position: absolute;
+        left: 48px;
+        right: 48px;
+        bottom: 40px;
+        color: white;
+        font-size: 64px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        text-wrap: balance;
+        text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+    }
+ </style>
