@@ -254,7 +254,7 @@ import ControlSection from '../../components/ControlSection.astro'
                 const distanceSquared = dx * dx + dy * dy
                 return ball.radius / (falloff * distanceSquared + 1)
             },
-            wyvill(x: number, y: number, ball: Circle, falloff: number) {
+            wyvill(x: number, y: number, ball: Circle, _falloff: number) {
                 const dx = x - ball.x
                 const dy = y - ball.y
                 const distanceSquared = dx * dx + dy * dy
@@ -267,7 +267,7 @@ import ControlSection from '../../components/ControlSection.astro'
                 const t = 1 - distanceSquared / radiusSquared
                 return t * t * t // (1 - (d² / R²))³
             },
-            quartic(x: number, y: number, ball: Circle, falloff: number) {
+            quartic(x: number, y: number, ball: Circle, _falloff: number) {
                 const dx = x - ball.x
                 const dy = y - ball.y
                 const distanceSquared = dx * dx + dy * dy

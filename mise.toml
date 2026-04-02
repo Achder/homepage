@@ -1,0 +1,6 @@
+[hooks]
+enter = "echo 'Loading environment variables...'"
+leave = "echo 'Unloading environment variables...'"
+
+[tools]
+node = "24"
