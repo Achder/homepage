@@ -22,7 +22,7 @@ const { class: className } = Astro.props
         id="page-nav"
         class:list={[
             className,
-            'flex-col hidden items-center sm:flex sm:flex-row border-dark border-b-8 sm:border-0 justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-8 absolute sm:static z-10 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none',
+            'bg-black flex-col hidden items-center sm:flex sm:flex-row border-brand border-b-32 sm:border-0 justify-start gap-4 sm:gap-6 pl-4 pb-8 sm:px-0 sm:py-8 absolute sm:static z-10 left-0 right-0 text-xl sm:text-base shadow-xl sm:shadow-none',
         ]}
     >
         <StyledLink href="/">
@@ -54,7 +54,7 @@ const { class: className } = Astro.props
                 },
                 {
                     opacity: 1,
-                    y: 0,
+                    y: -1,
                     ease: 'power4.out',
                     duration: 0.6,
                     onComplete: () => {},

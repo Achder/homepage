@@ -60,10 +60,14 @@ const personSchema = JSON.stringify({
     >
         <div class="grid gap-20 bg-brand sm:rounded-sm shadow-lg/30 shadow-black py-20 px-4 sm:px-10 max-w-3xl">
             <div class="contact grid justify-items-start content-end gap-8">
-                <Heading type="h1" class="grid gap-2">
-                    <p class="text-3xl text-shadow-lg/10 font-rethink font-black">Hi, I'm your freelance developer</p>
-                    <p class="leading-none text-shadow-lg/10 font-rethink font-extrabold">Thomas Meerpohl</p>
-                </Heading>
+                <div class="font-black leading-[0.8] text-balance text-white text-shadow-lg/10">
+                    <p class="text-3xl text-shadow-lg/10 font-rethink font-black no-underline">
+                        Hi, I'm your freelance developer
+                    </p>
+                    <p class="leading-none text-shadow-lg/10 font-rethink font-extrabold no-underline text-7xl">
+                        Thomas Meerpohl
+                    </p>
+                </div>
                 <LinkButton href="mailto:thomas.meerpohl@gmail.com" class="text-2xl">Contact me</LinkButton>
             </div>
 
