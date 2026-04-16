@@ -13,6 +13,7 @@ type Props = {
     ogImagePath?: string
     ogImageTarget?: string
     robots?: string
+    sectionPadding?: boolean
 }
 
 const {
@@ -24,7 +25,9 @@ const {
     ogImagePath,
     ogImageTarget,
     robots = 'index,follow',
+    sectionPadding = true,
 } = Astro.props
+
 const isProduction = import.meta.env.MODE === 'production'
 const siteUrl = Astro.site ?? Astro.url
 const canonicalUrl = new URL(canonicalPath, siteUrl)
@@ -82,16 +85,24 @@ if (!ogImagePath) {
 
         <link rel="preload" href="/fonts/RethinkSans-Regular.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="preload" href="/fonts/RethinkSans-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="" />
+        <link rel="preload" href="/fonts/Fraunces-Italic-VariableFont.ttf" as="font" type="font/ttf" crossorigin="" />
         <slot name="head" />
     </head>
 
     <body class="min-h-dvh tracking-wider font-rethink font-normal bg-brand text-dark">
-        <div class="px-4 sm:px-10 flex justify-between items-center gap-4">
+        <div class="px-4 sm:px-10 flex justify-between items-center gap-4 bg-black text-white">
             <PageNav />
             <SocialNav class="justify-end gap-8 py-8 hidden sm:flex" />
         </div>
 
-        <main class="grid justify-items-center gap-20 py-4 sm:py-10">
+        <main
+            class:list={[
+                'grid justify-items-center',
+                {
+                    'gap-20 py-10 sm:py-20': sectionPadding,
+                },
+            ]}
+        >
             <slot />
         </main>
 
@@ -118,6 +129,16 @@ if (!ogImagePath) {
             src: url('/fonts/RethinkSans-ExtraBold.woff2') format('woff2');
         }
 
+        @font-face {
+            font-family: 'Fraunces';
+            font-style: italic;
+            font-weight: 900;
+            src: url('/fonts/Fraunces-Italic-VariableFont.ttf') format('truetype');
+            font-variation-settings:
+                'SOFT' 100,
+                'WONK' 1;
+        }
+
         ::-webkit-color-swatch-wrapper {
             padding: 0;
         }
@@ -137,10 +158,3 @@ if (!ogImagePath) {
         }
     </style>
 </html>
-
-<script>
-    import { gsap } from 'gsap'
-    import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-    gsap.registerPlugin(ScrollTrigger)
-</script>

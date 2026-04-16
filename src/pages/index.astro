@@ -16,8 +16,7 @@ import Preview from '../components/Preview.astro'
 import PageLayout from '../layouts/PageLayout.astro'
 import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
-import StyledLink from '../components/StyledLink.astro'
-import { Image } from 'astro:assets'
+import About from '../components/About.astro'
 
 const siteUrl = Astro.site?.toString() ?? 'https://meerpohl.dev'
 const personSchema = JSON.stringify({
@@ -49,26 +48,28 @@ const personSchema = JSON.stringify({
     description="Thomas Meerpohl is a freelance JavaScript and TypeScript developer based in Dresden, Germany. He builds websites, web applications, and cross-platform apps."
     ogImagePath="/og/index.png"
     ogImageTarget="#profile"
+    sectionPadding={false}
 >
     <Fragment slot="head">
         <script is:inline type="application/ld+json" set:html={personSchema} />
     </Fragment>
 
-    <section class="px-4 sm:px-10 text-2xl text-pretty grid gap-10 items-end w-full max-w-400">
-        <Image
-            id="profile"
-            class="col-start-1 row-start-1 w-full aspect-1/1.5 md:aspect-2/1 object-cover outline-8 -outline-offset-8 shadow-lg rounded-sm"
-            src={MePig}
-            alt="A young and handsome Thomas Meerpohl"
-            loading="eager"
-        />
+    <section
+        class="grid w-full p-0 sm:p-10 lg:p-20 justify-items-start"
+        style=`background-image: url(${MePig.src}); background-size: cover; background-position: center;`
+    >
+        <div class="grid gap-20 bg-brand sm:rounded-sm shadow-lg/30 shadow-black py-20 px-4 sm:px-10 max-w-3xl">
+            <div class="contact grid justify-items-start content-end gap-8">
+                <Heading type="h1" class="grid gap-2">
+                    <p class="text-3xl text-shadow-lg/10 font-rethink font-black">Hi, I'm your freelance developer</p>
+                    <p class="leading-none text-shadow-lg/10 font-rethink font-extrabold">Thomas Meerpohl</p>
+                </Heading>
+                <LinkButton href="mailto:thomas.meerpohl@gmail.com" class="text-2xl">Contact me</LinkButton>
+            </div>
 
-        <div class="contact grid justify-items-start gap-8 col-start-1 row-start-1 z-10 px-6 md:px-10 py-10 md:py-20">
-            <Heading type="h1" class="grid gap-2">
-                <p class="text-3xl text-shadow-lg/30">Hi, I'm your freelance developer</p>
-                <p class="leading-none text-shadow-lg/30">Thomas Meerpohl</p>
-            </Heading>
-            <LinkButton href="mailto:thomas.meerpohl@gmail.com" class="text-2xl">Contact me</LinkButton>
+            <div class="grid gap-10 max-w-3xl contact">
+                <About />
+            </div>
         </div>
     </section>
 
@@ -77,7 +78,6 @@ const personSchema = JSON.stringify({
     >
         <Heading type="h2">Gallery</Heading>
 
-        <!-- <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-6"> -->
         <div
             class="grid justify-items-stretch sm:justify-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 w-full"
         >
@@ -96,70 +96,45 @@ const personSchema = JSON.stringify({
         </div>
     </section>
 
-    <section
-        class="px-4 sm:px-10 text-xl text-pretty grid gap-10 justify-items-start about py-20 max-w-7xl mx-auto bg-black rounded-sm"
-    >
-        <Heading type="h2">About me</Heading>
+    <script>
+        import { fadeIn } from '../utils/animation'
+        import { gsap, ScrollTrigger } from '../utils/gsap'
 
-        <article class="grid gap-4 text-white">
-            <p>I'm a full-stack developer from Dresden, Germany.</p>
-            <p>
-                My focus is on building applications <StyledLink href="/what">using web technologies</StyledLink>. In my
-                freetime I like to code interactive SVG playgrounds that I use to create prints for friends and family.
-            </p>
-            <p>
-                During my {new Date().getFullYear() - new Date(2016, 0).getFullYear()} years professional career, I have
-                worked in large international Scrum teams as well as small and highly dynamic startups.
-            </p>
-            <p>The products I helped develop are being used by thousands of users around the world.</p>
-            <p>
-                If you need assistance with your next project, feel free to <StyledLink
-                    href="mailto:thomas.meerpohl@gmail.com">contact me</StyledLink
-                > and I will provide you with a detailed CV.
-            </p>
-        </article>
-    </section>
+        fadeIn('.contact > *', '.contact', { startOffset: 50 })
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+        const to: gsap.TweenVars = {
+            opacity: 1,
+            y: 0,
+            filter: 'blur(0px) hue-rotate(0deg)',
+        }
+
+        if (prefersReducedMotion) {
+            gsap.to('.gallery-image', to)
+        } else {
+            ScrollTrigger.batch('.gallery-image', {
+                interval: 0.1,
+                start: 'top bottom-=100px',
+                once: true,
+                onEnter(elements) {
+                    gsap.fromTo(
+                        elements,
+                        {
+                            opacity: 0,
+                            y: '20%',
+                            filter: 'blur(10px) hue-rotate(180deg)',
+                        },
+                        {
+                            ...to,
+                            duration: 0.5,
+                            stagger: 0.3,
+                            ease: 'power1.out',
+                            grid: 'auto',
+                        }
+                    )
+                },
+            })
+        }
+    </script>
 </PageLayout>
-
-<script>
-    import { fadeIn } from '../utils/animation'
-    import { gsap } from 'gsap'
-    import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-    fadeIn('.contact > *', '.contact', { startOffset: 50 })
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    const to: gsap.TweenVars = {
-        opacity: 1,
-        y: 0,
-        filter: 'blur(0px) hue-rotate(0deg)',
-    }
-
-    if (prefersReducedMotion) {
-        gsap.to('.gallery-image', to)
-    } else {
-        ScrollTrigger.batch('.gallery-image', {
-            interval: 0.1,
-            start: 'top bottom-=100px',
-            once: true,
-            onEnter(elements) {
-                gsap.fromTo(
-                    elements,
-                    {
-                        opacity: 0,
-                        y: '20%',
-                        filter: 'blur(10px) hue-rotate(180deg)',
-                    },
-                    {
-                        ...to,
-                        duration: 0.5,
-                        stagger: 0.3,
-                        ease: 'power1.out',
-                        grid: 'auto',
-                    }
-                )
-            },
-        })
-    }
-</script>
