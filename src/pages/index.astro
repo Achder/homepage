@@ -55,10 +55,17 @@ const personSchema = JSON.stringify({
     </Fragment>
 
     <section
-        class="grid w-full p-0 sm:p-10 lg:p-20 justify-items-start"
+        class="relative grid w-full p-0 sm:p-10 lg:p-20 justify-items-start"
         style=`background-image: url(${MePig.src}); background-size: cover; background-position: center;`
     >
-        <div class="grid gap-20 bg-brand sm:rounded-sm shadow-lg/30 shadow-black py-20 px-4 sm:px-10 max-w-3xl">
+        <div
+            class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.8)_0%,rgba(0,0,0,0)_45%)]"
+            aria-hidden="true"
+        >
+        </div>
+        <div
+            class="relative z-10 grid gap-20 bg-brand sm:rounded-sm shadow-lg/30 shadow-black py-20 px-4 sm:px-10 max-w-3xl"
+        >
             <div class="contact grid justify-items-start content-end gap-8">
                 <div class="font-black leading-[0.8] text-balance text-white text-shadow-lg/10">
                     <p class="text-3xl text-shadow-lg/10 font-rethink font-black no-underline">
