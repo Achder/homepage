@@ -38,30 +38,12 @@ const { class: className } = Astro.props
 </div>
 
 <script>
-    import { gsap } from 'gsap'
-
     const pageNav = document.getElementById('page-nav')!
     const menuButton = document.getElementById('menu')!
     const menuIcon = document.getElementById('menu-icon')!
     const closeIcon = document.getElementById('close-icon')!
 
     menuButton.addEventListener('click', () => {
-        if (pageNav.classList.contains('hidden')) {
-            gsap.fromTo(
-                '#page-nav',
-                {
-                    y: '-100%',
-                },
-                {
-                    opacity: 1,
-                    y: -1,
-                    ease: 'power4.out',
-                    duration: 0.6,
-                    onComplete: () => {},
-                }
-            )
-        }
-
         pageNav.classList.toggle('hidden')
         pageNav.classList.toggle('flex')
         menuIcon.classList.toggle('hidden')

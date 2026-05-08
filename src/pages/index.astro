@@ -92,60 +92,18 @@ const personSchema = JSON.stringify({
         <div
             class="grid justify-items-stretch sm:justify-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 w-full"
         >
-            <Preview src={Cobra} class="gallery-image opacity-0" />
-            <Preview src={One} class="gallery-image opacity-0" />
-            <Preview src={Dunes} class="gallery-image opacity-0" />
-            <Preview src={Pow} class="gallery-image opacity-0" />
-            <Preview src={Ball} class="gallery-image opacity-0" />
-            <Preview src={Easy} class="gallery-image opacity-0" />
-            <Preview src={Smile} class="gallery-image opacity-0" />
-            <Preview src={Three} class="gallery-image opacity-0" />
-            <Preview src={Code} class="gallery-image opacity-0" />
-            <Preview src={Two} class="gallery-image opacity-0" />
-            <Preview src={Hello} class="gallery-image opacity-0" />
-            <Preview src={Swirl} class="gallery-image opacity-0" />
+            <Preview src={Cobra} />
+            <Preview src={One} />
+            <Preview src={Dunes} />
+            <Preview src={Pow} />
+            <Preview src={Ball} />
+            <Preview src={Easy} />
+            <Preview src={Smile} />
+            <Preview src={Three} />
+            <Preview src={Code} />
+            <Preview src={Two} />
+            <Preview src={Hello} />
+            <Preview src={Swirl} />
         </div>
     </section>
-
-    <script>
-        import { fadeIn } from '../utils/animation'
-        import { gsap, ScrollTrigger } from '../utils/gsap'
-
-        fadeIn('.contact > *', '.contact', { startOffset: 50 })
-
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-        const to: gsap.TweenVars = {
-            opacity: 1,
-            y: 0,
-            filter: 'blur(0px) hue-rotate(0deg)',
-        }
-
-        if (prefersReducedMotion) {
-            gsap.to('.gallery-image', to)
-        } else {
-            ScrollTrigger.batch('.gallery-image', {
-                interval: 0.1,
-                start: 'top bottom-=20px',
-                once: true,
-                onEnter(elements) {
-                    gsap.fromTo(
-                        elements,
-                        {
-                            opacity: 0,
-                            y: '20%',
-                            filter: 'blur(10px) hue-rotate(180deg)',
-                        },
-                        {
-                            ...to,
-                            duration: 0.5,
-                            stagger: 0.3,
-                            ease: 'power1.out',
-                            grid: 'auto',
-                        }
-                    )
-                },
-            })
-        }
-    </script>
 </PageLayout>
