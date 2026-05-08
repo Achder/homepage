@@ -3,6 +3,43 @@ import PageLayout from '../layouts/PageLayout.astro'
 import Heading from '../components/Heading.astro'
 import Timeline from '../components/Timeline.astro'
 import TimelineEntry from '../components/TimelineEntry.astro'
+
+const siteUrl = Astro.site?.toString() ?? 'https://meerpohl.dev/'
+const pageUrl = new URL('what', siteUrl).toString()
+const pageSchema = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+        {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+                {
+                    '@type': 'ListItem',
+                    position: 1,
+                    name: 'Home',
+                    item: siteUrl,
+                },
+                {
+                    '@type': 'ListItem',
+                    position: 2,
+                    name: 'What I do',
+                    item: pageUrl,
+                },
+            ],
+        },
+        {
+            '@type': 'CollectionPage',
+            url: pageUrl,
+            name: 'JavaScript And TypeScript Projects',
+            description:
+                'Selected freelance and in-house JavaScript and TypeScript projects across React, NestJS, Nx monorepos, Docker, GraphQL, and cross-platform apps.',
+            about: {
+                '@type': 'Person',
+                name: 'Thomas Meerpohl',
+                url: siteUrl,
+            },
+        },
+    ],
+})
 ---
 
 <PageLayout
@@ -10,8 +47,11 @@ import TimelineEntry from '../components/TimelineEntry.astro'
     description="Selected freelance and in-house JavaScript and TypeScript projects across React, NestJS, Nx monorepos, Docker, GraphQL, and cross-platform apps."
     ogImagePath="/og/what.png"
 >
+    <Fragment slot="head">
+        <script is:inline type="application/ld+json" set:html={pageSchema} />
+    </Fragment>
     <div class="px-4 sm:px-10 grid gap-10 w-full max-w-350">
-        <Heading type="h2" class="text-7xl">What I do</Heading>
+        <Heading type="h1" class="text-7xl">What I do</Heading>
 
         <Timeline>
             <TimelineEntry
