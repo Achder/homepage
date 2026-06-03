@@ -14,15 +14,18 @@
         "@astrojs/rss": "^4.0.18",
         "@astrojs/sitemap": "^3.7.2",
         "@tailwindcss/vite": "4.2.4",
+        "@types/three": "^0.184.1",
         "astro": "^6.3.1",
         "colorjs.io": "^0.6.1",
         "jscolorengine": "^1.4.4",
         "marching-squares": "^1.0.0",
         "puppeteer": "^24.43.0",
         "simplex-noise": "^4.0.3",
-        "tailwindcss": "4.2.4"
+        "tailwindcss": "4.2.4",
+        "three": "^0.184.0"
     },
     "devDependencies": {
+        "@astrojs/check": "^0.9.9",
         "typescript": "^6.0.3"
     },
     "engines": {

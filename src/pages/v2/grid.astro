@@ -1,11 +1,11 @@
 ---
 import Slider from '../../components/Slider.astro'
 import Input from '../../components/Input.astro'
-import SvgPlayground from '../../layouts/SvgPlayground.astro'
+import ThreePlayground from '../../layouts/ThreePlayground.astro'
 import ControlSection from '../../components/ControlSection.astro'
 ---
 
-<SvgPlayground
+<ThreePlayground
     pageTitle="Grid SVG Generator V2 Preview | Thomas Meerpohl"
     pageDescription="Experimental SVG grid generator using noise, gradients, and downloadable generative line work."
     heading="Grid"
@@ -49,26 +49,127 @@ import ControlSection from '../../components/ControlSection.astro'
             <Input type="color" id="bg-end" label="Background End" value="#1b0029" />
         </ControlSection>
     </Fragment>
-</SvgPlayground>
+</ThreePlayground>
 <script>
-    import { initInteractiveSvg, type Size, clear } from '../../svg/svg'
+    import * as THREE from 'three'
+    import { initInteractiveThree, type Size } from '../../three/three'
     import { getInputValue } from '../../utils/controls'
-    import { drawRect } from '../../svg/rect'
-    import { createNoise3D } from 'simplex-noise'
-    import Color from 'colorjs.io'
-    import type { Point } from 'puppeteer'
-    import { drawPath } from '../../svg/path'
-    import { addMask } from '../../svg/mask'
-    import { createGradient } from '../../svg/gradient'
+    import { noiseGLSL } from '../../three/noise.glsl'
+    import type Color from 'colorjs.io'
 
-    const init = (svg: HTMLElement, size: Size) => {
+    // Shared GLSL: linear gradient parameter along a normalized direction, used
+    // by both the background quad and the gradient-colored grid lines.
+    const gradientGLSL = /* glsl */ `
+    float gradT(vec2 uv, float angleDeg) {
+        float a = radians(angleDeg);
+        vec2 dir = vec2(cos(a), sin(a));
+        return clamp(dot(uv - 0.5, dir) + 0.5, 0.0, 1.0);
+    }
+    `
+
+    const lineVertexShader = /* glsl */ `
+    uniform vec2 uResolution;
+    uniform vec2 uOffset;
+    uniform vec2 uAmp;
+    uniform float uScale;
+    uniform float uNoiseFreq;
+    uniform float uLacunarity;
+    uniform float uGain;
+    uniform float uTime;
+    uniform vec3 uSeed;
+    uniform int uOctaves;
+    uniform float uWidth;
+
+    attribute vec2 aStart;
+    attribute vec2 aEnd;
+
+    varying vec2 vPos;
+
+    ${noiseGLSL}
+
+    // Warp a normalized grid coordinate to a pixel-space position, matching the
+    // original SVG logic (offset + grid step + fbm displacement, then scaled
+    // around the canvas center).
+    vec2 warpPoint(vec2 idx) {
+        vec2 d = fbmWarp(idx, uNoiseFreq, uLacunarity, uGain, uTime, uSeed, uOctaves);
+        float x = uOffset.x + idx.x * uResolution.x + d.x * uAmp.x;
+        float y = uOffset.y + idx.y * uResolution.y + d.y * uAmp.y;
+        vec2 p = vec2(x, y);
+        return (p - uResolution * 0.5) * uScale + uResolution * 0.5;
+    }
+
+    void main() {
+        vec2 P0 = warpPoint(aStart);
+        vec2 P1 = warpPoint(aEnd);
+
+        float along = position.x; // 0 at start, 1 at end
+        float side = position.y;  // -0.5 / +0.5 across the stroke
+
+        vec2 dir = P1 - P0;
+        float len = length(dir);
+        vec2 ndir = len > 0.0 ? dir / len : vec2(1.0, 0.0);
+        vec2 normal = vec2(-ndir.y, ndir.x);
+
+        vec2 cur = mix(P0, P1, along) + normal * side * uWidth;
+        vPos = cur;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(cur, 0.0, 1.0);
+    }
+    `
+
+    const lineFragmentShader = /* glsl */ `
+    precision highp float;
+    uniform vec2 uResolution;
+    uniform vec3 uColorStart;
+    uniform vec3 uColorEnd;
+    uniform float uAngle;
+
+    varying vec2 vPos;
+
+    ${gradientGLSL}
+
+    void main() {
+        float t = gradT(vPos / uResolution, uAngle);
+        gl_FragColor = vec4(mix(uColorStart, uColorEnd, t), 1.0);
+    }
+    `
+
+    const bgVertexShader = /* glsl */ `
+    varying vec2 vUv;
+    void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+    `
+
+    const bgFragmentShader = /* glsl */ `
+    precision highp float;
+    uniform vec3 uColorStart;
+    uniform vec3 uColorEnd;
+    uniform float uAngle;
+    varying vec2 vUv;
+
+    ${gradientGLSL}
+
+    void main() {
+        float t = gradT(vUv, uAngle);
+        gl_FragColor = vec4(mix(uColorStart, uColorEnd, t), 1.0);
+    }
+    `
+
+    // Raw sRGB colors: disable three's color management so input hex values map
+    // straight to screen, matching the SVG page (and naive WebGL) behavior.
+    THREE.ColorManagement.enabled = false
+
+    const init = (renderer: THREE.WebGLRenderer, size: Size) => {
         function get<T>(id: string) {
-            return getInputValue<T>(id, () => render())
+            return getInputValue<T>(id, render)
         }
 
-        function getScaled(id: string, max: number) {
-            const value = getInputValue<number>(id, () => requestAnimationFrame(render))
-            return value * max
+        function getColor(id: string) {
+            const [r, g, b] = get<Color>(id).to('srgb').coords
+            const clamp = (v: number | null) => Math.min(1, Math.max(0, v ?? 0))
+            return new THREE.Color(clamp(r), clamp(g), clamp(b))
         }
 
         function getSeed() {
@@ -84,41 +185,126 @@ import ControlSection from '../../components/ControlSection.astro'
             return seed
         }
 
-        function generatePath(points: Point[]) {
-            let d = ''
+        const scene = new THREE.Scene()
+        // y points downward (top=0, bottom=h) to match the SVG coordinate space.
+        const camera = new THREE.OrthographicCamera(0, size.w, 0, size.h, -1, 1)
 
-            for (let idx = 0; idx < points.length; idx++) {
-                const point = points[idx]
+        // --- Background gradient quad ---
+        const bgGeometry = new THREE.PlaneGeometry(size.w, size.h)
+        bgGeometry.translate(size.w / 2, size.h / 2, 0)
+        const bgMaterial = new THREE.ShaderMaterial({
+            vertexShader: bgVertexShader,
+            fragmentShader: bgFragmentShader,
+            side: THREE.DoubleSide,
+            depthTest: false,
+            depthWrite: false,
+            uniforms: {
+                uColorStart: { value: new THREE.Color() },
+                uColorEnd: { value: new THREE.Color() },
+                uAngle: { value: 0 },
+            },
+        })
+        const bg = new THREE.Mesh(bgGeometry, bgMaterial)
+        bg.renderOrder = 0
+        scene.add(bg)
 
-                if (idx === 0) {
-                    d += `M ${point.x} ${point.y} `
-                } else {
-                    d += `L ${point.x} ${point.y} `
+        // --- Grid lines (fat lines via instanced quads) ---
+        // Base unit quad: x = along (0|1), y = side (-0.5|0.5).
+        const quad = new Float32Array([
+            0, -0.5, 0, 1, -0.5, 0, 1, 0.5, 0, 0, -0.5, 0, 1, 0.5, 0, 0, 0.5, 0,
+        ])
+
+        function makeLineMaterial() {
+            return new THREE.ShaderMaterial({
+                vertexShader: lineVertexShader,
+                fragmentShader: lineFragmentShader,
+                side: THREE.DoubleSide,
+                depthTest: false,
+                depthWrite: false,
+                uniforms: {
+                    uResolution: { value: new THREE.Vector2(size.w, size.h) },
+                    uOffset: { value: new THREE.Vector2() },
+                    uAmp: { value: new THREE.Vector2() },
+                    uScale: { value: 1 },
+                    uNoiseFreq: { value: 1 },
+                    uLacunarity: { value: 2 },
+                    uGain: { value: 0.5 },
+                    uTime: { value: 0 },
+                    uSeed: { value: new THREE.Vector3() },
+                    uOctaves: { value: 1 },
+                    uWidth: { value: 1 },
+                    uColorStart: { value: new THREE.Color() },
+                    uColorEnd: { value: new THREE.Color() },
+                    uAngle: { value: 0 },
+                },
+            })
+        }
+
+        const hMaterial = makeLineMaterial()
+        const vMaterial = makeLineMaterial()
+        const lineMaterials = [hMaterial, vMaterial]
+
+        let hMesh: THREE.Mesh | null = null
+        let vMesh: THREE.Mesh | null = null
+        let builtXShapes = -1
+        let builtYShapes = -1
+
+        function buildLineMesh(material: THREE.ShaderMaterial, starts: number[], ends: number[]) {
+            const geometry = new THREE.InstancedBufferGeometry()
+            geometry.setAttribute('position', new THREE.BufferAttribute(quad, 3))
+            geometry.setAttribute('aStart', new THREE.InstancedBufferAttribute(new Float32Array(starts), 2))
+            geometry.setAttribute('aEnd', new THREE.InstancedBufferAttribute(new Float32Array(ends), 2))
+            geometry.instanceCount = starts.length / 2
+            const mesh = new THREE.Mesh(geometry, material)
+            mesh.renderOrder = 1
+            mesh.frustumCulled = false
+            return mesh
+        }
+
+        // Rebuild line topology only when the shape counts change.
+        function rebuildLines(xShapes: number, yShapes: number) {
+            if (xShapes === builtXShapes && yShapes === builtYShapes) return
+            builtXShapes = xShapes
+            builtYShapes = yShapes
+
+            if (hMesh) {
+                hMesh.geometry.dispose()
+                scene.remove(hMesh)
+            }
+            if (vMesh) {
+                vMesh.geometry.dispose()
+                scene.remove(vMesh)
+            }
+
+            // Horizontal segments: connect neighbors along x within each row.
+            const hStarts: number[] = []
+            const hEnds: number[] = []
+            for (let yIdx = 0; yIdx < yShapes; yIdx++) {
+                const yt = yIdx / yShapes
+                for (let xIdx = 0; xIdx < xShapes - 1; xIdx++) {
+                    hStarts.push(xIdx / xShapes, yt)
+                    hEnds.push((xIdx + 1) / xShapes, yt)
                 }
             }
 
-            return d
+            // Vertical segments: connect neighbors along y within each column.
+            const vStarts: number[] = []
+            const vEnds: number[] = []
+            for (let xIdx = 0; xIdx < xShapes; xIdx++) {
+                const xt = xIdx / xShapes
+                for (let yIdx = 0; yIdx < yShapes - 1; yIdx++) {
+                    vStarts.push(xt, yIdx / yShapes)
+                    vEnds.push(xt, (yIdx + 1) / yShapes)
+                }
+            }
+
+            hMesh = buildLineMesh(hMaterial, hStarts, hEnds)
+            vMesh = buildLineMesh(vMaterial, vStarts, vEnds)
+            scene.add(hMesh, vMesh)
         }
 
-        function scaleAroundCenter(p: Point, factor: number) {
-            // translate
-            p.x -= size.w / 2
-            p.y -= size.h / 2
-
-            p.x *= factor
-            p.y *= factor
-
-            p.x += size.w / 2
-            p.y += size.h / 2
-
-            return p
-        }
-
-        const render = () => {
-            clear(svg)
-
+        function render() {
             const seed = getSeed()
-            const noise = createNoise3D(() => seed)
 
             const noiseFreq = get<number>('noise-freq')
             const time = get<number>('time')
@@ -127,126 +313,64 @@ import ControlSection from '../../components/ControlSection.astro'
             const lacunarity = get<number>('lacunarity')
             const gain = get<number>('gain')
 
-            const xOffset = getScaled('x-offset', size.w)
-            const yOffset = getScaled('y-offset', size.h)
+            const xOffset = get<number>('x-offset') * size.w
+            const yOffset = get<number>('y-offset') * size.h
 
             const xShapes = get<number>('x-shapes')
             const yShapes = get<number>('y-shapes')
 
-            const xAmp = getScaled('x-amp', size.w)
-            const yAmp = getScaled('y-amp', size.h)
+            const xAmp = get<number>('x-amp') * size.w
+            const yAmp = get<number>('y-amp') * size.h
 
-            const xStrokeWidth = getScaled('x-stroke-width', size.w / 100)
-            const yStrokeWidth = getScaled('y-stroke-width', size.w / 100)
+            const xStrokeWidth = get<number>('x-stroke-width') * (size.w / 100)
+            const yStrokeWidth = get<number>('y-stroke-width') * (size.w / 100)
 
             const gridAngle = get<number>('grid-angle')
-            const gridStart = get<Color>('grid-start')
-            const gridEnd = get<Color>('grid-end')
+            const gridStart = getColor('grid-start')
+            const gridEnd = getColor('grid-end')
 
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<Color>('bg-start')
-            const bgEnd = get<Color>('bg-end')
+            const bgStart = getColor('bg-start')
+            const bgEnd = getColor('bg-end')
 
-            const mask = addMask(svg, {
-                id: 'mask',
-                maskType: 'luminance',
-            })
+            rebuildLines(xShapes, yShapes)
 
-            createGradient(svg, {
-                id: 'bg-gradient',
-                colors: [bgStart, bgEnd],
-                stops: 10,
-                angle: bgAngle,
-            })
+            bgMaterial.uniforms.uColorStart.value = bgStart
+            bgMaterial.uniforms.uColorEnd.value = bgEnd
+            bgMaterial.uniforms.uAngle.value = bgAngle
 
-            drawRect(svg, {
-                x: 0,
-                y: 0,
-                width: size.w,
-                height: size.h,
-                fill: 'url(#bg-gradient)',
-            })
-
-            const grid: Point[][] = []
-            for (let yIdx = 0; yIdx < yShapes; yIdx++) {
-                const points: Point[] = []
-                for (let xIdx = 0; xIdx < xShapes; xIdx++) {
-                    const xt = xIdx / xShapes
-                    const yt = yIdx / yShapes
-
-                    let sumx = 0
-                    let sumy = 0
-                    let freq = noiseFreq
-                    let amp = 0.5
-
-                    for (let o = 0; o < octaves; o++) {
-                        sumx += amp * noise(xt * freq, yt * freq, time)
-                        sumy += amp * noise(xt * freq + 1000, yt * freq + 1000, time)
-                        freq *= lacunarity
-                        amp *= gain
-                    }
-
-                    const xStep = size.w / xShapes
-                    const yStep = size.h / yShapes
-
-                    const x = xOffset + xIdx * xStep + sumx * xAmp
-                    const y = yOffset + yIdx * yStep + sumy * yAmp
-
-                    points.push(scaleAroundCenter({ x, y }, scale))
-                }
-
-                grid.push(points)
+            for (const m of lineMaterials) {
+                const u = m.uniforms
+                u.uOffset.value.set(xOffset, yOffset)
+                u.uAmp.value.set(xAmp, yAmp)
+                u.uScale.value = scale
+                u.uNoiseFreq.value = noiseFreq
+                u.uLacunarity.value = lacunarity
+                u.uGain.value = gain
+                u.uTime.value = time
+                u.uSeed.value.set(seed, seed, 0)
+                u.uOctaves.value = octaves
+                u.uColorStart.value = gridStart
+                u.uColorEnd.value = gridEnd
+                u.uAngle.value = gridAngle
             }
+            hMaterial.uniforms.uWidth.value = xStrokeWidth
+            vMaterial.uniforms.uWidth.value = yStrokeWidth
 
-            // horizontal lines
-            let hd = ''
-            const maxHLines = grid.length
-            for (let idx = 0; idx < maxHLines; idx++) {
-                const hLine = grid[idx]
-                hd += generatePath(hLine)
-            }
-
-            drawPath(mask, {
-                d: hd,
-                stroke: 'white',
-                strokeWidth: xStrokeWidth,
-            })
-
-            // vertical lines
-            let vd = ''
-            const maxVLines = grid[0].length
-            for (let idx = 0; idx < maxVLines; idx++) {
-                const vLine = grid.map((hLine) => hLine[idx])
-                vd += generatePath(vLine)
-            }
-
-            drawPath(mask, {
-                d: vd,
-                stroke: 'white',
-                strokeWidth: yStrokeWidth,
-            })
-
-            createGradient(svg, {
-                id: 'grid-gradient',
-                colors: [gridStart, gridEnd],
-                stops: 10,
-                angle: gridAngle,
-            })
-
-            drawRect(svg, {
-                x: 0,
-                y: 0,
-                width: size.w,
-                height: size.h,
-                fill: 'url(#grid-gradient)',
-                maskId: mask.id,
-            })
+            renderer.render(scene, camera)
         }
 
-        render()
+        function dispose() {
+            bgGeometry.dispose()
+            bgMaterial.dispose()
+            hMesh?.geometry.dispose()
+            vMesh?.geometry.dispose()
+            hMaterial.dispose()
+            vMaterial.dispose()
+        }
+
+        return { render, dispose }
     }
 
-    initInteractiveSvg({
-        init,
-    })
+    initInteractiveThree({ init })
 </script>

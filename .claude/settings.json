@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npx astro *)",
+      "Bash(npm i *)",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(cp /tmp/shot.mjs /Users/thomas/Dev/homepage/_shot.mjs)",
+      "Bash(node /Users/thomas/Dev/homepage/_shot.mjs)",
+      "Bash(pkill -f \"astro dev\")",
+      "Bash(rm -f /tmp/astro-dev.log)"
+    ]
+  }
+}
