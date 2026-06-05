@@ -9,7 +9,9 @@
       "Bash(cp /tmp/shot.mjs /Users/thomas/Dev/homepage/_shot.mjs)",
       "Bash(node /Users/thomas/Dev/homepage/_shot.mjs)",
       "Bash(pkill -f \"astro dev\")",
-      "Bash(rm -f /tmp/astro-dev.log)"
+      "Bash(rm -f /tmp/astro-dev.log)",
+      "WebFetch(domain:fit.meerpohl.dev)",
+      "WebFetch(domain:chochoose.meerpohl.dev)"
     ]
   }
 }

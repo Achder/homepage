@@ -17,6 +17,26 @@ import PageLayout from '../layouts/PageLayout.astro'
 import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
 import About from '../components/About.astro'
+import { Image } from 'astro:assets'
+import FitTrackOg from '../images/fittrack-og.png'
+import ChoChooseOg from '../images/chochoose-og.png'
+
+const sideProjects = [
+    {
+        name: 'FitTrack',
+        href: 'https://fit.meerpohl.dev',
+        image: FitTrackOg,
+        description:
+            'A fitness tracker that uses AI to create personalized training plans based on your goals and fitness level, then lets you keep up the streak with simple checklists.',
+    },
+    {
+        name: 'cho-choose',
+        href: 'https://chochoose.meerpohl.dev',
+        image: ChoChooseOg,
+        description:
+            'A collaborative polling app for groups. Spin up a poll in seconds, share a link, and let everyone rate the options until the best choice rises to the top.',
+    },
+]
 
 const siteUrl = Astro.site?.toString() ?? 'https://meerpohl.dev'
 const personSchema = JSON.stringify({
@@ -71,7 +91,9 @@ const personSchema = JSON.stringify({
                     <span class="block text-3xl text-shadow-lg/10 font-rethink font-black no-underline">
                         Hi, I'm your freelance webdeveloper
                     </span>
-                    <span class="block leading-none text-shadow-lg/10 font-rethink font-extrabold no-underline text-7xl">
+                    <span
+                        class="block leading-none text-shadow-lg/10 font-rethink font-extrabold no-underline text-7xl"
+                    >
                         Thomas Meerpohl
                     </span>
                 </h1>
@@ -81,6 +103,42 @@ const personSchema = JSON.stringify({
             <div class="grid gap-10 max-w-3xl contact">
                 <About />
             </div>
+        </div>
+    </section>
+
+    <section
+        class="px-4 sm:px-10 grid gap-20 pt-40 bg-dark justify-self-stretch grid-cols-[minmax(0,1fr)] overflow-clip"
+    >
+        <Heading type="h2">Side Projects</Heading>
+
+        <div class="grid gap-10 grid-cols-1 lg:grid-cols-2 w-full">
+            {
+                sideProjects.map((project) => (
+                    <a
+                        href={project.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="group grid content-start gap-6 bg-brand rounded-sm p-6 sm:p-8 shadow-lg/30 shadow-black transition duration-200 ease-out hover:scale-[1.01] hover:shadow-2xl/50"
+                    >
+                        <Image
+                            src={project.image}
+                            alt={`${project.name} preview`}
+                            class="aspect-1200/630 w-full rounded-sm object-cover ring-1 ring-black/20"
+                            loading="eager"
+                        />
+                        <Heading type="h3" class="not-italic font-rethink flex items-center gap-3">
+                            {project.name}
+                            <span
+                                aria-hidden="true"
+                                class="text-3xl leading-none transition-transform duration-200 group-hover:translate-x-1"
+                            >
+                                →
+                            </span>
+                        </Heading>
+                        <p class="text-white">{project.description}</p>
+                    </a>
+                ))
+            }
         </div>
     </section>
 
