@@ -9,4 +9,36 @@ type Props = {
 const { id, src, class: className } = Astro.props
 ---
 
-<Image id={id} class:list={['bg-black aspect-[1/1.414] rounded-sm', className]} src={src} alt="" loading="eager" />
+<button
+    type="button"
+    aria-label="Open image"
+    class="gallery-item group relative block w-full cursor-zoom-in overflow-hidden rounded-sm bg-black aspect-[1/1.414] transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+>
+    <Image
+        id={id}
+        class:list={['h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105', className]}
+        src={src}
+        alt=""
+        loading="eager"
+    />
+    <span
+        class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/30"
+    >
+        <svg
+            class="size-12 scale-75 text-white opacity-0 drop-shadow-lg transition duration-200 group-hover:scale-100 group-hover:opacity-100"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+        >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+    </span>
+</button>

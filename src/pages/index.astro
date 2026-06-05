@@ -13,6 +13,7 @@ import Pow from '../images/pow.jpeg'
 import Dunes from '../images/dunes.jpg'
 import Swirl from '../images/swirl.jpeg'
 import Preview from '../components/Preview.astro'
+import Lightbox from '../components/Lightbox.astro'
 import PageLayout from '../layouts/PageLayout.astro'
 import LinkButton from '../components/LinkButton.astro'
 import Heading from '../components/Heading.astro'
@@ -106,9 +107,7 @@ const personSchema = JSON.stringify({
         </div>
     </section>
 
-    <section
-        class="px-4 sm:px-10 grid gap-20 pt-40 bg-dark justify-self-stretch grid-cols-[minmax(0,1fr)] overflow-clip"
-    >
+    <section class="px-4 sm:px-10 grid gap-20 pt-40 bg-dark justify-self-stretch grid-cols-[minmax(0,1fr)]">
         <Heading type="h2">Side Projects</Heading>
 
         <div class="grid gap-10 grid-cols-1 lg:grid-cols-2 w-full">
@@ -164,4 +163,6 @@ const personSchema = JSON.stringify({
             <Preview src={Swirl} />
         </div>
     </section>
+
+    <Lightbox />
 </PageLayout>
