@@ -1,0 +1,169 @@
+---
+import SplatViewer from '../layouts/SplatViewer.astro'
+import ControlSection from '../components/ControlSection.astro'
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Button from '../components/Button.astro'
+---
+
+<SplatViewer
+    pageTitle="SuperSplat Viewer | Thomas Meerpohl"
+    pageDescription="Interactive 3D Gaussian Splatting viewer rendering a SuperSplat (.sog) scene with three.js and Spark."
+    heading="Splat"
+>
+    <Fragment slot="controls">
+        <ControlSection>
+            <Slider id="opacity" name="Opacity" min={0} max={1} value={1} step={0.01} reset={1} />
+            <Slider id="splat-scale" name="Splat size" min={0.2} max={3} value={1} step={0.01} reset={1} />
+            <div class="grid grid-cols-2 gap-3">
+                <Input type="color" id="tint" label="Tint" value="#ffffff" />
+                <Input type="color" id="bg" label="Background" value="#000000" />
+            </div>
+        </ControlSection>
+        <ControlSection>
+            <Slider id="fov" name="Field of view" min={20} max={180} value={60} step={1} reset={60} />
+            <label class="font-bold text-xs flex items-center justify-between gap-2 text-dark">
+                Auto-rotate
+                <input id="auto-rotate" type="checkbox" class="size-4 accent-brand" />
+            </label>
+            <Slider id="rotate-speed" name="Rotate speed" min={0.5} max={8} value={2} step={0.1} reset={2} />
+        </ControlSection>
+        <ControlSection>
+            <div class="grid grid-cols-2 gap-3">
+                <Button id="reset-view">Reset view</Button>
+                <Button id="screenshot">Snapshot</Button>
+            </div>
+        </ControlSection>
+    </Fragment>
+</SplatViewer>
+
+<script>
+    import * as THREE from 'three'
+    import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark'
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+
+    const SPLAT_URL = 'https://meerpohl-public.fsn1.your-objectstorage.com/dingo-free.sog'
+
+    const container = document.getElementById('container')!
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement
+    const status = document.getElementById('splat-status')!
+
+    const setStatus = (text: string) => {
+        status.textContent = text
+    }
+
+    // preserveDrawingBuffer keeps the framebuffer readable so "Snapshot" can capture it.
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setSize(container.clientWidth, container.clientHeight, false)
+    renderer.setClearColor('#000000')
+
+    const scene = new THREE.Scene()
+
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.01, 1000)
+    camera.position.set(0, 0, 4)
+
+    const spark = new SparkRenderer({ renderer })
+    scene.add(spark)
+
+    // Spark renders Gaussian splats as a SplatMesh in the regular scene graph.
+    // SuperSplat exports are typically Y-down, so flip to stand the scene upright.
+    const splat = new SplatMesh({
+        url: SPLAT_URL,
+        onProgress: (event: ProgressEvent) => {
+            if (event.lengthComputable) {
+                setStatus(`Loading… ${Math.round((event.loaded / event.total) * 100)}%`)
+            }
+        },
+        onLoad: () => setStatus(''),
+    })
+    splat.rotation.x = Math.PI
+    scene.add(splat)
+
+    // Surface a friendly hint when the splat can't be loaded rather than failing silently.
+    fetch(SPLAT_URL, { method: 'HEAD' })
+        .then((res) => {
+            if (!res.ok) setStatus(`Could not load splat (${res.status}): ${SPLAT_URL}`)
+        })
+        .catch(() => setStatus('Could not load splat — check the URL and its CORS policy.'))
+
+    const controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+
+    // Snapshot the default framing so "Reset view" can restore it.
+    const defaultCameraPosition = camera.position.clone()
+    const defaultTarget = controls.target.clone()
+
+    renderer.setAnimationLoop(() => {
+        controls.update()
+        renderer.render(scene, camera)
+    })
+
+    const resize = () => {
+        const w = container.clientWidth
+        const h = container.clientHeight
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+        renderer.setSize(w, h, false)
+    }
+    new ResizeObserver(resize).observe(container)
+
+    // Scene controls — plain listeners drive the continuous render loop directly.
+    const opacity = document.getElementById('opacity') as HTMLInputElement
+    opacity.addEventListener('input', () => {
+        splat.opacity = opacity.valueAsNumber
+    })
+
+    const tint = document.getElementById('tint') as HTMLInputElement
+    tint.addEventListener('input', () => {
+        splat.recolor = new THREE.Color(tint.value)
+    })
+
+    const bg = document.getElementById('bg') as HTMLInputElement
+    bg.addEventListener('input', () => {
+        renderer.setClearColor(bg.value)
+    })
+
+    // Uniformly scale the splat mesh to fatten or shrink every gaussian.
+    const splatScale = document.getElementById('splat-scale') as HTMLInputElement
+    splatScale.addEventListener('input', () => {
+        splat.scale.setScalar(splatScale.valueAsNumber)
+    })
+
+    const fov = document.getElementById('fov') as HTMLInputElement
+    fov.addEventListener('input', () => {
+        camera.fov = fov.valueAsNumber
+        camera.updateProjectionMatrix()
+    })
+
+    const autoRotate = document.getElementById('auto-rotate') as HTMLInputElement
+    autoRotate.addEventListener('change', () => {
+        controls.autoRotate = autoRotate.checked
+    })
+
+    const rotateSpeed = document.getElementById('rotate-speed') as HTMLInputElement
+    controls.autoRotateSpeed = rotateSpeed.valueAsNumber
+    rotateSpeed.addEventListener('input', () => {
+        controls.autoRotateSpeed = rotateSpeed.valueAsNumber
+    })
+
+    document.getElementById('reset-view')!.addEventListener('click', () => {
+        camera.position.copy(defaultCameraPosition)
+        controls.target.copy(defaultTarget)
+        controls.update()
+    })
+
+    // Render one fresh frame, then pull the canvas down as a PNG.
+    document.getElementById('screenshot')!.addEventListener('click', () => {
+        renderer.render(scene, camera)
+        canvas.toBlob((blob) => {
+            if (!blob) return
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = `splat-${Date.now()}.png`
+            link.click()
+            URL.revokeObjectURL(url)
+        })
+    })
+</script>

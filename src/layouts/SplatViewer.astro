@@ -1,0 +1,56 @@
+---
+import PageLayout from './PageLayout.astro'
+import Heading from '../components/Heading.astro'
+
+type Props = {
+    pageTitle: string
+    pageDescription: string
+    heading: string
+    canonicalPath?: string
+    ogTitle?: string
+    ogDescription?: string
+    ogImageTarget?: string
+    robots?: string
+}
+
+const {
+    pageTitle,
+    pageDescription,
+    heading,
+    canonicalPath,
+    ogTitle,
+    ogDescription,
+    ogImageTarget = '#container',
+    robots,
+} = Astro.props
+---
+
+<PageLayout
+    title={pageTitle}
+    description={pageDescription}
+    canonicalPath={canonicalPath}
+    ogTitle={ogTitle}
+    ogDescription={ogDescription}
+    ogImageTarget={ogImageTarget}
+    robots={robots}
+>
+    <slot name="head" slot="head" />
+    <section class="px-4 sm:px-10 grid gap-6 w-full max-w-350">
+        <Heading type="h1">{heading}</Heading>
+
+        <!-- Immersive 3D stage with an overlaid, floating controls panel -->
+        <div
+            id="container"
+            class="relative h-[calc(100dvh-160px)] min-h-100 w-full overflow-clip rounded-sm bg-dark shadow-lg outline-4 -outline-offset-4 outline-color"
+        >
+            <canvas id="canvas" class="block h-full w-full touch-none"></canvas>
+
+            <div class="pointer-events-none absolute inset-0 p-4 flex justify-end">
+                <div class="pointer-events-auto grid w-full max-w-3xs content-start gap-2">
+                    <slot name="controls" />
+                    <p id="splat-status" class="text-xs font-bold text-white/70" aria-live="polite"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+</PageLayout>

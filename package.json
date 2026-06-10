@@ -13,6 +13,7 @@
         "@astrojs/node": "^10.1.0",
         "@astrojs/rss": "^4.0.18",
         "@astrojs/sitemap": "^3.7.2",
+        "@sparkjsdev/spark": "^2.1.0",
         "@tailwindcss/vite": "4.2.4",
         "@types/three": "^0.184.1",
         "astro": "^6.3.1",
