@@ -1,0 +1,415 @@
+---
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Select from '../components/Select.astro'
+import ThreePlayground from '../layouts/ThreePlayground.astro'
+import ControlSection from '../components/ControlSection.astro'
+---
+
+<ThreePlayground
+    pageTitle="Image Dithering Tool | Thomas Meerpohl"
+    pageDescription="Turn any image into a black & white dithered rendering. Ordered, blue-noise and error-diffusion algorithms with live fine-tuning controls."
+    heading="Dither"
+    robots="noindex,follow"
+    colorspace={false}
+    softproof={false}
+>
+    <Fragment slot="controls">
+        <ControlSection>
+            <label
+                for="file"
+                class="px-8 py-2 font-bold text-xs tracking-widest bg-dark hover:bg-brand text-brand hover:text-dark transition-colors rounded-sm text-center cursor-pointer"
+            >
+                Upload image
+            </label>
+            <input id="file" type="file" accept="image/*" hidden />
+            <p class="text-xs text-dark/70">
+                Or drop an image onto the canvas. Settings are saved in the URL; the image is not.
+            </p>
+        </ControlSection>
+
+        <ControlSection>
+            <Slider id="brightness" min={-1} max={1} value={0} step={0.01} reset={0} name="Brightness" />
+            <Slider id="contrast" min={0} max={3} value={1} step={0.01} reset={1} name="Contrast" />
+            <Slider id="gamma" min={0.1} max={3} value={1} step={0.01} reset={1} name="Gamma" />
+            <Select id="invert" label="Invert" class="col-span-3">
+                <option value="off" selected>off</option>
+                <option value="on">on</option>
+            </Select>
+        </ControlSection>
+
+        <ControlSection>
+            <Select id="algorithm" label="Algorithm" class="col-span-3">
+                <option value="bayer2">Bayer 2×2</option>
+                <option value="bayer4">Bayer 4×4</option>
+                <option value="bayer8">Bayer 8×8</option>
+                <option value="blue">Blue noise</option>
+                <option value="white">White noise</option>
+                <option value="floyd-steinberg">Floyd–Steinberg</option>
+                <option value="atkinson" selected>Atkinson</option>
+            </Select>
+            <Slider id="threshold" min={0} max={1} value={0.9} step={0.001} reset={0.5} name="Threshold" />
+            <Slider id="amount" min={0} max={1} value={1} step={0.001} reset={1} name="Dither Amount" />
+            <Slider id="pixel-scale" min={1} max={16} value={1} step={1} reset={1} name="Pixel Scale" />
+        </ControlSection>
+
+        <ControlSection class="grid-cols-2">
+            <Input type="color" id="ink" label="Ink" value="#2e2e2e" />
+            <Input type="color" id="paper" label="Paper" value="#ff9500" />
+        </ControlSection>
+    </Fragment>
+</ThreePlayground>
+
+<script>
+    import * as THREE from 'three'
+    import Color from 'colorjs.io'
+    import { getInputValue } from '../utils/controls'
+    import { undo, redo } from '../utils/state'
+    import { ditherVertexShader, ditherFragmentShader } from '../three/dither.glsl'
+    import type { DitherWorkerRequest, DitherWorkerResponse } from '../workers/dither-worker'
+
+    // Raw sRGB colors: literal hex values map straight to screen (matches grid).
+    THREE.ColorManagement.enabled = false
+
+    // Ordered/noise modes resolve to a shader algorithm index; the rest run on
+    // the CPU worker and feed a precomputed mask.
+    const ORDERED: Record<string, number> = { bayer2: 0, bayer4: 1, bayer8: 2, blue: 3, white: 4 }
+    const CONTROL_IDS = [
+        'brightness',
+        'contrast',
+        'gamma',
+        'invert',
+        'algorithm',
+        'threshold',
+        'amount',
+        'pixel-scale',
+        'ink',
+        'paper',
+    ]
+
+    const container = document.getElementById('container')!
+    const canvas = document.getElementById('canvas') as HTMLCanvasElement
+    const fileInput = document.getElementById('file') as HTMLInputElement
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    const scene = new THREE.Scene()
+    const camera = new THREE.Camera() // vertex shader writes clip space directly
+    const uniforms = {
+        uImage: { value: null as THREE.Texture | null },
+        uMask: { value: null as THREE.Texture | null },
+        uImageSize: { value: new THREE.Vector2(1, 1) },
+        uCanvasSize: { value: new THREE.Vector2(1, 1) },
+        uHasImage: { value: 0 },
+        uMode: { value: 0 },
+        uAlgorithm: { value: 1 },
+        uBrightness: { value: 0 },
+        uContrast: { value: 1 },
+        uGamma: { value: 1 },
+        uInvert: { value: 0 },
+        uThreshold: { value: 0.5 },
+        uAmount: { value: 1 },
+        uPixelScale: { value: 1 },
+        uInk: { value: new THREE.Color(0, 0, 0) },
+        uPaper: { value: new THREE.Color(1, 1, 1) },
+    }
+    const material = new THREE.ShaderMaterial({
+        vertexShader: ditherVertexShader,
+        fragmentShader: ditherFragmentShader,
+        uniforms,
+    })
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material))
+
+    const u = uniforms
+
+    let imageEl: HTMLImageElement | null = null
+    let imageTexture: THREE.Texture | null = null
+    let maskTexture: THREE.DataTexture | null = null
+
+    function get<T>(id: string) {
+        return getInputValue<T>(id, render)
+    }
+
+    function getColor(id: string) {
+        const [r, g, b] = get<Color>(id).to('srgb').coords
+        const clamp = (v: number | null) => Math.min(1, Math.max(0, v ?? 0))
+        return new THREE.Color(clamp(r), clamp(g), clamp(b))
+    }
+
+    function draw() {
+        renderer.setRenderTarget(null)
+        renderer.render(scene, camera)
+    }
+
+    // --- CPU error diffusion via worker (debounced) ---
+    const worker = new Worker(new URL('../workers/dither-worker.ts', import.meta.url), { type: 'module' })
+    const offscreen = document.createElement('canvas')
+    const offCtx = offscreen.getContext('2d', { willReadFrequently: true })!
+    let reqId = 0
+    let pendingId = -1
+    let diffusionTimer: number | undefined
+
+    worker.onmessage = (event: MessageEvent<DitherWorkerResponse>) => {
+        const { id, width, height, mask } = event.data
+        if (id !== pendingId) return // a newer request superseded this one
+        updateMaskTexture(width, height, mask)
+        u.uMode.value = 1
+        draw()
+    }
+
+    function updateMaskTexture(w: number, h: number, mask: Uint8ClampedArray) {
+        if (maskTexture && (maskTexture.image.width !== w || maskTexture.image.height !== h)) {
+            maskTexture.dispose()
+            maskTexture = null
+        }
+        if (!maskTexture) {
+            maskTexture = new THREE.DataTexture(mask, w, h, THREE.RedFormat, THREE.UnsignedByteType)
+            maskTexture.magFilter = THREE.NearestFilter
+            maskTexture.minFilter = THREE.NearestFilter
+            u.uMask.value = maskTexture
+        } else {
+            maskTexture.image.data = mask
+        }
+        maskTexture.needsUpdate = true
+    }
+
+    type DiffusionParams = {
+        algorithm: 'floyd-steinberg' | 'atkinson'
+        brightness: number
+        contrast: number
+        gamma: number
+        invert: number
+        threshold: number
+        pixelScale: number
+    }
+
+    function requestDiffusion(params: DiffusionParams) {
+        window.clearTimeout(diffusionTimer)
+        diffusionTimer = window.setTimeout(() => runDiffusion(params), 120)
+    }
+
+    function runDiffusion(params: DiffusionParams) {
+        if (!imageEl) return
+        const imgW = imageEl.naturalWidth
+        const imgH = imageEl.naturalHeight
+        // Match the on-screen dot size: a cell is `pixelScale` canvas px, which
+        // maps back to `pixelScale / fitScale` source px.
+        const fitScale = Math.min(u.uCanvasSize.value.x / imgW, u.uCanvasSize.value.y / imgH)
+        const cellSrcPx = Math.max(1, params.pixelScale / Math.max(fitScale, 1e-6))
+        const w = Math.max(1, Math.round(imgW / cellSrcPx))
+        const h = Math.max(1, Math.round(imgH / cellSrcPx))
+
+        offscreen.width = w
+        offscreen.height = h
+        offCtx.clearRect(0, 0, w, h)
+        offCtx.drawImage(imageEl, 0, 0, w, h)
+        const data = offCtx.getImageData(0, 0, w, h)
+
+        pendingId = ++reqId
+        const message: DitherWorkerRequest = {
+            id: pendingId,
+            width: w,
+            height: h,
+            pixels: data.data,
+            algorithm: params.algorithm,
+            brightness: params.brightness,
+            contrast: params.contrast,
+            gamma: params.gamma,
+            invert: params.invert,
+            threshold: params.threshold,
+        }
+        worker.postMessage(message, [data.data.buffer])
+    }
+
+    function render() {
+        const brightness = get<number>('brightness')
+        const contrast = get<number>('contrast')
+        const gamma = get<number>('gamma')
+        const invert = get<string>('invert') === 'on' ? 1 : 0
+        const algorithm = get<string>('algorithm')
+        const threshold = get<number>('threshold')
+        const amount = get<number>('amount')
+        const pixelScale = Math.max(1, get<number>('pixel-scale'))
+
+        u.uBrightness.value = brightness
+        u.uContrast.value = contrast
+        u.uGamma.value = gamma
+        u.uInvert.value = invert
+        u.uThreshold.value = threshold
+        u.uAmount.value = amount
+        u.uPixelScale.value = pixelScale
+        u.uInk.value = getColor('ink')
+        u.uPaper.value = getColor('paper')
+        u.uHasImage.value = imageTexture ? 1 : 0
+
+        if (algorithm in ORDERED) {
+            u.uMode.value = 0
+            u.uAlgorithm.value = ORDERED[algorithm]
+            draw()
+        } else {
+            // Diffusion: keep showing a quick threshold preview until the worker
+            // returns the real mask (avoids a blank flash on first switch).
+            if (u.uMode.value === 1 && maskTexture) {
+                draw()
+            } else {
+                u.uMode.value = 0
+                u.uAlgorithm.value = ORDERED.bayer4
+                draw()
+            }
+            requestDiffusion({
+                algorithm: algorithm as DiffusionParams['algorithm'],
+                brightness,
+                contrast,
+                gamma,
+                invert,
+                threshold,
+                pixelScale,
+            })
+        }
+    }
+
+    // --- image loading ---
+    function applyImage(img: HTMLImageElement) {
+        imageTexture?.dispose()
+        imageTexture = new THREE.Texture(img)
+        imageTexture.magFilter = THREE.LinearFilter
+        imageTexture.minFilter = THREE.LinearFilter
+        imageTexture.generateMipmaps = false
+        imageTexture.needsUpdate = true
+        imageEl = img
+        u.uImage.value = imageTexture
+        u.uImageSize.value.set(img.naturalWidth, img.naturalHeight)
+        pendingId = -1 // invalidate any in-flight diffusion for the old image
+        u.uMode.value = 0
+        render()
+    }
+
+    function loadImageFromFile(file: File) {
+        const url = URL.createObjectURL(file)
+        const img = new Image()
+        img.onload = () => {
+            URL.revokeObjectURL(url)
+            applyImage(img)
+        }
+        img.onerror = () => {
+            URL.revokeObjectURL(url)
+            console.error('Could not load image.')
+        }
+        img.src = url
+    }
+
+    function loadImageFromUrl(src: string) {
+        const img = new Image()
+        // CORS-enabled so the worker can read pixels and Save can export.
+        img.crossOrigin = 'anonymous'
+        img.onload = () => applyImage(img)
+        img.onerror = () => console.error('Could not load default image.')
+        img.src = src
+    }
+
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files?.[0]
+        if (file) loadImageFromFile(file)
+    })
+
+    container.addEventListener('dragover', (event) => {
+        event.preventDefault()
+        container.classList.add('outline-brand')
+    })
+    container.addEventListener('dragleave', () => container.classList.remove('outline-brand'))
+    container.addEventListener('drop', (event) => {
+        event.preventDefault()
+        container.classList.remove('outline-brand')
+        const file = event.dataTransfer?.files?.[0]
+        if (file && file.type.startsWith('image/')) loadImageFromFile(file)
+    })
+
+    // --- sizing ---
+    function resize() {
+        const w = container.clientWidth
+        const h = container.clientHeight
+        renderer.setSize(w, h, false)
+        u.uCanvasSize.value.set(canvas.width, canvas.height)
+        render()
+    }
+    new ResizeObserver(resize).observe(container)
+
+    // --- save at native image resolution ---
+    function save() {
+        if (!imageEl || !imageTexture) return
+        const w = imageEl.naturalWidth
+        const h = imageEl.naturalHeight
+
+        // Scale the dot size so exported dots match the on-screen proportions.
+        const pixelScale = Math.max(1, get<number>('pixel-scale'))
+        const prevCanvasSize = u.uCanvasSize.value.clone()
+        const prevPixelScale = u.uPixelScale.value
+        u.uCanvasSize.value.set(w, h)
+        u.uPixelScale.value = Math.max(1, pixelScale * (w / Math.max(canvas.width, 1)))
+
+        const target = new THREE.WebGLRenderTarget(w, h)
+        renderer.setRenderTarget(target)
+        renderer.render(scene, camera)
+        const buffer = new Uint8Array(w * h * 4)
+        renderer.readRenderTargetPixels(target, 0, 0, w, h, buffer)
+        renderer.setRenderTarget(null)
+        target.dispose()
+
+        u.uCanvasSize.value.copy(prevCanvasSize)
+        u.uPixelScale.value = prevPixelScale
+        draw()
+
+        // GL render targets are bottom-up; flip rows into the output canvas.
+        const out = document.createElement('canvas')
+        out.width = w
+        out.height = h
+        const ctx = out.getContext('2d')!
+        const imageData = ctx.createImageData(w, h)
+        const row = w * 4
+        for (let y = 0; y < h; y++) {
+            const src = (h - 1 - y) * row
+            imageData.data.set(buffer.subarray(src, src + row), y * row)
+        }
+        ctx.putImageData(imageData, 0, 0)
+
+        out.toBlob((blob) => {
+            if (!blob) return
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(blob)
+            link.download = 'dither.png'
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            URL.revokeObjectURL(link.href)
+        }, 'image/png')
+    }
+
+    document.getElementById('save')!.addEventListener('click', save)
+
+    function syncControlsFromUrl() {
+        const params = new URLSearchParams(window.location.search)
+        for (const id of CONTROL_IDS) {
+            const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null
+            const value = params.get(id)
+            if (el && value !== null) el.value = decodeURIComponent(value)
+        }
+        render()
+    }
+
+    document.getElementById('undo')!.addEventListener('click', () => {
+        undo()
+        syncControlsFromUrl()
+    })
+    document.getElementById('redo')!.addEventListener('click', () => {
+        redo()
+        syncControlsFromUrl()
+    })
+    window.addEventListener('popstate', syncControlsFromUrl)
+
+    resize()
+
+    // Start with a random sample image so the page isn't blank on first visit.
+    const seed = Math.random().toString(36).slice(2)
+    loadImageFromUrl(`https://picsum.photos/seed/${seed}/900/1200`)
+</script>
