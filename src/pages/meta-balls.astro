@@ -321,11 +321,7 @@ import ControlSection from '../components/ControlSection.astro'
                 const color = fill(idx / layers.length)
 
                 for (const ring of layers[idx]) {
-                    target.path(
-                        ring.map(([x, y]) => [x * sx, y * sy]),
-                        true,
-                        { fill: color }
-                    )
+                    target.path([ring.flatMap(([x, y]) => [x * sx, y * sy])], true, { fill: color })
                 }
             }
         },

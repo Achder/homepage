@@ -7,12 +7,11 @@ import ControlSection from '../components/ControlSection.astro'
 
 <Playground
     pageTitle="Grid Generator | Thomas Meerpohl"
-    pageDescription="Experimental SVG grid generator using noise, gradients, and downloadable generative line work."
+    pageDescription="Experimental SVG grid generator that warps line grids with fractal noise, with gradient colors and SVG export."
     heading="Grid"
     robots="noindex,follow"
     colorspace={false}
     softproof={false}
-    saveLabel="Save png"
 >
     <Fragment slot="controls">
         <ControlSection>
@@ -52,326 +51,194 @@ import ControlSection from '../components/ControlSection.astro'
     </Fragment>
 </Playground>
 <script>
-    import * as THREE from 'three'
-    import { initInteractiveThree, type Size } from '../three/three'
-    import { getInputValue } from '../utils/controls'
-    import { noiseGLSL } from '../three/noise.glsl'
     import type Color from 'colorjs.io'
+    import { initPlayground } from '../vector/playground'
+    import { gradientLine } from '../vector/paint'
+    import type { LinearGradient, Size } from '../vector/types'
+    import { computeDisplacement, type GridNoise } from '../utils/grid-field'
+    import type { GridWorkerRequest, GridWorkerResponse } from '../workers/grid-worker'
 
-    // Shared GLSL: linear gradient parameter along a normalized direction, used
-    // by both the background quad and the gradient-colored grid lines.
-    const gradientGLSL = /* glsl */ `
-    float gradT(vec2 uv, float angleDeg) {
-        float a = radians(angleDeg);
-        vec2 dir = vec2(cos(a), sin(a));
-        return clamp(dot(uv - 0.5, dir) + 0.5, 0.0, 1.0);
-    }
-    `
+    // #region field
+    // The noise is the slow part, so it runs on a pool of workers, each one computing
+    // a band of rows. The live view draws the latest finished field; while a job runs,
+    // only the newest request waits.
+    type Field = { key: string; noise: GridNoise; displacement: Float32Array }
+    type Job = Field & { id: number; remaining: number }
 
-    const lineVertexShader = /* glsl */ `
-    uniform vec2 uResolution;
-    uniform vec2 uOffset;
-    uniform vec2 uAmp;
-    uniform float uScale;
-    uniform float uNoiseFreq;
-    uniform float uLacunarity;
-    uniform float uGain;
-    uniform float uTime;
-    uniform vec3 uSeed;
-    uniform int uOctaves;
-    uniform float uWidth;
+    const workers = Array.from(
+        { length: Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 4) - 1)) },
+        () => new Worker(new URL('../workers/grid-worker.ts', import.meta.url), { type: 'module' })
+    )
 
-    attribute vec2 aStart;
-    attribute vec2 aEnd;
+    let current: Field | null = null
+    let running: Job | null = null
+    let pending: { key: string; noise: GridNoise } | null = null
+    let jobId = 0
+    let onField = () => {}
 
-    varying vec2 vPos;
-
-    ${noiseGLSL}
-
-    // Warp a normalized grid coordinate to a pixel-space position, matching the
-    // original SVG logic (offset + grid step + fbm displacement, then scaled
-    // around the canvas center).
-    vec2 warpPoint(vec2 idx) {
-        vec2 d = fbmWarp(idx, uNoiseFreq, uLacunarity, uGain, uTime, uSeed, uOctaves);
-        float x = uOffset.x + idx.x * uResolution.x + d.x * uAmp.x;
-        float y = uOffset.y + idx.y * uResolution.y + d.y * uAmp.y;
-        vec2 p = vec2(x, y);
-        return (p - uResolution * 0.5) * uScale + uResolution * 0.5;
-    }
-
-    void main() {
-        vec2 P0 = warpPoint(aStart);
-        vec2 P1 = warpPoint(aEnd);
-
-        float along = position.x; // 0 at start, 1 at end
-        float side = position.y;  // -0.5 / +0.5 across the stroke
-
-        vec2 dir = P1 - P0;
-        float len = length(dir);
-        vec2 ndir = len > 0.0 ? dir / len : vec2(1.0, 0.0);
-        vec2 normal = vec2(-ndir.y, ndir.x);
-
-        vec2 cur = mix(P0, P1, along) + normal * side * uWidth;
-        vPos = cur;
-
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(cur, 0.0, 1.0);
-    }
-    `
-
-    const lineFragmentShader = /* glsl */ `
-    precision highp float;
-    uniform vec2 uResolution;
-    uniform vec3 uColorStart;
-    uniform vec3 uColorEnd;
-    uniform float uAngle;
-
-    varying vec2 vPos;
-
-    ${gradientGLSL}
-
-    void main() {
-        float t = gradT(vPos / uResolution, uAngle);
-        gl_FragColor = vec4(mix(uColorStart, uColorEnd, t), 1.0);
-    }
-    `
-
-    const bgVertexShader = /* glsl */ `
-    varying vec2 vUv;
-    void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-    `
-
-    const bgFragmentShader = /* glsl */ `
-    precision highp float;
-    uniform vec3 uColorStart;
-    uniform vec3 uColorEnd;
-    uniform float uAngle;
-    varying vec2 vUv;
-
-    ${gradientGLSL}
-
-    void main() {
-        float t = gradT(vUv, uAngle);
-        gl_FragColor = vec4(mix(uColorStart, uColorEnd, t), 1.0);
-    }
-    `
-
-    // Raw sRGB colors: disable three's color management so input hex values map
-    // straight to screen, matching the SVG page (and naive WebGL) behavior.
-    THREE.ColorManagement.enabled = false
-
-    const init = (renderer: THREE.WebGLRenderer, size: Size) => {
-        function get<T>(id: string) {
-            return getInputValue<T>(id, render)
+    function startJob(key: string, noise: GridNoise) {
+        const job: Job = {
+            id: ++jobId,
+            key,
+            noise,
+            displacement: new Float32Array(noise.xShapes * noise.yShapes * 2),
+            remaining: workers.length,
         }
+        running = job
 
-        function getColor(id: string) {
-            const [r, g, b] = get<Color>(id).to('srgb').coords
-            const clamp = (v: number | null) => Math.min(1, Math.max(0, v ?? 0))
-            return new THREE.Color(clamp(r), clamp(g), clamp(b))
-        }
-
-        function getSeed() {
-            const searchParams = new URLSearchParams(window.location.search)
-            const value = searchParams.get('seed')
-            if (value) {
-                return Number(value)
-            }
-
-            const seed = Math.random()
-            searchParams.set('seed', seed.toString())
-            window.history.replaceState({}, '', `?${searchParams.toString()}`)
-            return seed
-        }
-
-        const scene = new THREE.Scene()
-        // y points downward (top=0, bottom=h) to match the SVG coordinate space.
-        const camera = new THREE.OrthographicCamera(0, size.w, 0, size.h, -1, 1)
-
-        // --- Background gradient quad ---
-        const bgGeometry = new THREE.PlaneGeometry(size.w, size.h)
-        bgGeometry.translate(size.w / 2, size.h / 2, 0)
-        const bgMaterial = new THREE.ShaderMaterial({
-            vertexShader: bgVertexShader,
-            fragmentShader: bgFragmentShader,
-            side: THREE.DoubleSide,
-            depthTest: false,
-            depthWrite: false,
-            uniforms: {
-                uColorStart: { value: new THREE.Color() },
-                uColorEnd: { value: new THREE.Color() },
-                uAngle: { value: 0 },
-            },
+        const rowsPerWorker = Math.ceil(noise.yShapes / workers.length)
+        workers.forEach((worker, idx) => {
+            const rowStart = Math.min(idx * rowsPerWorker, noise.yShapes)
+            const rowEnd = Math.min(rowStart + rowsPerWorker, noise.yShapes)
+            const request: GridWorkerRequest = { job: job.id, noise, rowStart, rowEnd }
+            worker.postMessage(request)
         })
-        const bg = new THREE.Mesh(bgGeometry, bgMaterial)
-        bg.renderOrder = 0
-        scene.add(bg)
+    }
 
-        // --- Grid lines (fat lines via instanced quads) ---
-        // Base unit quad: x = along (0|1), y = side (-0.5|0.5).
-        const quad = new Float32Array([
-            0, -0.5, 0, 1, -0.5, 0, 1, 0.5, 0, 0, -0.5, 0, 1, 0.5, 0, 0, 0.5, 0,
-        ])
+    for (const worker of workers) {
+        worker.onmessage = (event: MessageEvent<GridWorkerResponse>) => {
+            const { job, rowStart, displacement } = event.data
+            if (!running || job !== running.id) {
+                return
+            }
 
-        function makeLineMaterial() {
-            return new THREE.ShaderMaterial({
-                vertexShader: lineVertexShader,
-                fragmentShader: lineFragmentShader,
-                side: THREE.DoubleSide,
-                depthTest: false,
-                depthWrite: false,
-                uniforms: {
-                    uResolution: { value: new THREE.Vector2(size.w, size.h) },
-                    uOffset: { value: new THREE.Vector2() },
-                    uAmp: { value: new THREE.Vector2() },
-                    uScale: { value: 1 },
-                    uNoiseFreq: { value: 1 },
-                    uLacunarity: { value: 2 },
-                    uGain: { value: 0.5 },
-                    uTime: { value: 0 },
-                    uSeed: { value: new THREE.Vector3() },
-                    uOctaves: { value: 1 },
-                    uWidth: { value: 1 },
-                    uColorStart: { value: new THREE.Color() },
-                    uColorEnd: { value: new THREE.Color() },
-                    uAngle: { value: 0 },
-                },
-            })
+            running.displacement.set(displacement, rowStart * running.noise.xShapes * 2)
+            if (--running.remaining > 0) {
+                return
+            }
+
+            current = running
+            running = null
+            if (pending) {
+                startJob(pending.key, pending.noise)
+                pending = null
+            }
+            onField()
+        }
+    }
+
+    function getField(noise: GridNoise, sync: boolean) {
+        const key = JSON.stringify(noise)
+        if (current?.key === key) {
+            return current
         }
 
-        const hMaterial = makeLineMaterial()
-        const vMaterial = makeLineMaterial()
-        const lineMaterials = [hMaterial, vMaterial]
-
-        let hMesh: THREE.Mesh | null = null
-        let vMesh: THREE.Mesh | null = null
-        let builtXShapes = -1
-        let builtYShapes = -1
-
-        function buildLineMesh(material: THREE.ShaderMaterial, starts: number[], ends: number[]) {
-            const geometry = new THREE.InstancedBufferGeometry()
-            geometry.setAttribute('position', new THREE.BufferAttribute(quad, 3))
-            geometry.setAttribute('aStart', new THREE.InstancedBufferAttribute(new Float32Array(starts), 2))
-            geometry.setAttribute('aEnd', new THREE.InstancedBufferAttribute(new Float32Array(ends), 2))
-            geometry.instanceCount = starts.length / 2
-            const mesh = new THREE.Mesh(geometry, material)
-            mesh.renderOrder = 1
-            mesh.frustumCulled = false
-            return mesh
+        // the export can not wait for the workers
+        if (sync) {
+            current = { key, noise, displacement: computeDisplacement(noise, 0, noise.yShapes) }
+            return current
         }
 
-        // Rebuild line topology only when the shape counts change.
-        function rebuildLines(xShapes: number, yShapes: number) {
-            if (xShapes === builtXShapes && yShapes === builtYShapes) return
-            builtXShapes = xShapes
-            builtYShapes = yShapes
+        if (!running) {
+            startJob(key, noise)
+        } else {
+            pending = running.key === key ? null : { key, noise }
+        }
+        return current
+    }
+    // #endregion field
 
-            if (hMesh) {
-                hMesh.geometry.dispose()
-                scene.remove(hMesh)
-            }
-            if (vMesh) {
-                vMesh.geometry.dispose()
-                scene.remove(vMesh)
-            }
-
-            // Horizontal segments: connect neighbors along x within each row.
-            const hStarts: number[] = []
-            const hEnds: number[] = []
-            for (let yIdx = 0; yIdx < yShapes; yIdx++) {
-                const yt = yIdx / yShapes
-                for (let xIdx = 0; xIdx < xShapes - 1; xIdx++) {
-                    hStarts.push(xIdx / xShapes, yt)
-                    hEnds.push((xIdx + 1) / xShapes, yt)
-                }
-            }
-
-            // Vertical segments: connect neighbors along y within each column.
-            const vStarts: number[] = []
-            const vEnds: number[] = []
-            for (let xIdx = 0; xIdx < xShapes; xIdx++) {
-                const xt = xIdx / xShapes
-                for (let yIdx = 0; yIdx < yShapes - 1; yIdx++) {
-                    vStarts.push(xt, yIdx / yShapes)
-                    vEnds.push(xt, (yIdx + 1) / yShapes)
-                }
-            }
-
-            hMesh = buildLineMesh(hMaterial, hStarts, hEnds)
-            vMesh = buildLineMesh(vMaterial, vStarts, vEnds)
-            scene.add(hMesh, vMesh)
+    function getSeed() {
+        const searchParams = new URLSearchParams(window.location.search)
+        const value = searchParams.get('seed')
+        if (value) {
+            return Number(value)
         }
 
-        function render() {
-            const seed = getSeed()
+        const seed = Math.random()
+        searchParams.set('seed', seed.toString())
+        window.history.replaceState({}, '', `?${searchParams.toString()}`)
+        return seed
+    }
 
-            const noiseFreq = get<number>('noise-freq')
-            const time = get<number>('time')
+    // two-color gradient across the canvas, mixed in srgb like the former shader
+    function gradient(size: Size, angle: number, start: Color, end: Color): LinearGradient {
+        return {
+            ...gradientLine(size, angle),
+            stops: [
+                { offset: 0, color: start.to('srgb').toString({ format: 'hex' }) },
+                { offset: 1, color: end.to('srgb').toString({ format: 'hex' }) },
+            ],
+        }
+    }
+
+    // point buffers, reused between frames
+    let rows = new Float32Array(0)
+    let columns = new Float32Array(0)
+    let seed = 0
+
+    initPlayground({
+        setup() {
+            seed = getSeed()
+        },
+
+        draw(target, { size, get, requestRender, exporting }) {
+            onField = requestRender
+
+            const noise: GridNoise = {
+                xShapes: get<number>('x-shapes'),
+                yShapes: get<number>('y-shapes'),
+                noiseFreq: get<number>('noise-freq'),
+                lacunarity: get<number>('lacunarity'),
+                gain: get<number>('gain'),
+                time: get<number>('time'),
+                seed,
+                octaves: get<number>('octaves'),
+            }
+
             const scale = get<number>('scale')
-            const octaves = get<number>('octaves')
-            const lacunarity = get<number>('lacunarity')
-            const gain = get<number>('gain')
-
             const xOffset = get<number>('x-offset') * size.w
             const yOffset = get<number>('y-offset') * size.h
-
-            const xShapes = get<number>('x-shapes')
-            const yShapes = get<number>('y-shapes')
-
             const xAmp = get<number>('x-amp') * size.w
             const yAmp = get<number>('y-amp') * size.h
-
             const xStrokeWidth = get<number>('x-stroke-width') * (size.w / 100)
             const yStrokeWidth = get<number>('y-stroke-width') * (size.w / 100)
 
-            const gridAngle = get<number>('grid-angle')
-            const gridStart = getColor('grid-start')
-            const gridEnd = getColor('grid-end')
+            const grid = gradient(size, get<number>('grid-angle'), get<Color>('grid-start'), get<Color>('grid-end'))
+            const background = gradient(size, get<number>('bg-angle'), get<Color>('bg-start'), get<Color>('bg-end'))
 
-            const bgAngle = get<number>('bg-angle')
-            const bgStart = getColor('bg-start')
-            const bgEnd = getColor('bg-end')
+            target.rect(0, 0, size.w, size.h, { fill: background })
 
-            rebuildLines(xShapes, yShapes)
-
-            bgMaterial.uniforms.uColorStart.value = bgStart
-            bgMaterial.uniforms.uColorEnd.value = bgEnd
-            bgMaterial.uniforms.uAngle.value = bgAngle
-
-            for (const m of lineMaterials) {
-                const u = m.uniforms
-                u.uOffset.value.set(xOffset, yOffset)
-                u.uAmp.value.set(xAmp, yAmp)
-                u.uScale.value = scale
-                u.uNoiseFreq.value = noiseFreq
-                u.uLacunarity.value = lacunarity
-                u.uGain.value = gain
-                u.uTime.value = time
-                u.uSeed.value.set(seed, seed, 0)
-                u.uOctaves.value = octaves
-                u.uColorStart.value = gridStart
-                u.uColorEnd.value = gridEnd
-                u.uAngle.value = gridAngle
+            const field = getField(noise, exporting)
+            if (!field) {
+                return
             }
-            hMaterial.uniforms.uWidth.value = xStrokeWidth
-            vMaterial.uniforms.uWidth.value = yStrokeWidth
 
-            renderer.render(scene, camera)
-        }
+            // warp the grid and scale it around the center
+            const { xShapes, yShapes } = field.noise
+            const { displacement } = field
+            if (rows.length !== xShapes * yShapes * 2) {
+                rows = new Float32Array(xShapes * yShapes * 2)
+                columns = new Float32Array(xShapes * yShapes * 2)
+            }
 
-        function dispose() {
-            bgGeometry.dispose()
-            bgMaterial.dispose()
-            hMesh?.geometry.dispose()
-            vMesh?.geometry.dispose()
-            hMaterial.dispose()
-            vMaterial.dispose()
-        }
+            const cx = size.w / 2
+            const cy = size.h / 2
+            for (let y = 0; y < yShapes; y++) {
+                for (let x = 0; x < xShapes; x++) {
+                    const k = (y * xShapes + x) * 2
+                    const px = (xOffset + (x / xShapes) * size.w + displacement[k] * xAmp - cx) * scale + cx
+                    const py = (yOffset + (y / yShapes) * size.h + displacement[k + 1] * yAmp - cy) * scale + cy
 
-        return { render, dispose }
-    }
+                    rows[k] = px
+                    rows[k + 1] = py
 
-    initInteractiveThree({ init })
+                    const c = (x * yShapes + y) * 2
+                    columns[c] = px
+                    columns[c + 1] = py
+                }
+            }
+
+            target.path(
+                Array.from({ length: yShapes }, (_, y) => rows.subarray(y * xShapes * 2, (y + 1) * xShapes * 2)),
+                false,
+                { stroke: grid, strokeWidth: xStrokeWidth }
+            )
+            target.path(
+                Array.from({ length: xShapes }, (_, x) => columns.subarray(x * yShapes * 2, (x + 1) * yShapes * 2)),
+                false,
+                { stroke: grid, strokeWidth: yStrokeWidth }
+            )
+        },
+    })
 </script>

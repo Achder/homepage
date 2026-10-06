@@ -161,7 +161,7 @@ import { Font } from 'astro:assets'
             const center = { x: size.w / 2, y: size.h / 2 }
 
             target.rect(0, 0, size.w, size.h, {
-                fill: linearGradient(bgAngle, shouldProof ? bgColors.map(toProofed) : bgColors, 10),
+                fill: linearGradient(size, bgAngle, shouldProof ? bgColors.map(toProofed) : bgColors, 10),
             })
 
             for (let i = 0; i <= shapes; i++) {

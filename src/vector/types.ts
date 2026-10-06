@@ -8,8 +8,7 @@ export type GradientStop = {
     color: string
 }
 
-// Linear gradient in the unit space of the filled shape's bounding box
-// (same as SVG `gradientUnits="objectBoundingBox"`).
+// Linear gradient in user space (same as SVG `gradientUnits="userSpaceOnUse"`).
 export type LinearGradient = {
     x1: number
     y1: number
@@ -18,16 +17,14 @@ export type LinearGradient = {
     stops: GradientStop[]
 }
 
+export type Paint = string | LinearGradient
+
 export type Style = {
-    fill?: string
+    fill?: Paint
     fillOpacity?: number
-    stroke?: string
+    stroke?: Paint
     strokeOpacity?: number
     strokeWidth?: number
-}
-
-export type RectStyle = Omit<Style, 'fill'> & {
-    fill?: string | LinearGradient
 }
 
 export type Font = {
@@ -42,8 +39,9 @@ export type Font = {
 // Immediate-mode drawing API shared by all output formats (canvas, svg, later hpgl).
 // Rotations are in degrees around the shape's own position.
 export interface VectorTarget {
-    rect(x: number, y: number, w: number, h: number, style: RectStyle): void
+    rect(x: number, y: number, w: number, h: number, style: Style): void
     ellipse(cx: number, cy: number, rx: number, ry: number, rotation: number, style: Style): void
-    path(points: ArrayLike<ArrayLike<number>>, closed: boolean, style: Style): void
+    // one path made of polylines; each polyline is a flat [x0, y0, x1, y1, ...] list
+    path(polylines: ArrayLike<number>[], closed: boolean, style: Style): void
     text(content: string, x: number, y: number, rotation: number, font: Font, style: Style): void
 }

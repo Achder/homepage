@@ -1,18 +1,30 @@
 import type Color from 'colorjs.io'
 import { mixN, toProofed } from '../utils/color'
-import type { LinearGradient } from './types'
+import type { LinearGradient, Size } from './types'
 
-// Linear gradient rotated by `angle` degrees around the center of the bounding box
-// (same as svg `gradientTransform="rotate(angle 0.5 0.5)"`).
-export function linearGradient(angle: number, colors: Color[], stops: number): LinearGradient {
-    const dx = Math.cos(angle * (Math.PI / 180)) / 2
-    const dy = Math.sin(angle * (Math.PI / 180)) / 2
+// Gradient line across a `size` box at `angle` degrees. Same result as an svg
+// objectBoundingBox gradient with `gradientTransform="rotate(angle 0.5 0.5)"`: the
+// gradient is linear in the box's unit space, so it is skewed on non-square boxes.
+export function gradientLine(size: Size, angle: number) {
+    // gradient of t in user space; the gradient line is parallel to it
+    const gx = Math.cos(angle * (Math.PI / 180)) / size.w
+    const gy = Math.sin(angle * (Math.PI / 180)) / size.h
+    const length = gx * gx + gy * gy
+    const dx = gx / length / 2
+    const dy = gy / length / 2
 
     return {
-        x1: 0.5 - dx,
-        y1: 0.5 - dy,
-        x2: 0.5 + dx,
-        y2: 0.5 + dy,
+        x1: size.w / 2 - dx,
+        y1: size.h / 2 - dy,
+        x2: size.w / 2 + dx,
+        y2: size.h / 2 + dy,
+    }
+}
+
+// Background gradient for a `size` box with `stops` colors mixed in hwb.
+export function linearGradient(size: Size, angle: number, colors: Color[], stops: number): LinearGradient {
+    return {
+        ...gradientLine(size, angle),
         stops: Array.from({ length: stops }, (_, idx) => {
             const t = idx / stops
             return { offset: t, color: mixN(colors, t, 'hwb', 'srgb').toString({ format: 'hex' }) }

@@ -1,8 +1,6 @@
-import type { Font, LinearGradient, RectStyle, Style, VectorTarget } from './types'
+import type { Font, Paint, Style, VectorTarget } from './types'
 
 const deg = Math.PI / 180
-
-type StrokeStyle = Pick<Style, 'stroke' | 'strokeOpacity' | 'strokeWidth'>
 
 export type CanvasTarget = VectorTarget & {
     // clears the canvas and resets the drawing state; call once per frame
@@ -15,13 +13,13 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
 
     // canvas state setters parse their input, so skip redundant writes
     let fillStyle: string | CanvasGradient = ''
-    let strokeStyle = ''
+    let strokeStyle: string | CanvasGradient = ''
     let lineWidth = -1
     let alpha = -1
     let font = ''
 
-    let gradientKey = ''
-    let gradient: CanvasGradient | null = null
+    // gradients are rebuilt by every draw call, so reuse them by value
+    const gradients = new Map<string, CanvasGradient>()
 
     function setAlpha(value: number) {
         if (value !== alpha) {
@@ -29,20 +27,44 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
         }
     }
 
-    function setFill(value: string | CanvasGradient) {
-        if (value !== fillStyle) {
-            ctx.fillStyle = fillStyle = value
+    function toCanvasPaint(paint: Paint) {
+        if (typeof paint === 'string') {
+            return paint
+        }
+
+        const key = `${paint.x1},${paint.y1},${paint.x2},${paint.y2}|${paint.stops.map((s) => s.offset + s.color).join()}`
+        let gradient = gradients.get(key)
+        if (!gradient) {
+            gradient = ctx.createLinearGradient(paint.x1, paint.y1, paint.x2, paint.y2)
+            for (const stop of paint.stops) {
+                gradient.addColorStop(stop.offset, stop.color)
+            }
+
+            if (gradients.size >= 16) {
+                gradients.clear()
+            }
+            gradients.set(key, gradient)
+        }
+        return gradient
+    }
+
+    function setFill(style: Style) {
+        setAlpha(style.fillOpacity ?? 1)
+        const paint = toCanvasPaint(style.fill!)
+        if (paint !== fillStyle) {
+            ctx.fillStyle = fillStyle = paint
         }
     }
 
-    function hasStroke(style: StrokeStyle) {
+    function hasStroke(style: Style) {
         return !!style.stroke && (style.strokeWidth ?? 1) > 0
     }
 
-    function setStroke(style: StrokeStyle) {
+    function setStroke(style: Style) {
         setAlpha(style.strokeOpacity ?? 1)
-        if (style.stroke !== strokeStyle) {
-            ctx.strokeStyle = strokeStyle = style.stroke!
+        const paint = toCanvasPaint(style.stroke!)
+        if (paint !== strokeStyle) {
+            ctx.strokeStyle = strokeStyle = paint
         }
         const width = style.strokeWidth ?? 1
         if (width !== lineWidth) {
@@ -52,8 +74,7 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
 
     function paintPath(style: Style) {
         if (style.fill) {
-            setAlpha(style.fillOpacity ?? 1)
-            setFill(style.fill)
+            setFill(style)
             ctx.fill()
         }
 
@@ -61,18 +82,6 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
             setStroke(style)
             ctx.stroke()
         }
-    }
-
-    function getGradient(paint: LinearGradient) {
-        const key = `${paint.x1},${paint.y1},${paint.x2},${paint.y2}|${paint.stops.map((s) => s.offset + s.color).join()}`
-        if (key !== gradientKey || !gradient) {
-            gradientKey = key
-            gradient = ctx.createLinearGradient(paint.x1, paint.y1, paint.x2, paint.y2)
-            for (const stop of paint.stops) {
-                gradient.addColorStop(stop.offset, stop.color)
-            }
-        }
-        return gradient
     }
 
     return {
@@ -90,17 +99,9 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
             lineWidth = alpha = -1
         },
 
-        rect(x, y, w, h, style: RectStyle) {
-            if (typeof style.fill === 'object') {
-                // draw the unit square in bounding box space, like svg objectBoundingBox
-                ctx.setTransform(scale * w, 0, 0, scale * h, scale * x, scale * y)
-                setAlpha(style.fillOpacity ?? 1)
-                setFill(getGradient(style.fill))
-                ctx.fillRect(0, 0, 1, 1)
-                ctx.setTransform(scale, 0, 0, scale, 0, 0)
-            } else if (style.fill) {
-                setAlpha(style.fillOpacity ?? 1)
-                setFill(style.fill)
+        rect(x, y, w, h, style) {
+            if (style.fill) {
+                setFill(style)
                 ctx.fillRect(x, y, w, h)
             }
 
@@ -121,18 +122,20 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
             paintPath(style)
         },
 
-        path(points, closed, style) {
-            if (points.length === 0) {
-                return
-            }
-
+        path(polylines, closed, style) {
             ctx.beginPath()
-            ctx.moveTo(points[0][0], points[0][1])
-            for (let idx = 1; idx < points.length; idx++) {
-                ctx.lineTo(points[idx][0], points[idx][1])
-            }
-            if (closed) {
-                ctx.closePath()
+            for (const points of polylines) {
+                if (points.length < 2) {
+                    continue
+                }
+
+                ctx.moveTo(points[0], points[1])
+                for (let idx = 2; idx < points.length; idx += 2) {
+                    ctx.lineTo(points[idx], points[idx + 1])
+                }
+                if (closed) {
+                    ctx.closePath()
+                }
             }
             paintPath(style)
         },
@@ -154,8 +157,7 @@ export function createCanvasTarget(canvas: HTMLCanvasElement): CanvasTarget {
             }
 
             if (style.fill) {
-                setAlpha(style.fillOpacity ?? 1)
-                setFill(style.fill)
+                setFill(style)
                 ctx.fillText(content, 0, 0)
             }
 
