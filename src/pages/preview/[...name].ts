@@ -119,7 +119,7 @@ export const GET: APIRoute = async (context) => {
 
         const previewTarget = await getVisibleTarget(
             page,
-            selector ? [selector, '#container', '#svg', 'main', 'body'] : ['#container', '#svg', 'main', 'body']
+            selector ? [selector, '#container', 'main', 'body'] : ['#container', 'main', 'body']
         )
 
         if (!previewTarget) {
@@ -127,7 +127,7 @@ export const GET: APIRoute = async (context) => {
         }
 
         const previewTargetId = await previewTarget.evaluate((element) => element.id)
-        const useStructuredClip = previewTargetId === 'container' || previewTargetId === 'svg'
+        const useStructuredClip = previewTargetId === 'container'
 
         await previewTarget.evaluate((element) => {
             element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' })
@@ -138,7 +138,6 @@ export const GET: APIRoute = async (context) => {
 
         const previewMetrics = await page.evaluate(() => {
             const container = document.querySelector('#container')
-            const svg = document.querySelector('#svg')
 
             const containerBounds =
                 container instanceof HTMLElement
@@ -160,60 +159,7 @@ export const GET: APIRoute = async (context) => {
                       })()
                     : 0
 
-            if (!(svg instanceof SVGSVGElement)) {
-                return { containerBounds, containerOutlineInset, contentBounds: null }
-            }
-
-            const svgWidth = svg.width.baseVal.value
-            const svgHeight = svg.height.baseVal.value
-            const points = [...svg.children].flatMap((element) => {
-                if (!(element instanceof SVGGraphicsElement)) {
-                    return []
-                }
-
-                if (element instanceof SVGRectElement) {
-                    const x = element.x.baseVal.value
-                    const y = element.y.baseVal.value
-                    const width = element.width.baseVal.value
-                    const height = element.height.baseVal.value
-
-                    if (x === 0 && y === 0 && width === svgWidth && height === svgHeight) {
-                        return []
-                    }
-                }
-
-                const bbox = element.getBBox()
-                const matrix = element.getScreenCTM()
-
-                if (!matrix || bbox.width <= 0 || bbox.height <= 0) {
-                    return []
-                }
-
-                return [
-                    new DOMPoint(bbox.x, bbox.y),
-                    new DOMPoint(bbox.x + bbox.width, bbox.y),
-                    new DOMPoint(bbox.x, bbox.y + bbox.height),
-                    new DOMPoint(bbox.x + bbox.width, bbox.y + bbox.height),
-                ].map((point) => point.matrixTransform(matrix))
-            })
-
-            if (points.length === 0) {
-                return { containerBounds, containerOutlineInset, contentBounds: null }
-            }
-
-            const xValues = points.map((point) => point.x)
-            const yValues = points.map((point) => point.y)
-
-            return {
-                containerBounds,
-                containerOutlineInset,
-                contentBounds: {
-                    x: Math.min(...xValues),
-                    y: Math.min(...yValues),
-                    width: Math.max(...xValues) - Math.min(...xValues),
-                    height: Math.max(...yValues) - Math.min(...yValues),
-                },
-            }
+            return { containerBounds, containerOutlineInset }
         })
         const scrollOffset = await page.evaluate(() => ({
             x: window.scrollX,
@@ -241,12 +187,11 @@ export const GET: APIRoute = async (context) => {
                                 height: Math.max(baseBounds.height - outlineInset * 2, 1),
                             }
                           : baseBounds
-                  const focusBounds = useStructuredClip ? previewMetrics.contentBounds ?? insetBounds : insetBounds
                   const sourceAspectRatio = insetBounds.width / insetBounds.height
 
                   if (sourceAspectRatio > ogAspectRatio) {
                       const width = insetBounds.height * ogAspectRatio
-                      const centeredX = focusBounds.x + focusBounds.width / 2 - width / 2
+                      const centeredX = insetBounds.x + insetBounds.width / 2 - width / 2
                       const x = Math.max(insetBounds.x, Math.min(centeredX, insetBounds.x + insetBounds.width - width))
 
                       return {
@@ -258,7 +203,7 @@ export const GET: APIRoute = async (context) => {
                   }
 
                   const height = insetBounds.width / ogAspectRatio
-                  const centeredY = focusBounds.y + focusBounds.height / 2 - height / 2
+                  const centeredY = insetBounds.y + insetBounds.height / 2 - height / 2
                   const y = Math.max(insetBounds.y, Math.min(centeredY, insetBounds.y + insetBounds.height - height))
 
                   return {

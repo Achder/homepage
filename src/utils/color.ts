@@ -1,14 +1,6 @@
 import Color from 'colorjs.io'
 import { Profile, Transform, eIntent, color } from 'jscolorengine'
 
-export function mix(start: Color, mid: Color, end: Color, t: number, space: string, outputSpace: string) {
-    if (t < 0.5) {
-        return start.mix(mid, t * 2, { space, outputSpace })
-    } else {
-        return mid.mix(end, (t - 0.5) * 2, { space, outputSpace })
-    }
-}
-
 export function mixN(colors: Color[] | readonly Color[], t: number, space: string, outputSpace: string): Color {
     const n = colors.length
     if (n === 0) {

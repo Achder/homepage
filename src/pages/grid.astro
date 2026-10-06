@@ -1,17 +1,18 @@
 ---
-import Slider from '../../components/Slider.astro'
-import Input from '../../components/Input.astro'
-import ThreePlayground from '../../layouts/ThreePlayground.astro'
-import ControlSection from '../../components/ControlSection.astro'
+import Slider from '../components/Slider.astro'
+import Input from '../components/Input.astro'
+import Playground from '../layouts/Playground.astro'
+import ControlSection from '../components/ControlSection.astro'
 ---
 
-<ThreePlayground
-    pageTitle="Grid SVG Generator V2 Preview | Thomas Meerpohl"
+<Playground
+    pageTitle="Grid Generator | Thomas Meerpohl"
     pageDescription="Experimental SVG grid generator using noise, gradients, and downloadable generative line work."
     heading="Grid"
     robots="noindex,follow"
     colorspace={false}
     softproof={false}
+    saveLabel="Save png"
 >
     <Fragment slot="controls">
         <ControlSection>
@@ -49,12 +50,12 @@ import ControlSection from '../../components/ControlSection.astro'
             <Input type="color" id="bg-end" label="Background End" value="#1b0029" />
         </ControlSection>
     </Fragment>
-</ThreePlayground>
+</Playground>
 <script>
     import * as THREE from 'three'
-    import { initInteractiveThree, type Size } from '../../three/three'
-    import { getInputValue } from '../../utils/controls'
-    import { noiseGLSL } from '../../three/noise.glsl'
+    import { initInteractiveThree, type Size } from '../three/three'
+    import { getInputValue } from '../utils/controls'
+    import { noiseGLSL } from '../three/noise.glsl'
     import type Color from 'colorjs.io'
 
     // Shared GLSL: linear gradient parameter along a normalized direction, used

@@ -20,3 +20,5 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 .claude/settings.local.json
+# local task notes
+.ai/todo.md

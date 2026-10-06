@@ -1,35 +1,29 @@
 ---
-import SvgPlayground from '../layouts/SvgPlayground.astro'
+import Playground from '../layouts/Playground.astro'
 import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
 import Button from '../components/Button.astro'
 import ControlSection from '../components/ControlSection.astro'
 ---
 
-<SvgPlayground
+<Playground
     pageTitle="Metaballs SVG Generator | Thomas Meerpohl"
-    pageDescription="Interactive SVG metaballs generator for downloadable abstract shapes with editable thresholds, color gradients, and stroke controls."
+    pageDescription="Interactive SVG metaballs generator for downloadable abstract shapes with editable thresholds, falloff, and color gradients."
     heading="Metaballs"
 >
     <Fragment slot="controls">
         <ControlSection>
-            <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.076} step={0.001} name="Min Threshold" />
-            <Slider id="max-threshold" min={-0.5} max={0.5} value={0.06} step={0.001} name="Max Threshold" />
-            <Slider id="resolution" min={4} max={20} value={20} name="Resolution" />
-            <Slider id="iso-levels" min={4} max={100} value={52} name="Iso Levels" />
+            <Slider id="min-threshold" min={-0.5} max={0.5} value={-0.054} step={0.001} name="Min Threshold" />
+            <Slider id="max-threshold" min={-0.5} max={0.5} value={0.061} step={0.001} name="Max Threshold" />
+            <Slider id="resolution" min={0.005} max={0.1} value={0.0415} step={0.0001} name="Resolution" />
+            <Slider id="iso-levels" min={1} max={100} value={100} name="Iso Levels" />
+            <Slider id="falloff" min={1} max={100} value={18} name="Falloff" />
         </ControlSection>
 
         <ControlSection class="grid-cols-3">
-            <Input type="color" id="fill-start" label="Fill Start" value="#23ffea" />
-            <Input type="color" id="fill-mid" label="Fill Mid" value="#23bb00" />
-            <Input type="color" id="fill-end" label="Fill End" value="#230000" />
-        </ControlSection>
-
-        <ControlSection class="grid-cols-3">
-            <Input type="color" id="stroke-start" label="Stroke Start" value="#23fff7" />
-            <Input type="color" id="stroke-mid" label="Stroke Mid" value="#23b800" />
-            <Input type="color" id="stroke-end" label="Stroke End" value="#230000" />
-            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={2.2} name="Stroke Width" />
+            <Input type="color" id="fill-start" label="Fill Start" value="#ffc800" />
+            <Input type="color" id="fill-mid" label="Fill Mid" value="#ff0000" />
+            <Input type="color" id="fill-end" label="Fill End" value="#12001f" />
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
@@ -37,375 +31,303 @@ import ControlSection from '../components/ControlSection.astro'
             <Button id="add">+</Button>
         </ControlSection>
     </Fragment>
-</SvgPlayground>
+</Playground>
 
 <script>
-    import { isoBands } from 'marching-squares'
-    import { drawPath } from '../svg/path'
-    import { clear, initInteractiveSvg, type Size } from '../svg/svg'
-    import { getInputValue, writeToUrl, readFromUrl } from '../utils/controls'
-    import { drawCircle } from '../svg/circle'
-    import Color from 'colorjs.io'
-    import { mix, toProofed } from '../utils/color'
+    import type Color from 'colorjs.io'
+    import { initPlayground } from '../vector/playground'
+    import { colorRamp } from '../vector/paint'
+    import type { Size } from '../vector/types'
+    import { connectClick, readFromUrl, writeToUrl } from '../utils/controls'
+    import { computeLayers, type Circle, type MetaballsLayers, type MetaballsParams } from '../utils/metaballs'
+    import type { MetaballsWorkerRequest, MetaballsWorkerResponse } from '../workers/metaballs-worker'
 
-    type Circle = {
-        x: number
-        y: number
-        radius: number
-    }
+    // #region layers
+    // The live view draws the latest layers from the worker and requests new ones
+    // when the params change. Only the newest pending request is sent.
+    const worker = new Worker(new URL('../workers/metaballs-worker.ts', import.meta.url), { type: 'module' })
 
-    function metaball(x: number, y: number, ball: Circle) {
-        const dx = x - ball.x
-        const dy = y - ball.y
-        const distanceSquared = dx * dx + dy * dy
-        return ball.radius / distanceSquared
-    }
+    let current: { key: string; params: MetaballsParams; layers: MetaballsLayers } | null = null
+    let pending: MetaballsWorkerRequest | null = null
+    let busy = false
+    let onLayers = () => {}
 
-    type FieldParams = {
-        size: Size
-        balls: Circle[]
-        gridSize: number
-    }
-
-    function generateField(params: FieldParams) {
-        const { size, balls, gridSize } = params
-
-        const field: number[][] = []
-        for (let y = 0; y <= size.h + gridSize; y += gridSize) {
-            const line: number[] = []
-            for (let x = 0; x <= size.w + gridSize; x += gridSize) {
-                let sum = 0
-                for (const ball of balls) {
-                    sum += metaball(x, y, ball)
-                }
-                line.push(sum)
-            }
-
-            field.push(line)
-        }
-
-        return field
-    }
-
-    function scaleRing(ring: number[][], scaleBy: number): number[][] {
-        return ring.map((point) => point.map((value) => value * scaleBy))
-    }
-
-    function smoothRing(ring: number[][]): number[][] {
-        const smoothRing: number[][] = []
-
-        const dx = (p1: number[], p2: number[]) => {
-            return p2[0] - p1[0]
-        }
-
-        const dy = (p1: number[], p2: number[]) => {
-            return p2[1] - p1[1]
-        }
-
-        const smoothPoint = (p1: number[], p2: number[]) => {
-            return [p1[0] + dx(p1, p2) / 2, p1[1] + dy(p1, p2) / 2]
-        }
-
-        for (let idx = -1; idx < ring.length; idx++) {
-            const prev = ring.at(idx - 1)
-            const p = ring.at(idx)
-            const next = ring.at(idx + 1)
-
-            if (!prev || !next || !p) {
-                continue
-            }
-
-            const d = smoothPoint(prev, next)
-            smoothRing.push(smoothPoint(p, d))
-        }
-
-        return smoothRing
-    }
-
-    function generatePath(ring: number[][]) {
-        let d = ''
-
-        for (let idx = 0; idx < ring.length; idx++) {
-            const point = ring[idx]
-
-            if (idx === 0) {
-                d += `M ${point[0]} ${point[1]} `
-            } else {
-                d += `L ${point[0]} ${point[1]} `
-            }
-        }
-
-        d += `Z`
-
-        return d
-    }
-
-    function generateThresholds(min: number, max: number, num: number) {
-        const bandwidth = (max - min) / num
-
-        // first and last bandwidth need to be big to catch outliers
-        const thresholds: number[] = [min - 10]
-        const bandwidths: number[] = [10]
-
-        for (let idx = 0; idx < num; idx++) {
-            thresholds.push(min + bandwidth * idx)
-            bandwidths.push(bandwidth)
-        }
-
-        thresholds.push(min + num * bandwidth)
-        bandwidths.push(10)
-
-        return { thresholds, bandwidths }
-    }
-
-    function generateRandomBall(size: Size) {
-        const genRadius = (min: number, max: number) => {
-            const rr = (Math.random() - 0.2) * (1 / 0.8)
-            return Math.sign(rr) * min + rr * max
-        }
-
-        return {
-            x: Math.random() * size.w,
-            y: Math.random() * size.h,
-            radius: genRadius(400, 2000),
+    function sendPending() {
+        if (!busy && pending) {
+            worker.postMessage(pending)
+            pending = null
+            busy = true
         }
     }
 
-    function removeBall() {
-        const balls = getBallElements()
-        if (balls.length <= 1) {
-            return
+    worker.onmessage = (event: MessageEvent<MetaballsWorkerResponse>) => {
+        current = event.data
+        busy = false
+        sendPending()
+        onLayers()
+    }
+
+    function getLayers(params: MetaballsParams, sync: boolean) {
+        const key = JSON.stringify(params)
+        if (current?.key === key) {
+            return current
         }
 
-        const lastBall = balls.pop()
-        lastBall?.remove()
-        writeBallsToUrl()
-    }
-
-    function addBallResizeHandle(ballElement: HTMLElement, onMoveCallback: () => void, onUpCallback: () => void) {
-        const resizeHandle = document.createElement('div') as HTMLDivElement
-        resizeHandle.classList.add(
-            'bg-fuchsia-600/30',
-            'resize-handle',
-            'absolute',
-            'right-0',
-            'top-0',
-            'h-4',
-            'w-4',
-            'cursor-se-resize'
-        )
-        resizeHandle.style.transform = `translate(100%, -100%)`
-
-        ballElement.appendChild(resizeHandle)
-
-        resizeHandle.addEventListener('pointerdown', (e) => {
-            e.stopPropagation()
-            let initialX = e.clientX
-            const oldRadius = Number(ballElement.dataset.radius)
-
-            function handleMove(e: PointerEvent) {
-                const distX = e.clientX - initialX
-                ballElement.setAttribute('data-radius', (oldRadius + distX * 3).toString())
-                onMoveCallback()
-            }
-
-            function handleUp() {
-                document.removeEventListener('pointermove', handleMove)
-                document.removeEventListener('pointerup', handleUp)
-                onUpCallback()
-            }
-
-            document.addEventListener('pointermove', handleMove)
-            document.addEventListener('pointerup', handleUp)
-        })
-    }
-
-    function addBall(container: HTMLElement, ball: Circle, onMoveCallback: () => void, onUpCallback: () => void) {
-        const { x, y, radius } = ball
-
-        const ballElement = document.createElement('div')
-        ballElement.setAttribute('data-radius', radius.toString())
-        ballElement.classList.add(
-            'ball',
-            'rounded-full',
-            'h-12',
-            'w-12',
-            'absolute',
-            'translate-x-[-50%]',
-            'translate-y-[-50%]',
-            'bg-fuchsia-600/30',
-            'hover:bg-fuchsia-600',
-            'touch-none',
-            'select-none',
-            'outline',
-            'outline-2',
-            'outline-transparent',
-            'active:outline-fuchsia-600',
-            'active:outline-offset-4'
-        )
-        ballElement.style.left = `${x}px`
-        ballElement.style.top = `${y}px`
-
-        ballElement.addEventListener('pointerdown', (e) => {
-            let offsetX = e.clientX - ballElement.offsetLeft
-            let offsetY = e.clientY - ballElement.offsetTop
-
-            function handleMove(e: PointerEvent) {
-                let newLeft = e.clientX - offsetX
-                let newTop = e.clientY - offsetY
-
-                ballElement.style.left = newLeft + 'px'
-                ballElement.style.top = newTop + 'px'
-
-                onMoveCallback()
-            }
-
-            function handleUp() {
-                document.removeEventListener('pointermove', handleMove)
-                document.removeEventListener('pointerup', handleUp)
-                onUpCallback()
-            }
-
-            document.addEventListener('pointermove', handleMove)
-            document.addEventListener('pointerup', handleUp)
-        })
-
-        addBallResizeHandle(ballElement, onMoveCallback, onUpCallback)
-        container.appendChild(ballElement)
-    }
-
-    function addBalls(container: HTMLElement, size: Size, onMoveCallback: () => void, onUpCallback: () => void) {
-        document.querySelectorAll('.ball').forEach((el) => {
-            el.remove()
-        })
-
-        const ballsSearchParam = readFromUrl('balls')
-        const balls: Circle[] = ballsSearchParam ? (JSON.parse(ballsSearchParam) as Circle[]) : []
-
-        // init randomly if no balls are provided in the URL query string
-        if (!ballsSearchParam) {
-            const numBalls = 15
-            for (let idx = 0; idx < numBalls; idx++) {
-                balls.push(generateRandomBall(size))
-            }
+        // compute on the main thread for the first frame and for the export
+        if (sync || !current) {
+            current = { key, params, layers: computeLayers(params) }
+            return current
         }
 
-        for (const ball of balls) {
-            addBall(container, ball, onMoveCallback, onUpCallback)
-        }
-
-        writeBallsToUrl()
+        pending = { key, params }
+        sendPending()
+        return current
     }
+    // #endregion layers
 
+
+    // #region balls
+    // Balls are draggable DOM handles on top of the canvas. Positions are stored in
+    // the handles and normalized to width (x) and 1.414 * width (y).
     function getBallElements() {
         return [...document.querySelectorAll('.ball')] as HTMLElement[]
     }
 
-    function getBalls() {
-        const ballElements = getBallElements()
-        return ballElements.map((el) => ({
-            x: el.offsetLeft,
-            y: el.offsetTop,
+    function getBalls(size: Size) {
+        return getBallElements().map((el) => ({
+            x: el.offsetLeft / size.w,
+            y: (el.offsetTop / size.h) * 1.414,
             radius: Number(el.dataset.radius),
         }))
     }
 
-    function writeBallsToUrl() {
-        const balls = getBalls()
-        writeToUrl('balls', JSON.stringify(balls))
+    function writeBallsToUrl(size: Size) {
+        writeToUrl('balls', JSON.stringify(getBalls(size)))
     }
 
-    const init = (svg: HTMLElement, size: Size) => {
-        function get<T>(id: string) {
-            return getInputValue<T>(id, () => requestAnimationFrame(render))
+    function generateRandomBall() {
+        const genRadius = (min: number, max: number) => {
+            const sign = Math.sign(Math.random() - 0.5)
+            const radius = sign * (min + Math.random() * (max - min))
+            return radius
         }
 
-        const render = () => {
-            clear(svg)
+        return {
+            x: Math.random(),
+            y: Math.random(),
+            radius: genRadius(0.1, 0.3),
+        }
+    }
 
-            const gridSize = get<number>('resolution')
-            const minThreshold = get<number>('min-threshold')
-            const maxThreshold = get<number>('max-threshold')
-            const isoLevels = get<number>('iso-levels')
+    function createBallHandles(size: Size, onMove: () => void) {
+        const onUp = () => writeBallsToUrl(size)
 
-            const fillStart = get<Color>('fill-start')
-            const fillMid = get<Color>('fill-mid')
-            const fillEnd = get<Color>('fill-end')
+        function addBallResizeHandle(ballElement: HTMLElement) {
+            const resizeHandle = document.createElement('div') as HTMLDivElement
+            resizeHandle.style.transform = `translate(100%, -100%)`
+            resizeHandle.classList.add(
+                'bg-black/30',
+                'hover:bg-black',
+                'resize-handle',
+                'absolute',
+                'right-0',
+                'top-0',
+                'h-4',
+                'w-4',
+                'rounded-lg',
+                'cursor-se-resize'
+            )
 
-            const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<Color>('stroke-start')
-            const strokeMid = get<Color>('stroke-mid')
-            const strokeEnd = get<Color>('stroke-end')
+            ballElement.appendChild(resizeHandle)
 
-            const colorSpace = get<string>('color-space')
-            const proof = get<string>('proof')
-            const shouldProof = proof === 'proof'
+            resizeHandle.addEventListener('pointerdown', (e) => {
+                e.stopPropagation()
+                let initialX = e.clientX
+                const oldRadius = Number(ballElement.dataset.radius)
 
-            const balls = getBalls()
-            const field = generateField({ size, balls, gridSize })
+                function handleMove(e: PointerEvent) {
+                    const distX = (e.clientX - initialX) / size.w
+                    ballElement.setAttribute('data-radius', (oldRadius + distX).toString())
+                    onMove()
+                }
 
-            const { thresholds, bandwidths } = generateThresholds(minThreshold, maxThreshold, isoLevels)
-            const layers = isoBands(field, thresholds, bandwidths)
+                function handleUp() {
+                    document.removeEventListener('pointermove', handleMove)
+                    document.removeEventListener('pointerup', handleUp)
+                    onUp()
+                }
+
+                document.addEventListener('pointermove', handleMove)
+                document.addEventListener('pointerup', handleUp)
+            })
+        }
+
+        function addBall(ball: Circle) {
+            const { x, y, radius } = ball
+
+            const ballElement = document.createElement('div')
+            ballElement.style.left = `${x * size.w}px`
+            ballElement.style.top = `${(y * size.h) / 1.414}px`
+            ballElement.setAttribute('data-radius', radius.toString())
+            ballElement.classList.add(
+                'ball',
+                'rounded-full',
+                'h-12',
+                'w-12',
+                'absolute',
+                'translate-x-[-50%]',
+                'translate-y-[-50%]',
+                'bg-black/40',
+                'hover:bg-black',
+                'touch-none',
+                'select-none',
+                'outline',
+                'outline-4',
+                'outline-white/10',
+                'hover:outline-white/30',
+                'active:outline-black',
+                'active:outline-offset-4'
+            )
+
+            ballElement.addEventListener('pointerdown', (e) => {
+                let offsetX = e.clientX - ballElement.offsetLeft
+                let offsetY = e.clientY - ballElement.offsetTop
+
+                function handleMove(e: PointerEvent) {
+                    let newLeft = e.clientX - offsetX
+                    let newTop = e.clientY - offsetY
+
+                    ballElement.style.left = newLeft + 'px'
+                    ballElement.style.top = newTop + 'px'
+
+                    onMove()
+                }
+
+                function handleUp() {
+                    document.removeEventListener('pointermove', handleMove)
+                    document.removeEventListener('pointerup', handleUp)
+                    onUp()
+                }
+
+                document.addEventListener('pointermove', handleMove)
+                document.addEventListener('pointerup', handleUp)
+            })
+
+            addBallResizeHandle(ballElement)
+
+            const container = document.getElementById('container') as HTMLElement
+            container.appendChild(ballElement)
+        }
+
+        // replace existing handles with the balls from the url, or with the defaults
+        for (const el of getBallElements()) {
+            el.remove()
+        }
+
+        const ballsSearchParam = readFromUrl('balls')
+        const balls: Circle[] = ballsSearchParam ? (JSON.parse(ballsSearchParam) as Circle[]) : []
+
+        if (!ballsSearchParam) {
+            balls.push({
+                x: 0.31625441696113077,
+                y: 1.2143972517176764,
+                radius: 0.7472224639448626,
+            })
+            balls.push({
+                x: 0.7800353356890459,
+                y: 0.8575852592129918,
+                radius: -0.9408659170687433,
+            })
+            balls.push({
+                x: 0.12809187279151943,
+                y: 0.06094066208619612,
+                radius: -0.09964753211457122,
+            })
+            balls.push({
+                x: 0.8268551236749117,
+                y: 0.34003123048094935,
+                radius: 0.5336042778399835,
+            })
+            balls.push({
+                x: 0.0715547703180212,
+                y: 0.7904622111180512,
+                radius: -0.09813380419584605,
+            })
+            balls.push({
+                x: 0.5856890459363958,
+                y: 0.8045933791380387,
+                radius: 0.23446259894957294,
+            })
+        }
+
+        for (const ball of balls) {
+            addBall(ball)
+        }
+
+        if (!ballsSearchParam) {
+            writeBallsToUrl(size)
+        }
+
+        return { addBall }
+    }
+    // #endregion balls
+
+    initPlayground({
+        setup({ size, requestRender }) {
+            const handles = createBallHandles(size, requestRender)
+
+            connectClick('remove', () => {
+                const balls = getBallElements()
+                if (balls.length > 1) {
+                    balls[balls.length - 1].remove()
+                    writeBallsToUrl(size)
+                    requestRender()
+                }
+            })
+
+            connectClick('add', () => {
+                handles.addBall(generateRandomBall())
+                writeBallsToUrl(size)
+                requestRender()
+            })
+        },
+
+        draw(target, { size, get, requestRender, exporting }) {
+            onLayers = requestRender
+
+            const fill = colorRamp(
+                [get<Color>('fill-start'), get<Color>('fill-mid'), get<Color>('fill-end')],
+                get<string>('color-space'),
+                get<string>('proof') === 'proof'
+            )
+
+            const { params, layers } = getLayers(
+                {
+                    balls: getBalls(size),
+                    resolution: get<number>('resolution'),
+                    falloff: get<number>('falloff'),
+                    minThreshold: get<number>('min-threshold'),
+                    maxThreshold: get<number>('max-threshold'),
+                    isoLevels: get<number>('iso-levels'),
+                },
+                exporting
+            )
+
+            // field cells to canvas pixels
+            const sx = size.w * params.resolution
+            const sy = size.h * (params.resolution / 1.414)
 
             for (let idx = 0; idx < layers.length; idx++) {
-                const t = idx / layers.length
-                const layer = layers[idx]
+                const color = fill(idx / layers.length)
 
-                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
-                const proofedFill = toProofed(fill)
-
-                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
-                const proofedStroke = toProofed(stroke)
-
-                for (const ring of layer) {
-                    const scaled = scaleRing(ring, gridSize)
-                    const smooth = smoothRing(scaled)
-                    const d = generatePath(smooth)
-                    drawPath(svg, {
-                        d,
-                        strokeWidth,
-                        stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex', precision: 0 }),
-                        fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex', precision: 0 }),
-                    })
+                for (const ring of layers[idx]) {
+                    target.path(
+                        ring.map(([x, y]) => [x * sx, y * sy]),
+                        true,
+                        { fill: color }
+                    )
                 }
             }
-
-            for (const { x, y, radius } of balls) {
-                drawCircle(svg, {
-                    x,
-                    y,
-                    radius: Math.abs(radius / 16),
-                    fill: 'none',
-                    stroke: radius > 0 ? '#00000055' : '#ffffff55',
-                    strokeWidth: 1,
-                })
-            }
-        }
-
-        const container = document.getElementById('container') as HTMLElement
-        container.classList.add('bg-linear-to-t', 'from-cyan-500', 'to-indigo-500')
-
-        const removeButton = document.getElementById('remove') as HTMLButtonElement
-        const addButton = document.getElementById('add') as HTMLButtonElement
-
-        removeButton.addEventListener('click', () => {
-            removeBall()
-            writeBallsToUrl()
-            render()
-        })
-
-        addButton.addEventListener('click', () => {
-            addBall(container, generateRandomBall(size), render, writeBallsToUrl)
-            writeBallsToUrl()
-            render()
-        })
-
-        addBalls(container, size, render, writeBallsToUrl)
-        getBalls()
-        render()
-    }
-
-    initInteractiveSvg({
-        init,
+        },
     })
 </script>

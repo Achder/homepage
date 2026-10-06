@@ -1,32 +1,32 @@
 ---
 import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
-import Select from '../components/Select.astro'
-import SvgPlayground from '../layouts/SvgPlayground.astro'
+import Playground from '../layouts/Playground.astro'
 import ControlSection from '../components/ControlSection.astro'
 ---
 
-<SvgPlayground
+<Playground
     pageTitle="Swirly SVG Generator | Thomas Meerpohl"
     pageDescription="Interactive SVG swirl generator for exportable abstract posters with layered ellipses, gradients, and print-friendly color controls."
     heading="Swirly"
+    defaultColorSpace="lch"
 >
     <Fragment slot="controls">
         <ControlSection>
-            <Slider id="stride" min={2} max={50} value={21} name="Stride" step={0.1} />
+            <Slider id="stride" min={0.05} max={1} value={0.4} name="Stride" step={0.001} />
             <Slider id="rotation" min={0} max={720} value={56} name="Rotation" />
         </ControlSection>
 
         <ControlSection>
-            <Slider id="radius-min" min={0} max={1000} value={7} name="Radius Min" />
-            <Slider id="radius-x" min={0} max={1} value={0.68} step={0.01} name="Radius X" />
-            <Slider id="radius-y" min={0} max={1} value={0.32} step={0.01} name="Radius Y" />
+            <Slider id="radius-min" min={0} max={1} value={0.01} step={0.001} name="Radius Min" />
+            <Slider id="radius-x" min={0} max={1} value={0.68} step={0.001} name="Radius X" />
+            <Slider id="radius-y" min={0} max={1} value={0.32} step={0.001} name="Radius Y" />
         </ControlSection>
 
         <ControlSection>
             <Slider id="freq" min={-5} max={5} value={0.5} step={0.1} name="Frequency" />
-            <Slider id="offset-x" min={-500} max={500} value={170} name="Offset X" />
-            <Slider id="offset-y" min={-500} max={500} value={-280} name="Offset Y" />
+            <Slider id="offset-x" min={-1} max={1} value={0.35} step={0.001} name="Offset X" />
+            <Slider id="offset-y" min={-1} max={1} value={-0.6} step={0.001} name="Offset Y" />
         </ControlSection>
 
         <ControlSection class="grid-cols-3">
@@ -41,7 +41,7 @@ import ControlSection from '../components/ControlSection.astro'
             <Input type="color" id="stroke-mid" label="Stroke Mid" value="#0091ff" />
             <Input type="color" id="stroke-end" label="Stroke End" value="#ff00ea" />
             <Slider class="col-span-3" id="stroke-alpha" min={0} max={1} step={0.01} value={0.44} name="Stroke Alpha" />
-            <Slider class="col-span-3" id="stroke-width" min={0} max={10} step={0.1} value={1.5} name="Stroke Width" />
+            <Slider class="col-span-3" id="stroke-width" min={0} max={1} step={0.001} value={0.2} name="Stroke Width" />
         </ControlSection>
 
         <ControlSection>
@@ -51,124 +51,76 @@ import ControlSection from '../components/ControlSection.astro'
                 <Input type="color" id="bg-end" label="Bg End" value="#000000" />
             </div>
         </ControlSection>
-
-        <ControlSection>
-            <Select id="color-space" label="Color Space" class="col-span-3">
-                <option value="lch" selected>LCH</option>
-                <option value="acescc">ACEScc</option>
-                <option value="a98rgb">Adobe 98 RGB</option>
-                <option value="hpluv">HPLuv</option>
-                <option value="hsl">HSL</option>
-                <option value="hsluv">HSLuv</option>
-                <option value="hwb">HWB</option>
-                <option value="ictcp">ICTCQ</option>
-                <option value="jzczhz">JzCzHz</option>
-                <option value="lab">LAB</option>
-                <option value="oklch">Oklch</option>
-                <option value="p3">P3</option>
-                <option value="prophoto">ProPhoto</option>
-                <option value="rec2020">REC.2020</option>
-                <option value="rec2100hlg">REC.2100-HLG</option>
-                <option value="rec2100pq">REC.2100-PQ</option>
-            </Select>
-        </ControlSection>
     </Fragment>
-</SvgPlayground>
+</Playground>
 
 <script>
-    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
-    import { drawEllipse } from '../svg/ellipse'
-    import { getInputValue } from '../utils/controls'
-    import { drawRect } from '../svg/rect'
-    import { createGradient } from '../svg/gradient'
-    import Color from 'colorjs.io'
-    import { mix, toProofed } from '../utils/color'
+    import type Color from 'colorjs.io'
+    import { initPlayground } from '../vector/playground'
+    import { colorRamp, linearGradient } from '../vector/paint'
+    import { toProofed } from '../utils/color'
 
-    const init = (svg: HTMLElement, size: Size) => {
-        function get<T>(id: string) {
-            return getInputValue<T>(id, () => requestAnimationFrame(render))
-        }
+    initPlayground({
+        draw(target, { size, get }) {
+            const getScaled = (id: string, max: number) => get<number>(id) * max
 
-        const render = () => {
-            clear(svg)
-
-            const radiusMin = get<number>('radius-min')
+            const radiusMin = getScaled('radius-min', size.w / 2)
             const radiusX = get<number>('radius-x')
             const radiusY = get<number>('radius-y')
             const freq = get<number>('freq')
-            const offsetX = get<number>('offset-x')
-            const offsetY = get<number>('offset-y')
+            const offsetX = getScaled('offset-x', size.w / 2)
+            const offsetY = getScaled('offset-y', size.w / 2)
             const rotation = get<number>('rotation')
-            const stride = get<number>('stride')
-
-            const fillStart = get<Color>('fill-start')
-            const fillMid = get<Color>('fill-mid')
-            const fillEnd = get<Color>('fill-end')
-            const fillAlpha = get<number>('fill-alpha')
-
-            const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<Color>('stroke-start')
-            const strokeMid = get<Color>('stroke-mid')
-            const strokeEnd = get<Color>('stroke-end')
-            const strokeAlpha = get<number>('stroke-alpha')
+            const stride = getScaled('stride', size.w / 10)
 
             const colorSpace = get<string>('color-space')
-            const proof = get<string>('proof')
-            const shouldProof = proof === 'proof'
+            const shouldProof = get<string>('proof') === 'proof'
+
+            const fill = colorRamp(
+                [get<Color>('fill-start'), get<Color>('fill-mid'), get<Color>('fill-end')],
+                colorSpace,
+                shouldProof
+            )
+            const fillAlpha = get<number>('fill-alpha')
+
+            const strokeWidth = getScaled('stroke-width', size.w / 100)
+            const stroke = colorRamp(
+                [get<Color>('stroke-start'), get<Color>('stroke-mid'), get<Color>('stroke-end')],
+                colorSpace,
+                shouldProof
+            )
+            const strokeAlpha = get<number>('stroke-alpha')
 
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<Color>('bg-start')
-            const bgEnd = get<Color>('bg-end')
+            const bgColors = [get<Color>('bg-start'), get<Color>('bg-end')]
 
             const steps = (size.h + radiusY) / stride
             const center = { x: size.w / 2, y: size.h / 2 }
 
-            createGradient(svg, {
-                id: 'bg-gradient',
-                colors: [shouldProof ? toProofed(bgStart) : bgStart, shouldProof ? toProofed(bgEnd) : bgEnd],
-                stops: 10,
-                angle: bgAngle,
-            })
-
-            drawRect(svg, {
-                x: 0,
-                y: 0,
-                width: size.w,
-                height: size.h,
-                fill: 'url(#bg-gradient)',
+            target.rect(0, 0, size.w, size.h, {
+                fill: linearGradient(bgAngle, shouldProof ? bgColors.map(toProofed) : bgColors, 10),
             })
 
             for (let i = 0; i < steps; i++) {
                 const t = i / steps
                 const pi_t = t * Math.PI * 2 * freq
-
-                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
-                const proofedFill = toProofed(fill)
-
-                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
-                const proofedStroke = toProofed(stroke)
-
                 const r = (1 - t) * size.h + 10
 
-                drawEllipse(svg, {
-                    x: center.x + Math.sin(pi_t) * offsetX,
-                    y: center.y + Math.cos(pi_t) * offsetY,
-                    radiusX: radiusMin + r * radiusX,
-                    radiusY: radiusMin + r * radiusY,
-                    fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex', precision: 0 }),
-                    fillOpacity: fillAlpha,
-                    stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex', precision: 0 }),
-                    strokeOpacity: strokeAlpha,
-                    strokeWidth: strokeWidth,
-                    rotation: (t - 0.5) * rotation,
-                })
+                target.ellipse(
+                    center.x + Math.sin(pi_t) * offsetX,
+                    center.y + Math.cos(pi_t) * offsetY,
+                    radiusMin + r * radiusX,
+                    radiusMin + r * radiusY,
+                    (t - 0.5) * rotation,
+                    {
+                        fill: fill(t),
+                        fillOpacity: fillAlpha,
+                        stroke: stroke(t),
+                        strokeOpacity: strokeAlpha,
+                        strokeWidth,
+                    }
+                )
             }
-        }
-
-        render()
-    }
-
-    initInteractiveSvg({
-        init,
+        },
     })
 </script>

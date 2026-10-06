@@ -83,6 +83,21 @@ export function connect(id: string, callback: () => void) {
     addListener(element, 'input', callback)
 }
 
+export function resetControls() {
+    for (const input of [...document.querySelectorAll('input')]) {
+        input.value = input.defaultValue
+    }
+
+    for (const select of [...document.querySelectorAll('select')]) {
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].defaultSelected) {
+                select.selectedIndex = i
+                break
+            }
+        }
+    }
+}
+
 export function connectClick(id: string, callback: () => void) {
     const element = document.getElementById(id)! as HTMLButtonElement
     addListener(element, 'click', callback)

@@ -2,17 +2,18 @@
 import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
 import Select from '../components/Select.astro'
-import ThreePlayground from '../layouts/ThreePlayground.astro'
+import Playground from '../layouts/Playground.astro'
 import ControlSection from '../components/ControlSection.astro'
 ---
 
-<ThreePlayground
+<Playground
     pageTitle="Image Dithering Tool | Thomas Meerpohl"
     pageDescription="Turn any image into a black & white dithered rendering. Ordered, blue-noise and error-diffusion algorithms with live fine-tuning controls."
     heading="Dither"
     robots="noindex,follow"
     colorspace={false}
     softproof={false}
+    saveLabel="Save png"
 >
     <Fragment slot="controls">
         <ControlSection>
@@ -58,7 +59,7 @@ import ControlSection from '../components/ControlSection.astro'
             <Input type="color" id="paper" label="Paper" value="#ff9500" />
         </ControlSection>
     </Fragment>
-</ThreePlayground>
+</Playground>
 
 <script>
     import * as THREE from 'three'

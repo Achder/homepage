@@ -1,7 +1,8 @@
 import * as THREE from 'three'
-import { clearAllListeners } from '../utils/controls'
+import { clearAllListeners, resetControls } from '../utils/controls'
 import { redo, undo } from '../utils/state'
-import { resetControls, type Size } from '../svg/svg'
+import type { Size } from '../vector/types'
+import { download } from '../utils/download'
 
 export type { Size }
 
@@ -26,16 +27,7 @@ async function save(canvas: HTMLCanvasElement, render: () => void) {
         return
     }
 
-    const url = URL.createObjectURL(blob)
-    const title = document.querySelector('h1')?.textContent ?? 'your-file'
-
-    const downloadLink = document.createElement('a')
-    downloadLink.href = url
-    downloadLink.download = `${title.trim()}.png`
-    document.body.appendChild(downloadLink)
-    downloadLink.click()
-    document.body.removeChild(downloadLink)
-    URL.revokeObjectURL(url)
+    download(blob, 'png')
 }
 
 export function initInteractiveThree(params: InteractiveThreeParams) {

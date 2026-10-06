@@ -2,12 +2,12 @@
 import Slider from '../components/Slider.astro'
 import Input from '../components/Input.astro'
 import Select from '../components/Select.astro'
-import SvgPlayground from '../layouts/SvgPlayground.astro'
+import Playground from '../layouts/Playground.astro'
 import ControlSection from '../components/ControlSection.astro'
 import { Font } from 'astro:assets'
 ---
 
-<SvgPlayground
+<Playground
     pageTitle="Wordy SVG Typography Generator | Thomas Meerpohl"
     pageDescription="Interactive SVG typography generator for downloadable word art with custom text, font choices, gradients, and layered motion controls."
     heading="Wordy"
@@ -30,7 +30,7 @@ import { Font } from 'astro:assets'
                 <option value="--font-caveat">Caveat</option>
                 <option value="--font-rowdies">Rowdies</option>
             </Select>
-            <Slider id="font-size" min={5} max={100} value={27} reset={20} step={0.01} name="Font Size" />
+            <Slider id="font-size" min={0.1} max={1} value={0.3} reset={0.25} step={0.001} name="Font Size" />
             <Slider id="font-scale" min={-1} max={1} value={0.2} step={0.01} reset={0} name="Font Scale" />
         </ControlSection>
 
@@ -40,10 +40,10 @@ import { Font } from 'astro:assets'
         </ControlSection>
 
         <ControlSection class="grid-cols-2">
-            <Slider id="x-stride" min={-10} max={10} value={0.6} reset={0} name="x - Stride" step={0.01} />
-            <Slider id="y-stride" min={-10} max={10} value={2.16} reset={0} name="y - Stride" step={0.01} />
-            <Slider id="x-amplitude" min={-100} max={100} value={6} reset={0} name="x - Amplitude" />
-            <Slider id="y-amplitude" min={-500} max={500} value={6} reset={0} name="y - Amplitude" />
+            <Slider id="x-stride" min={-1} max={1} value={0} reset={0} step={0.001} name="x - Stride" />
+            <Slider id="y-stride" min={-1} max={1} value={0} reset={0} step={0.001} name="y - Stride" />
+            <Slider id="x-amplitude" min={-1} max={1} value={0} reset={0} step={0.001} name="x - Amplitude" />
+            <Slider id="y-amplitude" min={-1} max={1} value={0} reset={0} step={0.001} name="y - Amplitude" />
             <Slider id="x-wobble-freq" min={0.5} max={3} value={1.4} step={0.01} reset={0.5} name="x - Frequency" />
             <Slider id="y-wobble-freq" min={0.5} max={3} value={0} step={0.01} reset={0.5} name="y - Frequency" />
             <Slider id="x-wobble-phase" min={0} max={Math.PI * 2} value={0} step={0.01} name="x - Phase" />
@@ -68,7 +68,7 @@ import { Font } from 'astro:assets'
                 <Input type="color" id="stroke-end" label="Stroke End" value="#eeff00" />
             </div>
 
-            <Slider id="stroke-width" min={0} max={20} step={0.1} value={4} reset={1} name="Stroke Width" />
+            <Slider id="stroke-width" min={0} max={1} step={0.001} value={0.1} reset={0.1} name="Stroke Width" />
             <Slider id="stroke-alpha" min={0} max={1} step={0.01} value={0.75} reset={1} name="Stroke Alpha" />
             <Slider
                 id="stroke-alpha-scale"
@@ -89,92 +89,85 @@ import { Font } from 'astro:assets'
             </div>
         </ControlSection>
     </Fragment>
-</SvgPlayground>
+</Playground>
 
 <script>
-    import { initInteractiveSvg, type Size, clear } from '../svg/svg'
-    import { getInputValue } from '../utils/controls'
-    import { drawRect } from '../svg/rect'
-    import { createGradient } from '../svg/gradient'
-    import Color from 'colorjs.io'
-    import { mix, toProofed } from '../utils/color'
-    import { drawText } from '../svg/text'
+    import type Color from 'colorjs.io'
+    import { initPlayground } from '../vector/playground'
+    import { colorRamp, linearGradient } from '../vector/paint'
+    import { toProofed } from '../utils/color'
     import { seesaw } from '../utils/form'
 
-    const init = (svg: HTMLElement, size: Size) => {
-        function get<T>(id: string) {
-            return getInputValue<T>(id, () => requestAnimationFrame(render))
+    // canvas text does not re-render when a web font finishes loading, so load it explicitly
+    const requestedFonts = new Set<string>()
+    function ensureFontLoaded(font: string, onLoad: () => void) {
+        if (requestedFonts.has(font) || document.fonts.check(font)) {
+            return
         }
 
-        const render = () => {
-            clear(svg)
+        requestedFonts.add(font)
+        document.fonts.load(font).then(onLoad)
+    }
+
+    initPlayground({
+        draw(target, { size, get, requestRender }) {
+            const getScaled = (id: string, max: number) => get<number>(id) * max
 
             const text = get<string>('text')
-            const font = get<string>('font')
-            const fontSize = get<number>('font-size')
+            const fontVariable = get<string>('font')
+            const fontFamily = getComputedStyle(document.documentElement).getPropertyValue(fontVariable).trim()
+            const exportFamily = document.querySelector(`#font option[value="${fontVariable}"]`)?.textContent ?? ''
+            const fontSize = getScaled('font-size', size.w / 10)
             const fontScale = get<number>('font-scale')
+            const fontWeight = '900'
+            ensureFontLoaded(`${fontWeight} 16px ${fontFamily}`, requestRender)
 
             const rotation = get<number>('rotation')
             const shapes = get<number>('shapes')
-            const xStride = get<number>('x-stride')
-            const yStride = get<number>('y-stride')
+            const xStride = getScaled('x-stride', size.w / 10)
+            const yStride = getScaled('y-stride', size.w / 10)
 
-            const xAmplitude = get<number>('x-amplitude')
+            const xAmplitude = getScaled('x-amplitude', size.w)
             const xWobbleFreq = get<number>('x-wobble-freq')
             const xWobblePhase = get<number>('x-wobble-phase')
-            const yAmplitude = get<number>('y-amplitude')
+            const yAmplitude = getScaled('y-amplitude', size.h)
             const yWobbleFreq = get<number>('y-wobble-freq')
             const yWobblePhase = get<number>('y-wobble-phase')
             const wobble = get<number>('wobble')
 
-            const fillStart = get<Color>('fill-start')
-            const fillMid = get<Color>('fill-mid')
-            const fillEnd = get<Color>('fill-end')
+            const colorSpace = get<string>('color-space')
+            const shouldProof = get<string>('proof') === 'proof'
+
+            const fill = colorRamp(
+                [get<Color>('fill-start'), get<Color>('fill-mid'), get<Color>('fill-end')],
+                colorSpace,
+                shouldProof
+            )
             const fillAlpha = get<number>('fill-alpha')
             const fillAlphaScale = get<number>('fill-alpha-scale')
 
-            const strokeWidth = get<number>('stroke-width')
-            const strokeStart = get<Color>('stroke-start')
-            const strokeMid = get<Color>('stroke-mid')
-            const strokeEnd = get<Color>('stroke-end')
+            const strokeWidth = getScaled('stroke-width', size.w / 25)
+            const stroke = colorRamp(
+                [get<Color>('stroke-start'), get<Color>('stroke-mid'), get<Color>('stroke-end')],
+                colorSpace,
+                shouldProof
+            )
             const strokeAlpha = get<number>('stroke-alpha')
             const strokeAlphaScale = get<number>('stroke-alpha-scale')
 
-            const colorSpace = get<string>('color-space')
-            const proof = get<string>('proof')
-            const shouldProof = proof === 'proof'
-
             const bgAngle = get<number>('bg-angle')
-            const bgStart = get<Color>('bg-start')
-            const bgEnd = get<Color>('bg-end')
+            const bgColors = [get<Color>('bg-start'), get<Color>('bg-end')]
 
             const center = { x: size.w / 2, y: size.h / 2 }
 
-            createGradient(svg, {
-                id: 'bg-gradient',
-                colors: [shouldProof ? toProofed(bgStart) : bgStart, shouldProof ? toProofed(bgEnd) : bgEnd],
-                stops: 10,
-                angle: bgAngle,
-            })
-
-            drawRect(svg, {
-                x: 0,
-                y: 0,
-                width: size.w,
-                height: size.h,
-                fill: 'url(#bg-gradient)',
+            target.rect(0, 0, size.w, size.h, {
+                fill: linearGradient(bgAngle, shouldProof ? bgColors.map(toProofed) : bgColors, 10),
             })
 
             for (let i = 0; i <= shapes; i++) {
                 const t = i / shapes
                 const nt = (t - 0.5) * 2
                 const pi_nt = nt * Math.PI * 2
-
-                const fill = mix(fillStart, fillMid, fillEnd, t, colorSpace, 'srgb')
-                const proofedFill = toProofed(fill)
-
-                const stroke = mix(strokeStart, strokeMid, strokeEnd, t, colorSpace, 'srgb')
-                const proofedStroke = toProofed(stroke)
 
                 const xSineOffset = Math.sin(pi_nt * xWobbleFreq + xWobblePhase) * xAmplitude
                 const ySineOffset = Math.sin(pi_nt * yWobbleFreq + yWobblePhase) * yAmplitude
@@ -183,27 +176,26 @@ import { Font } from 'astro:assets'
                 const xOffset = (i - shapes / 2) * xStride + xLinearOffset + (xSineOffset - xLinearOffset) * wobble
                 const yOffset = (i - shapes / 2) * yStride + yLinearOffset + (ySineOffset - yLinearOffset) * wobble
 
-                drawText(svg, {
-                    content: text,
-                    x: center.x + xOffset,
-                    y: center.y + yOffset,
-                    fill: (shouldProof ? proofedFill : fill).toString({ format: 'hex' }),
-                    fillOpacity: fillAlpha * seesaw(fillAlphaScale, t),
-                    stroke: (shouldProof ? proofedStroke : stroke).toString({ format: 'hex' }),
-                    strokeOpacity: strokeAlpha * seesaw(strokeAlphaScale, t),
-                    strokeWidth: strokeWidth,
-                    rotation: (nt - 0.5) * rotation,
-                    fontFamily: `var(${font})`,
-                    fontSize: `${fontSize * seesaw(fontScale, t) * 16}px`,
-                    fontWeight: '900',
-                })
+                target.text(
+                    text,
+                    center.x + xOffset,
+                    center.y + yOffset,
+                    (nt - 0.5) * rotation,
+                    {
+                        family: fontFamily,
+                        exportFamily,
+                        size: fontSize * seesaw(fontScale, t) * 16,
+                        weight: fontWeight,
+                    },
+                    {
+                        fill: fill(t),
+                        fillOpacity: fillAlpha * seesaw(fillAlphaScale, t),
+                        stroke: stroke(t),
+                        strokeOpacity: strokeAlpha * seesaw(strokeAlphaScale, t),
+                        strokeWidth,
+                    }
+                )
             }
-        }
-
-        render()
-    }
-
-    initInteractiveSvg({
-        init,
+        },
     })
 </script>
